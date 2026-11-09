@@ -1,14 +1,13 @@
 ---
 /**
  * Bundles and booster boxes side by side: name and price at a glance. The button in
- * the corner opens what is inside, the price per booster and the Cardmarket link.
+ * the corner opens what is inside and the price per booster.
  */
 import type { Locale } from '../../config/site';
 import { snapshot } from '../../lib/data/load';
 import type { MtgSet } from '../../lib/data/schema';
 import { createFormatters } from '../../lib/format';
 import { useTranslations } from '../../lib/i18n';
-import { cardmarketSearch } from '../../lib/links';
 import { productLabel, sortProducts } from '../../lib/products';
 
 interface Props {
@@ -56,9 +55,6 @@ const upcoming = set.standard?.status === 'upcoming';
                   {t('products.priceDate', { date: format.date(priceDate) })}
                 </p>
               )}
-              <a href={cardmarketSearch(locale, product.name)} target="_blank" rel="noopener">
-                {t('link.cardmarket')} ↗
-              </a>
             </div>
           </details>
         </li>
@@ -180,11 +176,6 @@ const upcoming = set.standard?.status === 'upcoming';
 
   .details p {
     margin: 0;
-  }
-
-  .details a {
-    color: var(--accent);
-    text-decoration: none;
   }
 
   @keyframes open {

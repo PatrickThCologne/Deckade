@@ -7,7 +7,7 @@ export const en: Record<UiKey, string> = {
     'Which Magic sets are in Standard right now, when they rotate out, what the cards cost and how often they are played – updated daily.',
   'meta.set.title': '{name}: cards, prices and rotation',
   'meta.set.description':
-    '{name} in Standard: {rotation}. {cards} with Cardmarket price and tournament play rate.',
+    '{name} in Standard: {rotation}. {cards} with price and tournament play rate.',
   'meta.about.title': 'How we determine rotation',
   'meta.about.description':
     'How {site} knows when a set leaves Standard, how certain each statement is and where the data comes from.',
@@ -101,7 +101,7 @@ export const en: Record<UiKey, string> = {
   'col.played': 'Played',
   'col.playedTitle': 'Share of Standard tournament decks of the last 30 days that contain the card',
   'col.price': 'Price',
-  'col.priceTitle': 'Cheapest printing, Cardmarket trend price',
+  'col.priceTitle': 'Cheapest printing, trend price',
   'type.creature': 'Creature',
   'type.planeswalker': 'Planeswalker',
   'type.battle': 'Battle',
@@ -133,7 +133,6 @@ export const en: Record<UiKey, string> = {
   'color.R': 'Red',
   'color.G': 'Green',
 
-  'link.cardmarket': 'Search on Cardmarket',
   'link.scryfall': 'View on Scryfall',
 
   'count.cards.one': '{count} card',
@@ -170,8 +169,6 @@ export const en: Record<UiKey, string> = {
     'These formats do not rotate. Which sets are legal in them is not written down by hand: a set counts when at least 80% of its cards are allowed in the format according to Scryfall (banned cards included). The banned lists come from Scryfall as well; Wizards’ official list is authoritative.',
   'about.sources.heading': 'Data sources',
   'about.sources.scryfall': 'Sets, release dates, legality, mana costs and card images.',
-  'about.sources.cardmarket':
-    'Daily price guide. Shown is the trend price of the cheapest printing, in euros.',
   'about.sources.mtgjson': 'Bundles and booster boxes with their contents.',
   'about.sources.decks':
     'Public tournament decklists from MTGO and Melee. “Played” is the share of these decks of the last 30 days that contain a card (main deck or sideboard). Arena games are not included.',
@@ -183,7 +180,7 @@ export const en: Record<UiKey, string> = {
 
   'footer.art': 'Background artwork by',
   'footer.data':
-    'Data from Scryfall, Cardmarket, MTGJSON and public tournament lists. As of {date}.',
+    'Card and product data from Scryfall and MTGJSON, play rates from public tournament lists. As of {date}.',
 
   'notFound.title': 'Page not found',
   'notFound.text': 'This page does not exist (anymore). Maybe the set has rotated out?',
@@ -192,7 +189,7 @@ export const en: Record<UiKey, string> = {
   'meta.overview.title': 'All Magic sets at a glance',
   'meta.overview.description':
     'Every Magic set since 1993 at a glance – marked where they are legal in Standard, Pioneer and Modern, with card prices and booster box prices.',
-  'meta.set.descriptionFormats': '{name}: legal in {formats}. {cards} with Cardmarket price.',
+  'meta.set.descriptionFormats': '{name}: legal in {formats}. {cards} with price.',
   'tabs.label': 'Sections',
   'tabs.overview': 'All sets',
   'tabs.cards': 'All cards',
@@ -200,7 +197,7 @@ export const en: Record<UiKey, string> = {
   'tabs.cards.short': 'Cards',
   'meta.cards.title': 'All Magic cards',
   'meta.cards.description':
-    '{count} cards from {sets} sets, filterable by name, colour, mana value and type, with Cardmarket prices.',
+    '{count} cards from {sets} sets, filterable by name, colour, mana value and type, with prices.',
   'allCards.eyebrow': 'Card overview',
   'allCards.title': 'All cards',
   'allCards.text':
@@ -227,7 +224,7 @@ export const en: Record<UiKey, string> = {
   'overview.text':
     '{count} sets from {oldest} ({year}) until today. Click a pack to see all cards and prices.',
   'products.showContents': 'Show contents',
-  'products.priceDate': 'Cardmarket trend of {date}',
+  'products.priceDate': 'Trend price of {date}',
   'nav.privacy': 'Privacy',
   'meta.privacy.title': 'Privacy',
   'meta.privacy.description': 'Which data a visit to this site produces and who processes it.',
@@ -246,7 +243,7 @@ export const en: Record<UiKey, string> = {
   'privacy.images.link': 'Privacy at Scryfall',
   'privacy.local.heading': 'What needs no third party',
   'privacy.local.text':
-    "Fonts, mana symbols and booster images are served from the same server as the site. Links to Cardmarket, Scryfall or Wizards of the Coast transfer nothing until you click them; from then on, that site's privacy policy applies.",
+    "Fonts, mana symbols and booster images are served from the same server as the site. Links to Scryfall or Wizards of the Coast transfer nothing until you click them; from then on, that site's privacy policy applies.",
   'privacy.rights.heading': 'Your rights',
   'privacy.rights.text':
     'You have the right to access, rectification, erasure and restriction of processing, and to object (Art. 15 to 18 and 21 GDPR). Contact the address above. You can also lodge a complaint with a data protection authority (Art. 77 GDPR).',

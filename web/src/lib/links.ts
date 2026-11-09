@@ -36,8 +36,3 @@ export function switchLocale(
 export function mailto(address: string, subject: string): string {
   return `mailto:${address}?subject=${encodeURIComponent(subject)}`;
 }
-
-export function cardmarketSearch(locale: Locale, query: string): string {
-  const search = encodeURIComponent(query.split(' // ')[0] ?? query);
-  return `https://www.cardmarket.com/${locale}/Magic/Products/Search?searchString=${search}`;
-}

@@ -5,7 +5,7 @@ export const de = {
     'Welche Magic-Sets gerade in Standard sind, wann sie rotieren, was die Karten kosten und wie oft sie gespielt werden – täglich aktualisiert.',
   'meta.set.title': '{name}: Karten, Preise und Rotation',
   'meta.set.description':
-    '{name} in Standard: {rotation}. {cards} mit Cardmarket-Preis und Spielanteil in Turnierdecks.',
+    '{name} in Standard: {rotation}. {cards} mit Preis und Spielanteil in Turnierdecks.',
   'meta.about.title': 'So bestimmen wir die Rotation',
   'meta.about.description':
     'Woher {site} weiß, wann ein Set aus Standard rotiert, wie sicher die Angaben sind und woher die Daten kommen.',
@@ -100,7 +100,7 @@ export const de = {
   'col.playedTitle':
     'Anteil der Standard-Turnierdecks der letzten 30 Tage, in denen die Karte steckt',
   'col.price': 'Preis',
-  'col.priceTitle': 'Günstigster Druck, Cardmarket-Trendpreis',
+  'col.priceTitle': 'Günstigster Druck, Trendpreis',
   'type.creature': 'Kreatur',
   'type.planeswalker': 'Planeswalker',
   'type.battle': 'Schlacht',
@@ -132,7 +132,6 @@ export const de = {
   'color.R': 'Rot',
   'color.G': 'Grün',
 
-  'link.cardmarket': 'Auf Cardmarket suchen',
   'link.scryfall': 'Auf Scryfall ansehen',
 
   'count.cards.one': '{count} Karte',
@@ -169,8 +168,6 @@ export const de = {
     'Diese Formate rotieren nicht. Welche Sets darin legal sind, schreiben wir nicht von Hand fest: Ein Set zählt, wenn mindestens 80 % seiner Karten laut Scryfall im Format erlaubt sind (gebannte Karten mitgezählt). Die Bannlisten kommen ebenfalls von Scryfall; maßgeblich ist die offizielle Liste von Wizards.',
   'about.sources.heading': 'Datenquellen',
   'about.sources.scryfall': 'Sets, Erscheinungsdaten, Legalität, Manakosten und Kartenbilder.',
-  'about.sources.cardmarket':
-    'Tägliche Preisliste. Gezeigt wird der Trendpreis des günstigsten Drucks, in Euro.',
   'about.sources.mtgjson': 'Bundles und Booster Boxes mit ihrem Inhalt.',
   'about.sources.decks':
     'Öffentliche Turnierdecklisten von MTGO und Melee. „Gespielt“ ist der Anteil dieser Decks der letzten 30 Tage, in denen eine Karte steckt (Haupt- oder Sideboard). Arena-Partien sind nicht enthalten.',
@@ -182,7 +179,7 @@ export const de = {
 
   'footer.art': 'Artworks im Hintergrund von',
   'footer.data':
-    'Daten von Scryfall, Cardmarket, MTGJSON und öffentlichen Turnierlisten. Stand: {date}.',
+    'Karten- und Produktdaten von Scryfall und MTGJSON, Spielanteile aus öffentlichen Turnierlisten. Stand: {date}.',
 
   'notFound.title': 'Seite nicht gefunden',
   'notFound.text': 'Diese Seite gibt es nicht (mehr). Vielleicht ist das Set inzwischen rotiert?',
@@ -191,7 +188,7 @@ export const de = {
   'meta.overview.title': 'Alle Magic-Sets im Überblick',
   'meta.overview.description':
     'Alle Magic-Sets seit 1993 auf einen Blick – mit Markierungen, ab wo sie in Standard, Pioneer und Modern legal sind, Kartenpreisen und Booster-Box-Preisen.',
-  'meta.set.descriptionFormats': '{name}: legal in {formats}. {cards} mit Cardmarket-Preis.',
+  'meta.set.descriptionFormats': '{name}: legal in {formats}. {cards} mit Preis.',
   'tabs.label': 'Bereiche',
   'tabs.overview': 'Alle Sets',
   'tabs.cards': 'Alle Karten',
@@ -199,7 +196,7 @@ export const de = {
   'tabs.cards.short': 'Karten',
   'meta.cards.title': 'Alle Magic-Karten',
   'meta.cards.description':
-    '{count} Karten aus {sets} Sets, filterbar nach Name, Farbe, Manawert und Typ, mit Cardmarket-Preisen.',
+    '{count} Karten aus {sets} Sets, filterbar nach Name, Farbe, Manawert und Typ, mit Preisen.',
   'allCards.eyebrow': 'Kartenübersicht',
   'allCards.title': 'Alle Karten',
   'allCards.text':
@@ -226,7 +223,7 @@ export const de = {
   'overview.text':
     '{count} Sets von {oldest} ({year}) bis heute. Ein Klick auf ein Päckchen zeigt alle Karten und Preise.',
   'products.showContents': 'Inhalt anzeigen',
-  'products.priceDate': 'Cardmarket-Trend vom {date}',
+  'products.priceDate': 'Trendpreis vom {date}',
   'nav.privacy': 'Datenschutz',
   'meta.privacy.title': 'Datenschutz',
   'meta.privacy.description':
@@ -246,7 +243,7 @@ export const de = {
   'privacy.images.link': 'Datenschutz bei Scryfall',
   'privacy.local.heading': 'Was ohne Dritte auskommt',
   'privacy.local.text':
-    'Schriften, Mana-Symbole und Booster-Bilder liegen auf demselben Server wie die Seite. Links zu Cardmarket, Scryfall oder Wizards of the Coast übertragen erst etwas, wenn du sie anklickst; ab dann gilt der Datenschutz der jeweiligen Seite.',
+    'Schriften, Mana-Symbole und Booster-Bilder liegen auf demselben Server wie die Seite. Links zu Scryfall oder Wizards of the Coast übertragen erst etwas, wenn du sie anklickst; ab dann gilt der Datenschutz der jeweiligen Seite.',
   'privacy.rights.heading': 'Deine Rechte',
   'privacy.rights.text':
     'Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung sowie auf Widerspruch (Art. 15 bis 18 und 21 DSGVO). Wende dich dafür an die oben genannte Adresse. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren (Art. 77 DSGVO).',
