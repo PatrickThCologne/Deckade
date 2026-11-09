@@ -9,7 +9,7 @@ import type { Locale } from '../../config/site';
 import { useTranslations } from '../../lib/i18n';
 import { localePath } from '../../lib/links';
 
-export type Tab = 'overview' | 'cards' | 'rotation' | 'deck';
+export type Tab = 'overview' | 'cards' | 'rotation' | 'search';
 
 interface Props {
   current: Tab;
@@ -38,10 +38,10 @@ const tabs = [
     short: t('tabs.rotation.short'),
   },
   {
-    id: 'deck',
-    href: localePath(locale, 'deck'),
-    label: t('tabs.deck'),
-    short: t('tabs.deck.short'),
+    id: 'search',
+    href: localePath(locale, 'search'),
+    label: t('tabs.search'),
+    short: t('tabs.search.short'),
   },
 ] as const; // short: the label on narrow screens
 ---

@@ -213,16 +213,16 @@ export const de = {
   'col.set': 'Set',
   'tabs.rotation': 'Standard Rotation',
   'tabs.rotation.short': 'Rotation',
-  'tabs.deck': 'Deck importieren',
-  'tabs.deck.short': 'Deck',
+  'tabs.search': 'Suche',
+  'tabs.search.short': 'Suche',
   'overview.eyebrow': 'Set-Übersicht',
   'overview.title': 'Alle Sets',
   'overview.stat.sets': 'Sets',
   'overview.stat.cards': 'Karten in allen Sets',
-  'deck.eyebrow': 'Bald verfügbar',
-  'deck.title': 'Deck importieren',
-  'deck.text':
-    'Hier kannst du bald eine Deckliste einfügen und sehen, welche Karten wann rotieren und was das Deck wert ist.',
+  'search.eyebrow': 'Bald verfügbar',
+  'search.title': 'Suche',
+  'search.text':
+    'Hier kannst du bald in ganz normaler Sprache nach Karten suchen, zum Beispiel „günstige rote Kreaturen mit Eile“.',
   'overview.text':
     '{count} Sets von {oldest} ({year}) bis heute. Ein Klick auf ein Päckchen zeigt alle Karten und Preise.',
   'products.showContents': 'Inhalt anzeigen',

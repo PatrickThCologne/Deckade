@@ -214,16 +214,16 @@ export const en: Record<UiKey, string> = {
   'col.set': 'Set',
   'tabs.rotation': 'Standard rotation',
   'tabs.rotation.short': 'Rotation',
-  'tabs.deck': 'Import deck',
-  'tabs.deck.short': 'Deck',
+  'tabs.search': 'Search',
+  'tabs.search.short': 'Search',
   'overview.eyebrow': 'Set overview',
   'overview.title': 'All sets',
   'overview.stat.sets': 'sets',
   'overview.stat.cards': 'cards in all sets',
-  'deck.eyebrow': 'Coming soon',
-  'deck.title': 'Import deck',
-  'deck.text':
-    'Soon you can paste a decklist here and see which cards rotate out when and what the deck is worth.',
+  'search.eyebrow': 'Coming soon',
+  'search.title': 'Search',
+  'search.text':
+    'Soon you can search for cards here in plain language, for example "cheap red creatures with haste".',
   'overview.text':
     '{count} sets from {oldest} ({year}) until today. Click a pack to see all cards and prices.',
   'products.showContents': 'Show contents',
