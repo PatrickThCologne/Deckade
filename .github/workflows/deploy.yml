@@ -1,13 +1,13 @@
-# Daily: rebuild the data snapshot, build the site and publish it on GitHub Pages.
+# Daily, or started by hand (Actions -> Refresh data and deploy -> Run workflow): rebuild
+# the data snapshot with fresh prices, build the site and publish it on GitHub Pages.
+# A push to main does not deploy; code changes go live with the next run.
 # Requires Settings -> Pages -> Source: "GitHub Actions".
 name: Refresh data and deploy
 
 on:
   schedule:
-    - cron: '30 4 * * *' # after Cardmarket publishes its nightly price guide
+    - cron: '30 4 * * *' # after the nightly price guide is published
   workflow_dispatch:
-  push:
-    branches: [main]
 
 permissions:
   contents: read
