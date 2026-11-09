@@ -1,0 +1,66 @@
+# Daily: rebuild the data snapshot, build the site and publish it on GitHub Pages.
+# Requires Settings -> Pages -> Source: "GitHub Actions".
+name: Refresh data and deploy
+
+on:
+  schedule:
+    - cron: '30 4 * * *' # after Cardmarket publishes its nightly price guide
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Cache downloads and pack images
+        uses: actions/cache@v4
+        with:
+          path: |
+            pipeline/.cache
+            web/public/images
+          key: pipeline-${{ github.run_id }}
+          restore-keys: pipeline-
+      - run: pip install -e ./pipeline
+      - name: Build data snapshot
+        run: python -m rotation_radar build --root .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+        working-directory: web
+      - run: npm run build
+        working-directory: web
+        env:
+          SITE_URL: https://${{ github.repository_owner }}.github.io
+          BASE_PATH: /${{ github.event.repository.name }}/
+          # Shown in the imprint and privacy notice; set under Settings > Secrets and variables > Variables
+          OPERATOR_NAME: ${{ vars.OPERATOR_NAME }}
+          OPERATOR_ADDRESS: ${{ vars.OPERATOR_ADDRESS }}
+          OPERATOR_EMAIL: ${{ vars.OPERATOR_EMAIL }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
