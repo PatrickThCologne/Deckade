@@ -9,9 +9,6 @@ Open work, roughly in order. Done items move to the commit history.
       show their set symbol for now. Ideas: own photos, written permission from a shop,
       card art of the set's most iconic card. TCGplayer photos are not allowed (Terms of
       Service), see [ADR 0001](docs/adr/0001-pack-image-sources.md).
-- [ ] Background art wall: sort the artwork by colour. Tried as a mock-up (a rainbow from top
-      to bottom); needs a hue per artwork from the pipeline as a new contract field. Waiting
-      for a decision.
 
 ## Site
 
@@ -20,8 +17,13 @@ Open work, roughly in order. Done items move to the commit history.
 - [ ] Page size: a few set pages are large (The List: 6.9 MB, 0.8 MB with gzip). Split their
       card list into pages or load it as JSON.
 - [ ] Screenshots for the README.
-- [ ] Tab changes still wait about 0.3 s for the next page. Prerendering it on hover
-      (Speculation Rules, Chromium only) would remove that; waiting for a decision.
+- [ ] Banner behind the page tabs: choose one of three designs (obsidian glass, engraved
+      plaque, veil with astrolabe). Either way the small grey stat labels need 4.5:1 over
+      bright artwork; at the banner's see-through right end they reach about 3.8:1
+      (computed from the CSS values with a white art pixel behind).
+- [ ] Fonts: only weight 400 of IBM Plex Sans and Mono is loaded, so the 500 to 700 used on
+      the site are faked bold by the browser. Load those weights (`weights` in
+      `web/astro.config.ts`) or stop asking for them.
 
 ## Data and legal
 
