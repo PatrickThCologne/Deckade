@@ -22,7 +22,8 @@ Open work, roughly in order. Done items move to the commit history.
 
 - [ ] Feedback in the info menu: a form with text fields that sends to the operator e-mail.
 - [ ] Logo: "Deck" + a capital "A" ("DeckAde").
-- [ ] Page size: some set pages are several MB; the set overlay prefetches whole pages on hover.
+- [ ] Page size: a few set pages are large (The List: 6.9 MB, 0.8 MB with gzip). Split their
+      card list into pages or load it as JSON.
 - [ ] Screenshots for the README.
 
 ## Data and legal
