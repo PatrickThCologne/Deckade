@@ -1,23 +1,22 @@
 ---
 /**
- * Page background: a wall of card artwork in slanted rows behind the whole page. While
- * scrolling the wall sinks slower than the content and its rows drift sideways, alternating
- * left and right (scripts/backdrop.ts). Each row holds its sequence twice, so it can loop
- * without showing an end. The artworks are Scryfall art crops, shown unchanged; the artists
+ * Page background: a wall of card artwork in slanted rows behind the whole page, sorted by
+ * colour from red at the top to violet at the bottom. While scrolling the wall sinks slower
+ * than the content and its rows drift sideways, alternating left and right
+ * (scripts/backdrop.ts). Each row holds its sequence twice, so it can loop without showing
+ * an end. The artworks are Scryfall art crops, shown unchanged; the artists
  * are credited in the footer. Scryfall's image rules forbid changing the images themselves
  * (no desaturating, recolouring, blurring), so only dark layers on top keep the text in front
  * readable.
  */
 import { snapshot } from '../../lib/data/load';
-import { artRows } from '../../lib/backdrop';
+import { colourRows } from '../../lib/backdrop';
 
 const ROWS = 9;
 const PER_ROW = 10;
 
-const rows = artRows(
-  snapshot.featuredArt.map((art) => art.imageUrl),
-  ROWS,
-  PER_ROW,
+const rows = colourRows(snapshot.featuredArt, ROWS, PER_ROW).map((row) =>
+  row.map((art) => art.imageUrl),
 );
 ---
 

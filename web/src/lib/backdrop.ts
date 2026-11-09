@@ -4,22 +4,35 @@
  * browser; scripts/backdrop.ts applies it.
  */
 
+/** Where the colour wheel starts: pink-reds just below 360° belong to the reds at the top. */
+const WHEEL_START = 340;
+
+/** Position on the wall's colour order; artworks without a main colour come last. */
+function wheelPosition(hue: number | null): number {
+  return hue === null ? 360 : (hue - WHEEL_START + 360) % 360;
+}
+
 /**
- * Spreads the artworks over the rows, `perRow` each. Once all artworks are used, the next rows
- * take them again in a new order -- every second one, then every third one and so on -- so no
- * two rows show the same sequence.
+ * Spreads the artworks over the rows, `perRow` each, sorted by their main colour (pipeline:
+ * domain/art.py): red at the top, then yellow, green and blue to violet, grey ones last.
+ * Each row shows a stretch of that order a little further along than the row above, so the
+ * colours change gradually and no two rows show the same sequence. The order runs round
+ * like a colour wheel: the last rows lead from violet back to red.
  */
-export function artRows<T>(items: readonly T[], rowCount: number, perRow: number): T[][] {
-  if (items.length === 0) return [];
-  const order: T[] = [];
-  for (let step = 1; order.length < rowCount * perRow; step++) {
-    for (let start = 0; start < step; start++) {
-      order.push(...items.filter((_, index) => index % step === start));
-    }
-  }
-  return Array.from({ length: rowCount }, (_, row) =>
-    order.slice(row * perRow, (row + 1) * perRow),
-  );
+export function colourRows<T extends { hue: number | null }>(
+  items: readonly T[],
+  rowCount: number,
+  perRow: number,
+): T[][] {
+  const sorted = [...items].sort((a, b) => wheelPosition(a.hue) - wheelPosition(b.hue));
+  if (sorted.length === 0) return [];
+  // The order repeated often enough that a stretch starting anywhere in it fits
+  const copies = Math.ceil((sorted.length + perRow) / sorted.length);
+  const loop = Array.from({ length: copies }, () => sorted).flat();
+  return Array.from({ length: rowCount }, (_, row) => {
+    const start = Math.round((row * sorted.length) / rowCount);
+    return loop.slice(start, start + perRow);
+  });
 }
 
 /**
