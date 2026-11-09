@@ -1,0 +1,132 @@
+---
+/**
+ * Page background: a wall of card artwork in slanted rows behind the whole page. While
+ * scrolling the wall sinks slower than the content and its rows drift sideways, alternating
+ * left and right (scripts/backdrop.ts). Each row holds its sequence twice, so it can loop
+ * without showing an end. The artworks are Scryfall art crops, shown unchanged; the artists
+ * are credited in the footer. Scryfall's image rules forbid changing the images themselves
+ * (no desaturating, recolouring, blurring), so only dark layers on top keep the text in front
+ * readable.
+ */
+import { snapshot } from '../../lib/data/load';
+import { artRows } from '../../lib/backdrop';
+
+const ROWS = 9;
+const PER_ROW = 10;
+
+const rows = artRows(
+  snapshot.featuredArt.map((art) => art.imageUrl),
+  ROWS,
+  PER_ROW,
+);
+---
+
+<div class="backdrop" aria-hidden="true">
+  {rows.length > 0 && (
+    <div class="wall" data-wall>
+      {rows.map((row) => (
+        <div class="row" data-row data-count={row.length}>
+          {[...row, ...row].map((src) => (
+            <div class="art">
+              <img src={src} alt="" decoding="async" fetchpriority="low" />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  )}
+  <div class="shade"></div>
+  <div class="dim" data-dim></div>
+  <div class="grain"></div>
+</div>
+
+<script>
+  import { initBackdrop } from '../../scripts/backdrop';
+
+  initBackdrop();
+</script>
+
+<style>
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--bg);
+  }
+
+  .wall {
+    --tile-w: 300px;
+    --tile-h: 200px;
+    --slant: 36px;
+    --gap: 12px;
+    position: absolute;
+    top: -24px;
+    left: 0;
+    display: grid;
+    gap: var(--gap);
+    will-change: transform;
+  }
+
+  .row {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+  }
+
+  /* Parallelogram frames, the same slant as tabs and labels; neighbours share the gap evenly */
+  .art {
+    flex: none;
+    width: var(--tile-w);
+    height: var(--tile-h);
+    margin-right: calc(var(--gap) - var(--slant));
+    clip-path: polygon(var(--slant) 0, 100% 0, calc(100% - var(--slant)) 100%, 0 100%);
+    background: var(--surface-solid);
+  }
+
+  .art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Lighter at the top, where the banner is see-through, darker further down */
+  .shade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        180deg,
+        rgb(8 9 12 / 0.6) 0,
+        rgb(8 9 12 / 0.76) 420px,
+        rgb(8 9 12 / 0.88) 100%
+      ),
+      radial-gradient(120% 90% at 50% 0, transparent 40%, rgb(8 9 12 / 0.5));
+  }
+
+  /* Fades in once the reader scrolls past the top */
+  .dim {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: rgb(8 9 12 / 0.5);
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  @media (max-width: 720px) {
+    .wall {
+      --tile-w: 200px;
+      --tile-h: 136px;
+      --slant: 24px;
+      --gap: 8px;
+    }
+  }
+</style>

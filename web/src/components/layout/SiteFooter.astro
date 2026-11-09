@@ -1,0 +1,102 @@
+---
+import { LOCALE_TAGS, type Locale, SITE_NAME } from '../../config/site';
+import { creditedArtists } from '../../lib/backdrop';
+import { snapshot } from '../../lib/data/load';
+import { createFormatters } from '../../lib/format';
+import { useTranslations } from '../../lib/i18n';
+import { localePath } from '../../lib/links';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const { t } = useTranslations(locale);
+const format = createFormatters(locale);
+const updated = format.date(snapshot.generatedAt.slice(0, 10));
+// Scryfall asks to name the artist wherever an art crop is shown, so the list stays visible.
+const artists = creditedArtists(
+  snapshot.featuredArt.map((art) => art.artist),
+  LOCALE_TAGS[locale],
+);
+const links = [
+  { href: localePath(locale, 'about'), label: t('nav.method') },
+  { href: localePath(locale, 'imprint'), label: t('nav.imprint') },
+  { href: localePath(locale, 'privacy'), label: t('nav.privacy') },
+];
+---
+
+<footer class="site-footer">
+  <div class="container inner">
+    <div class="top">
+      <p>{t('footer.data', { date: updated })}</p>
+      <nav aria-label={t('nav.info')}>
+        {links.map((link) => (
+          <a href={link.href}>{link.label}</a>
+        ))}
+      </nav>
+    </div>
+    {artists.length > 0 && (
+      <p class="credits">
+        {t('footer.art')} {artists.join(', ')}.
+      </p>
+    )}
+    <p>
+      {SITE_NAME} is unofficial Fan Content permitted under the{' '}
+      <a href="https://company.wizards.com/en/legal/fancontentpolicy" rel="noopener">
+        Fan Content Policy.
+      </a>{' '}
+      Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of
+      the Coast. ©Wizards of the Coast LLC.
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--line);
+    background: rgb(6 8 12 / 0.6);
+  }
+
+  .inner {
+    display: grid;
+    gap: 6px;
+    padding-block: 16px 22px;
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--text-faint);
+  }
+
+  p {
+    margin: 0;
+    max-width: 900px;
+  }
+
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 18px;
+    color: var(--text-dim);
+  }
+
+  nav {
+    display: flex;
+    gap: 14px;
+  }
+
+  a {
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+
+  p a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  a:hover {
+    color: var(--accent);
+  }
+</style>

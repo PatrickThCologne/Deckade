@@ -1,0 +1,52 @@
+---
+/** Banner of the overview: what the site covers. Everything about rotation lives on its own tab. */
+import type { Locale } from '../../config/site';
+import { overviewSets, setCards, standardSets } from '../../lib/data/load';
+import { createFormatters, yearOf } from '../../lib/format';
+import { useTranslations } from '../../lib/i18n';
+import { localePath } from '../../lib/links';
+import HeroPanel from '../hero/HeroPanel.astro';
+import type { HeroStat } from '../hero/types';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const { t } = useTranslations(locale);
+const format = createFormatters(locale);
+const sets = overviewSets();
+const oldest = sets.at(-1);
+// The same count each set page shows, added up: reprints count once per set
+const cards = sets.reduce((sum, set) => sum + setCards(set).length, 0);
+const inStandard = standardSets().filter((s) => s.standard.status === 'legal').length;
+
+const stats: HeroStat[] = [
+  { value: format.integer(sets.length), label: t('overview.stat.sets'), tone: 'accent' },
+  {
+    value: format.integer(cards),
+    label: t('overview.stat.cards'),
+    tone: 'special',
+    href: localePath(locale, 'cards'),
+  },
+  { value: format.integer(inStandard), label: t('hero.stat.legal'), tone: 'calm' },
+];
+---
+
+<HeroPanel
+  tab="overview"
+  locale={locale}
+  eyebrow={t('overview.eyebrow')}
+  title={t('overview.title')}
+  stats={stats}
+>
+  {oldest && (
+    <p>
+      {t('overview.text', {
+        count: format.integer(sets.length),
+        oldest: oldest.name,
+        year: yearOf(oldest.releasedAt),
+      })}
+    </p>
+  )}
+</HeroPanel>

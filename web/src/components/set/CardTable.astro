@@ -1,0 +1,125 @@
+---
+import '../../styles/card-table.css';
+
+import type { Locale } from '../../config/site';
+import { searchText, shownCard } from '../../lib/cards/local';
+import {
+  CARD_TYPES,
+  cardTypes,
+  MANA_VALUES,
+  mainType,
+  matchesManaValue,
+  normalizeForSearch,
+  SORT_KEYS,
+} from '../../lib/cards/sort';
+import type { Card } from '../../lib/data/schema';
+import { createFormatters } from '../../lib/format';
+import { useTranslations } from '../../lib/i18n';
+import ColorPips from '../ui/ColorPips.astro';
+import ManaCost from '../ui/ManaCost.astro';
+import CardControls from './CardControls.astro';
+
+interface Props {
+  cards: readonly Card[];
+  locale: Locale;
+}
+
+const { cards, locale } = Astro.props;
+const { t } = useTranslations(locale);
+const format = createFormatters(locale);
+// Play rates exist for Standard only; older sets sort by market value instead.
+const hasPlayData = cards.some((card) => card.playShare != null);
+const sortKeys = hasPlayData ? SORT_KEYS : SORT_KEYS.filter((key) => key !== 'played');
+// The filters list every type and mana value; those this set has no card of are greyed out.
+const typesPerCard = cards.map((card) => cardTypes(card.typeLine));
+const typeCounts = CARD_TYPES.filter((type) => type !== 'other').map(
+  (type) => [type, typesPerCard.filter((types) => types.includes(type)).length] as const,
+);
+const manaValues = MANA_VALUES.filter((value) =>
+  cards.some((card) => matchesManaValue(card, new Set([value]))),
+);
+---
+
+<section class="card-table" data-card-table aria-labelledby="cards-heading">
+  <CardControls
+    locale={locale}
+    headingId="cards-heading"
+    sortKeys={sortKeys}
+    total={cards.length}
+    typeCounts={typeCounts}
+    manaValues={manaValues}
+    searchLabel={t('cards.search')}
+  />
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">{t('col.card')}</th>
+          <th scope="col" class="type">
+            {t('col.type')}
+          </th>
+          <th scope="col" class="mana">
+            {t('col.mana')}
+          </th>
+          {hasPlayData && (
+            <th scope="col" class="num" title={t('col.playedTitle')}>
+              {t('col.played')}
+            </th>
+          )}
+          <th scope="col" class="num" title={t('col.priceTitle')}>
+            {t('col.price')}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {cards.map((card) => {
+          const type = mainType(card.typeLine);
+          const shown = shownCard(card, locale);
+          return (
+            <tr
+              data-name={shown.name}
+              data-search={normalizeForSearch(searchText(card, locale))}
+              data-type={type}
+              data-types={cardTypes(card.typeLine).join(' ')}
+              data-colors={card.colors}
+              data-cmc={card.cmc}
+              data-price={card.price ?? ''}
+              data-share={card.playShare ?? ''}
+              data-land={card.isLand ? '1' : ''}
+              data-image={shown.imageNormal ?? ''}
+              data-label={`${shown.name} · ${format.price(card.price)}`}
+            >
+              <th scope="row">
+                <ColorPips colors={card.colors} />
+                <a
+                  href={shown.scryfallUrl}
+                  target="_blank"
+                  rel="noopener"
+                  title={t('link.scryfall')}
+                >
+                  {shown.name}
+                </a>
+                {card.banned && <span class="pill pill--hot banned">{t('cards.banned')}</span>}
+              </th>
+              <td class="type" title={card.typeLine}>
+                {t(`type.${type}`)}
+              </td>
+              <td class="mana">
+                <ManaCost cost={card.manaCost} />
+              </td>
+              {hasPlayData && (
+                <td class:list={['num', 'mono', { strong: (card.playShare ?? 0) >= 1 }]}>
+                  {format.percent(card.playShare)}
+                </td>
+              )}
+              <td class="num mono">{format.price(card.price)}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+  <p class="empty" data-empty hidden>
+    {t('cards.empty')}
+  </p>
+</section>

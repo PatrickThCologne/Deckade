@@ -1,0 +1,7 @@
+---
+import { DEFAULT_LOCALE } from '../config/site';
+import { localePath } from '../lib/links';
+
+// The site lives under /de/ and /en/; the root only forwards to the default language.
+return Astro.redirect(localePath(DEFAULT_LOCALE));
+---

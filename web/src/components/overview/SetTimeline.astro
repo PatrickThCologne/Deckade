@@ -1,0 +1,90 @@
+---
+import type { Locale } from '../../config/site';
+import { overviewSets } from '../../lib/data/load';
+import { groupByYear } from '../../lib/timeline';
+import { setTile } from '../../lib/tiles';
+import SetTile from '../rotation/SetTile.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const years = groupByYear(overviewSets());
+// One row per year: every year gets as many columns as the fullest one, so packs line up
+const perRow = Math.max(1, ...years.map((group) => group.sets.length));
+---
+
+<div class="container timeline" style={`--per-row: ${perRow}`}>
+  {years.map((group) => (
+    <section class="year" aria-labelledby={`year-${group.year}`}>
+      <h2 id={`year-${group.year}`}>{group.year}</h2>
+      <div class="grid">
+        {group.sets.map((set) => (
+          <SetTile tile={setTile(set, locale)} locale={locale} />
+        ))}
+      </div>
+    </section>
+  ))}
+</div>
+
+<style>
+  .timeline {
+    --tile-art-height: 190px;
+    --tile-pad-x: 6px;
+    --tile-min: 120px; /* a pack at full height plus a little room */
+  }
+
+  .year {
+    margin-top: 34px;
+  }
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 4px;
+    font-size: 20px;
+    color: var(--text-dim);
+  }
+
+  h2::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--line-strong), transparent);
+  }
+
+  /*
+   * Each year is one row. The columns share the width when the fullest year fits,
+   * otherwise they keep their minimum and the row scrolls sideways instead of wrapping.
+   */
+  .grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max(
+      var(--tile-min),
+      calc((100% - (var(--per-row) - 1) * 4px) / var(--per-row))
+    );
+    gap: 4px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+    /* room for focus rings, which the scroll box would cut off */
+    margin: 0 -4px;
+    padding: 0 4px 6px;
+  }
+
+  .grid > :global(*) {
+    scroll-snap-align: start;
+  }
+
+  @media (max-width: 560px) {
+    .timeline {
+      --tile-art-height: 150px;
+      --tile-min: 128px; /* about 2.6 packs wide: the cut-off one shows the row goes on */
+    }
+  }
+</style>

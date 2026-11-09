@@ -1,0 +1,241 @@
+---
+import CardTable from '../../../components/set/CardTable.astro';
+import ProductStrip from '../../../components/set/ProductStrip.astro';
+import SetFacts from '../../../components/set/SetFacts.astro';
+import { LOCALES } from '../../../config/site';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { shownCard } from '../../../lib/cards/local';
+import { mainSets, setCards, snapshot } from '../../../lib/data/load';
+import type { MtgSet } from '../../../lib/data/schema';
+import { createFormatters } from '../../../lib/format';
+import { useTranslations } from '../../../lib/i18n';
+import { localePath, withBase } from '../../../lib/links';
+import { localeFrom } from '../../../lib/routing';
+import { createRotationText } from '../../../lib/rotation/describe';
+
+export function getStaticPaths() {
+  return LOCALES.flatMap((lang) =>
+    mainSets().map((set) => ({ params: { lang, code: set.code }, props: { set } })),
+  );
+}
+
+interface Props {
+  set: MtgSet;
+}
+
+const { set } = Astro.props;
+const locale = localeFrom(Astro.params.lang);
+const { t, plural } = useTranslations(locale);
+const format = createFormatters(locale);
+const rotationText = createRotationText(locale, snapshot.rotation);
+
+// Bonus sheets ("The Big Score") are listed together with their main set.
+const cards = setCards(set);
+const firstWithImage = cards.find((card) => card.imageNormal);
+const preview = firstWithImage && {
+  ...shownCard(firstWithImage, locale),
+  price: firstWithImage.price,
+};
+const description = set.standard
+  ? t('meta.set.description', {
+      name: set.name,
+      rotation: rotationText.forSet(set.standard.rotation),
+      cards: plural('count.cards', cards.length),
+    })
+  : t('meta.set.descriptionFormats', {
+      name: set.name,
+      formats: set.formats.map((id) => t(`format.${id}`)).join(', '),
+      cards: plural('count.cards', cards.length),
+    });
+---
+
+<BaseLayout
+  locale={locale}
+  title={t('meta.set.title', { name: set.name })}
+  description={description}
+  image={set.packImage}
+>
+  <!--
+    The same view is shown as its own page (direct links, search engines) and as an
+    overlay above the overview (scripts/set-overlay.ts copies [data-set-view] over).
+    A click on the empty space around the columns leads back to the overview.
+  -->
+  <div class="set-view container" data-set-view data-overview={localePath(locale)}>
+    <a class="back" href={localePath(locale)} data-leave>
+      ← {t('set.back')}
+    </a>
+    <div class="layout" data-leave-area>
+      <aside class="pack panel">
+        {set.packImage && (
+          <img src={withBase(set.packImage)} alt="" width="300" height="540" data-pack-image />
+        )}
+      </aside>
+
+      <article class="main panel" aria-labelledby="set-title">
+        <button class="close" type="button" data-leave aria-label={t('overlay.close')}>
+          ✕
+        </button>
+        <p class="eyebrow">
+          {set.code.toUpperCase()} · {format.monthYear(set.releasedAt)}
+        </p>
+        <h1 id="set-title">{set.name}</h1>
+        <SetFacts set={set} cardCount={cards.length} locale={locale} />
+        <ProductStrip set={set} locale={locale} />
+        <CardTable cards={cards} locale={locale} />
+      </article>
+
+      <aside class="preview" aria-hidden="true">
+        {preview && (
+          <figure class="panel">
+            <img
+              data-preview-image
+              src={preview.imageNormal}
+              alt=""
+              width="488"
+              height="680"
+              decoding="async"
+            />
+            <figcaption data-preview-caption>
+              {preview.name} · {format.price(preview.price)}
+            </figcaption>
+          </figure>
+        )}
+        <p class="hint">{t('cards.preview')}</p>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { initSetView } from '../../../scripts/set-view';
+
+  initSetView(document);
+</script>
+
+<style>
+  .back {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13.5px;
+  }
+
+  .back:hover {
+    color: var(--accent);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr) 270px;
+    gap: 24px;
+    align-items: start;
+    cursor: zoom-out;
+  }
+
+  /* Each column has its own background; the space between them is the way back. */
+  .layout > * {
+    cursor: auto;
+  }
+
+  .pack,
+  .preview {
+    position: sticky;
+    top: var(--sticky-top-panels, 86px);
+  }
+
+  .pack {
+    padding: 16px;
+  }
+
+  .pack:empty {
+    display: none;
+  }
+
+  .pack img {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 22px 30px rgb(0 0 0 / 0.6));
+  }
+
+  .main {
+    position: relative;
+    padding: 22px 24px 26px;
+  }
+
+  .close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface-solid);
+    color: var(--text-dim);
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .close:hover {
+    color: var(--text);
+    border-color: var(--line-strong);
+  }
+
+  h1 {
+    margin: 6px 40px 16px 0;
+    font-size: clamp(28px, 3.6vw, 40px);
+  }
+
+  .preview figure {
+    margin: 0;
+    padding: 12px;
+  }
+
+  .preview img {
+    width: 100%;
+    height: auto;
+    border-radius: 11px;
+  }
+
+  figcaption {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-dim);
+  }
+
+  .hint {
+    margin: 10px 4px 0;
+    font-size: 12px;
+    color: var(--text-faint);
+    text-align: center;
+  }
+
+  @media (max-width: 1120px) {
+    .layout {
+      grid-template-columns: 170px minmax(0, 1fr);
+    }
+
+    .preview {
+      display: none;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .layout {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .pack {
+      position: static;
+      width: 150px;
+      justify-self: center;
+    }
+
+    .main {
+      padding: 18px 14px 20px;
+    }
+  }
+</style>

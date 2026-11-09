@@ -1,0 +1,85 @@
+---
+import type { Locale } from '../../config/site';
+import { formatById, snapshot, standardSets } from '../../lib/data/load';
+import { createFormatters } from '../../lib/format';
+import { useTranslations } from '../../lib/i18n';
+import { localePath } from '../../lib/links';
+import { createRotationText } from '../../lib/rotation/describe';
+import HeroPanel from '../hero/HeroPanel.astro';
+import type { HeroStat } from '../hero/types';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const { t } = useTranslations(locale);
+const format = createFormatters(locale);
+const { rotation, rules, sources } = snapshot;
+const text = createRotationText(locale, rotation);
+const today = snapshot.generatedAt.slice(0, 10);
+
+const sets = standardSets();
+const triggerSet = snapshot.sets.find((s) => s.code === rotation.triggerSet);
+const rule = triggerSet
+  ? t('hero.rule', { set: triggerSet.name, count: rules.rotatingSetCount })
+  : t('hero.ruleNoSet', { count: rules.rotatingSetCount });
+
+const stats: HeroStat[] = [
+  {
+    value: format.integer(
+      sets.filter((s) => s.standard.rotation.wave === 0 && s.standard.rotation.certain).length,
+    ),
+    label: t('hero.stat.rotating'),
+    tone: 'hot',
+  },
+  {
+    value: format.integer(sets.filter((s) => s.standard.status === 'legal').length),
+    label: t('hero.stat.legal'),
+    tone: 'calm',
+  },
+  { value: format.integer(sources.playRateDecks), label: t('hero.stat.decks'), tone: 'accent' },
+  {
+    value: format.integer(formatById('standard').banned.length),
+    label: t('hero.stat.banned'),
+    tone: 'special',
+    href: '#banlist',
+  },
+];
+---
+
+<HeroPanel
+  tab="rotation"
+  locale={locale}
+  radar
+  eyebrow={t('hero.eyebrow')}
+  title={text.headline()}
+  stats={stats}
+>
+  <p class="meta">
+    {rotation.day && <span class="mono">{text.countdown(today)}</span>}
+    {rotation.certainty === 'official' && (
+      <span class="pill pill--info">{t('wave.badge.official')}</span>
+    )}
+  </p>
+  <p>
+    {rule}
+    <a class="text-link" href={localePath(locale, 'about')}>
+      {t('hero.method')}
+    </a>
+  </p>
+</HeroPanel>
+
+<style>
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-bottom: 8px !important;
+  }
+
+  .text-link {
+    margin-left: 6px;
+  }
+</style>

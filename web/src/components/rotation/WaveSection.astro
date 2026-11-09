@@ -1,0 +1,77 @@
+---
+import type { Locale } from '../../config/site';
+import { snapshot } from '../../lib/data/load';
+import { createRotationText } from '../../lib/rotation/describe';
+import type { Wave } from '../../lib/rotation/waves';
+import { setTile } from '../../lib/tiles';
+import SetTile from './SetTile.astro';
+
+interface Props {
+  wave: Wave;
+  locale: Locale;
+}
+
+const { wave, locale } = Astro.props;
+const text = createRotationText(locale, snapshot.rotation);
+const headingId = `wave-${wave.kind}-${wave.index ?? wave.legalUntilAtLeast}`;
+---
+
+<section class:list={['wave', `wave--${wave.kind}`]} aria-labelledby={headingId}>
+  <header>
+    <h2 id={headingId}>{text.waveTitle(wave)}</h2>
+    {text.waveBadge(wave) && <span class="badge mono">{text.waveBadge(wave)}</span>}
+  </header>
+  <div class="grid">
+    {wave.sets.map((set) => (
+      <SetTile tile={setTile(set, locale)} locale={locale} />
+    ))}
+  </div>
+</section>
+
+<style>
+  .wave {
+    margin-top: 56px;
+  }
+
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 16px;
+    padding-bottom: 14px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  h2 {
+    font-size: clamp(20px, 2.4vw, 26px);
+  }
+
+  .wave--next h2 {
+    color: var(--hot);
+  }
+
+  .wave--special h2 {
+    color: var(--special);
+  }
+
+  .badge {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 8px;
+    justify-content: center;
+  }
+
+  @media (max-width: 560px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

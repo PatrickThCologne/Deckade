@@ -1,0 +1,129 @@
+---
+/**
+ * Drop-down menu in the header (info, language). A <details> element, so it opens without
+ * JavaScript; the script only closes it on an outside click or Escape and keeps at most one
+ * menu open. The button content goes into the "button" slot, the <li> entries into the default
+ * slot.
+ */
+interface Props {
+  /** Accessible name of the button. */
+  label: string;
+}
+
+const { label } = Astro.props;
+---
+
+<details class="menu" data-header-menu>
+  <summary aria-label={label}>
+    <slot name="button" />
+    <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+      <path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+    </svg>
+  </summary>
+  <ul role="list">
+    <slot />
+  </ul>
+</details>
+
+<script>
+  const menus = [...document.querySelectorAll<HTMLDetailsElement>('[data-header-menu]')];
+  for (const menu of menus) {
+    menu.addEventListener('toggle', () => {
+      if (!menu.open) return;
+      for (const other of menus) if (other !== menu) other.open = false;
+    });
+    menu.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || !menu.open) return;
+      menu.open = false;
+      menu.querySelector('summary')?.focus();
+    });
+  }
+  document.addEventListener('click', (event) => {
+    for (const menu of menus) if (!menu.contains(event.target as Node)) menu.open = false;
+  });
+</script>
+
+<style>
+  .menu {
+    position: relative;
+  }
+
+  summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 11px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--text-dim);
+    cursor: pointer;
+    list-style: none;
+    font-size: 12.5px;
+    transition:
+      color 0.15s,
+      border-color 0.15s,
+      background 0.15s;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary:hover,
+  .menu[open] summary {
+    color: var(--text);
+    border-color: var(--line-strong);
+    background: var(--surface-raised);
+  }
+
+  .chevron {
+    transition: transform 0.2s var(--ease-out);
+  }
+
+  .menu[open] .chevron {
+    transform: rotate(180deg);
+  }
+
+  ul {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 30;
+    min-width: 190px;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: var(--surface-solid);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    animation: menu-in 0.16s var(--ease-out);
+  }
+
+  ul :global(a) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  ul :global(a:hover) {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  ul :global(a[aria-current]) {
+    color: var(--accent);
+  }
+
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+</style>

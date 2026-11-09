@@ -1,0 +1,48 @@
+---
+import { LOCALE_NAMES, LOCALES, type Locale } from '../../config/site';
+import { useTranslations } from '../../lib/i18n';
+import { switchLocale } from '../../lib/links';
+import HeaderMenu from './HeaderMenu.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const { t } = useTranslations(locale);
+---
+
+<HeaderMenu label={`${t('nav.language')}: ${LOCALE_NAMES[locale]}`}>
+  <Fragment slot="button">
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+      <path
+        d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3Z"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+      ></path>
+    </svg>
+    <span class="mono">{locale.toUpperCase()}</span>
+  </Fragment>
+  {LOCALES.map((option) => (
+    <li>
+      <a
+        href={switchLocale(Astro.url.pathname, option)}
+        hreflang={option}
+        lang={option}
+        aria-current={option === locale ? 'true' : undefined}
+      >
+        <span class="mono code">{option.toUpperCase()}</span>
+        {LOCALE_NAMES[option]}
+      </a>
+    </li>
+  ))}
+</HeaderMenu>
+
+<style>
+  .code {
+    font-size: 11px;
+    opacity: 0.7;
+  }
+</style>

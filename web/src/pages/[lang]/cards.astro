@@ -1,0 +1,229 @@
+---
+/**
+ * The "All cards" tab: every card of the overview's sets once, with the same filters as the
+ * set tables. The rows come from cards.json and are built in the browser (scripts/all-cards.ts),
+ * since some 30,000 of them would make this page far too big.
+ */
+import '../../styles/card-table.css';
+
+import HeroPanel from '../../components/hero/HeroPanel.astro';
+import type { HeroStat } from '../../components/hero/types';
+import CardControls from '../../components/set/CardControls.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { CARD_TYPES, MANA_VALUES, SORT_KEYS } from '../../lib/cards/sort';
+import { cardCatalog, overviewSets } from '../../lib/data/load';
+import { createFormatters } from '../../lib/format';
+import { useTranslations } from '../../lib/i18n';
+import { localePath, withBase } from '../../lib/links';
+import { localeFrom, localePaths } from '../../lib/routing';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFrom(Astro.params.lang);
+const { t } = useTranslations(locale);
+const format = createFormatters(locale);
+const catalog = cardCatalog(locale);
+const sets = overviewSets();
+const typeCounts = CARD_TYPES.filter((type) => type !== 'other').map(
+  (type) => [type, catalog.filter((card) => card.types.includes(type)).length] as const,
+);
+const labels = {
+  types: Object.fromEntries(CARD_TYPES.map((type) => [type, t(`type.${type}`)])),
+  banned: t('cards.banned'),
+  scryfall: t('link.scryfall'),
+  loading: t('cards.loading'),
+  error: t('cards.loadError'),
+  more: t('cards.more'),
+};
+const stats: HeroStat[] = [
+  { value: format.integer(catalog.length), label: t('allCards.stat.cards'), tone: 'accent' },
+  {
+    value: format.integer(sets.length),
+    label: t('overview.stat.sets'),
+    tone: 'special',
+    href: localePath(locale),
+  },
+];
+---
+
+<BaseLayout
+  locale={locale}
+  title={t('meta.cards.title')}
+  description={t('meta.cards.description', {
+    count: format.integer(catalog.length),
+    sets: format.integer(sets.length),
+  })}
+>
+  <HeroPanel
+    tab="cards"
+    locale={locale}
+    eyebrow={t('allCards.eyebrow')}
+    title={t('allCards.title')}
+    stats={stats}
+  >
+    <p>{t('allCards.text')}</p>
+  </HeroPanel>
+
+  <div class="container layout">
+    <section
+      class="panel main card-table"
+      aria-labelledby="all-cards-heading"
+      data-all-cards
+      data-locale={locale}
+      data-src={withBase(`${locale}/cards.json`)}
+      data-labels={JSON.stringify(labels)}
+    >
+      <CardControls
+        locale={locale}
+        headingId="all-cards-heading"
+        sortKeys={SORT_KEYS}
+        sort="value-desc"
+        total={catalog.length}
+        typeCounts={typeCounts}
+        manaValues={MANA_VALUES}
+        searchLabel={t('cards.searchName')}
+      />
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{t('col.card')}</th>
+              <th scope="col" class="type">
+                {t('col.type')}
+              </th>
+              <th scope="col" class="mana">
+                {t('col.mana')}
+              </th>
+              <th scope="col" class="set">
+                {t('col.set')}
+              </th>
+              <th scope="col" class="num" title={t('col.priceTitle')}>
+                {t('col.price')}
+              </th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="status" data-status hidden></p>
+      <noscript>
+        <p class="status">{t('cards.noscript')}</p>
+      </noscript>
+      <p class="empty" data-empty hidden>
+        {t('cards.empty')}
+      </p>
+      <button type="button" class="more" data-more hidden></button>
+    </section>
+
+    <aside class="preview" aria-hidden="true">
+      <figure class="panel">
+        <img data-preview-image alt="" width="488" height="680" decoding="async" hidden />
+        <figcaption data-preview-caption></figcaption>
+      </figure>
+      <p class="hint">{t('cards.preview')}</p>
+    </aside>
+  </div>
+</BaseLayout>
+
+<script>
+  import { initAllCards } from '../../scripts/all-cards';
+
+  void initAllCards();
+</script>
+
+<style>
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 270px;
+    gap: 24px;
+    align-items: start;
+    padding-block: 6px 48px;
+  }
+
+  .main {
+    padding: 18px 22px 22px;
+  }
+
+  /* The banner above already opens the page; the list starts right at the top of its box */
+  .main :global(.toolbar) {
+    margin-top: 0;
+  }
+
+  .status {
+    padding: 28px;
+    text-align: center;
+    color: var(--text-dim);
+  }
+
+  .more {
+    display: block;
+    margin: 16px auto 0;
+    padding: 9px 18px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--surface-solid);
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+
+  .more:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .more[hidden] {
+    display: none;
+  }
+
+  .preview {
+    position: sticky;
+    top: 86px;
+  }
+
+  .preview figure {
+    margin: 0;
+    padding: 12px;
+  }
+
+  .preview img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 11px;
+  }
+
+  figcaption {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-dim);
+  }
+
+  .hint {
+    margin: 10px 4px 0;
+    font-size: 12px;
+    color: var(--text-faint);
+    text-align: center;
+  }
+
+  @media (max-width: 1120px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .preview {
+      display: none;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .main {
+      padding: 14px 12px 16px;
+    }
+  }
+</style>

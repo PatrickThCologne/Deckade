@@ -1,0 +1,29 @@
+---
+import OverviewHero from '../../components/overview/OverviewHero.astro';
+import SetTimeline from '../../components/overview/SetTimeline.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { useTranslations } from '../../lib/i18n';
+import { localeFrom, localePaths } from '../../lib/routing';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFrom(Astro.params.lang);
+const { t } = useTranslations(locale);
+---
+
+<BaseLayout
+  locale={locale}
+  title={t('meta.overview.title')}
+  description={t('meta.overview.description')}
+>
+  <OverviewHero locale={locale} />
+  <SetTimeline locale={locale} />
+</BaseLayout>
+
+<script>
+  import { initSetOverlay } from '../../scripts/set-overlay';
+  import { initTilt } from '../../scripts/tilt';
+
+  initTilt();
+  initSetOverlay();
+</script>

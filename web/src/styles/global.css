@@ -1,0 +1,271 @@
+/* ---------- Design tokens ---------- */
+:root {
+  color-scheme: dark;
+
+  --bg: #08090c;
+  --grain-opacity: 0.07;
+
+  --surface: rgb(16 18 24 / 0.82);
+  --surface-solid: #101218;
+  --surface-raised: #161922;
+  --surface-hover: #1c202b;
+  --line: rgb(170 178 196 / 0.12);
+  --line-strong: rgb(170 178 196 / 0.24);
+
+  --text: #eceae4;
+  --text-dim: #a3a6af;
+  --text-faint: #6b6f7a;
+
+  /* Gold like a mythic rarity symbol; the other tones mark rotation states */
+  --accent: #f2c14e;
+  --accent-soft: rgb(242 193 78 / 0.14);
+  --hot: #ff6a4d;
+  --hot-soft: rgb(255 106 77 / 0.14);
+  --calm: #86a8ff;
+  --calm-soft: rgb(134 168 255 / 0.12);
+  --special: #b79cff;
+  --special-soft: rgb(183 156 255 / 0.13);
+
+  --radius-lg: 10px;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --shadow: 0 24px 60px -28px rgb(0 0 0 / 0.8);
+  --inner-highlight: inset 0 1px 0 rgb(255 255 255 / 0.04);
+
+  --content-width: 1240px;
+  --gutter: clamp(16px, 4vw, 40px);
+
+  --ease-out: cubic-bezier(0.22, 0.9, 0.24, 1);
+
+  /* One angle for the page tabs and the banner below them, so their slanted edges form one
+     line. The banner's lower left corner reaches into the page margin, hence less lean
+     where that margin is narrow; on small screens the banner is straight. */
+  --lean: -13deg;
+}
+
+@media (901px <= width <= 1264px) {
+  :root {
+    --lean: -8deg;
+  }
+}
+
+/* ---------- Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  /* Room for the scrollbar even without one, so locking the scroll for the set window or a
+     short page does not shift the layout sideways */
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg); /* the moving layers live in components/layout/Backdrop.astro */
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--content-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Shared pieces ---------- */
+.eyebrow {
+  font-family: var(--font-display), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.mono {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.dim {
+  color: var(--text-dim);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow), var(--inner-highlight);
+}
+
+/* Status labels as small parallelograms */
+.pill {
+  --slant: 7px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px calc(var(--slant) + 8px);
+  clip-path: polygon(var(--slant) 0, 100% 0, calc(100% - var(--slant)) 100%, 0 100%);
+  font-family: var(--font-display), sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill--hot {
+  color: var(--hot);
+  background: var(--hot-soft);
+}
+
+.pill--calm {
+  color: var(--calm);
+  background: var(--calm-soft);
+}
+
+.pill--special {
+  color: var(--special);
+  background: var(--special-soft);
+}
+
+.pill--info {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.text-link {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.text-link:hover {
+  border-bottom-color: currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Set overlay (scripts/set-overlay.ts) ---------- */
+html.has-overlay {
+  overflow: hidden;
+}
+
+.set-overlay {
+  --sticky-top: 0px;
+  --sticky-top-panels: 16px;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 28px 0 56px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  cursor: zoom-out;
+}
+
+/* Dimmed, not blacked out: the overview stays visible behind the set. */
+.set-overlay::backdrop {
+  background: rgb(4 6 10 / 0.58);
+  backdrop-filter: blur(3px);
+  animation: overlay-fade 0.26s ease-out;
+}
+
+.set-overlay > .set-view {
+  animation: overlay-in 0.32s var(--ease-out);
+}
+
+/* The overlay has its close button; the page's back link would only duplicate it. */
+dialog.set-overlay .back {
+  display: none;
+}
+
+.set-overlay.is-closing > .set-view {
+  opacity: 0;
+  transition: opacity 0.22s ease-in;
+}
+
+.set-overlay.is-closing::backdrop {
+  opacity: 0;
+  transition: opacity 0.32s ease-in;
+}
+
+.pack-ghost {
+  position: fixed;
+  z-index: 10;
+  margin: 0;
+  pointer-events: none;
+  transform-origin: 0 0;
+  filter: drop-shadow(0 22px 30px rgb(0 0 0 / 0.6));
+}
+
+@keyframes overlay-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}

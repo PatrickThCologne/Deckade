@@ -1,0 +1,17 @@
+---
+import HeroPanel from '../../components/hero/HeroPanel.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { useTranslations } from '../../lib/i18n';
+import { localeFrom, localePaths } from '../../lib/routing';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFrom(Astro.params.lang);
+const { t } = useTranslations(locale);
+---
+
+<BaseLayout locale={locale} title={t('deck.title')} description={t('deck.text')}>
+  <HeroPanel tab="deck" locale={locale} eyebrow={t('deck.eyebrow')} title={t('deck.title')}>
+    <p>{t('deck.text')}</p>
+  </HeroPanel>
+</BaseLayout>

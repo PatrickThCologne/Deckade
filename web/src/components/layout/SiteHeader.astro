@@ -1,0 +1,70 @@
+---
+import { type Locale, SITE_NAME_PARTS } from '../../config/site';
+import { localePath } from '../../lib/links';
+import InfoMenu from './InfoMenu.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+<header class="site-header">
+  <div class="container bar">
+    <a class="brand" href={localePath(locale)}>
+      <span class="name">
+        {SITE_NAME_PARTS[0]}
+        <span class="accent">{SITE_NAME_PARTS[1]}</span>
+      </span>
+    </a>
+    <div class="menus">
+      <InfoMenu locale={locale} />
+      <LanguageSwitcher locale={locale} />
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgb(6 8 12 / 0.72);
+    backdrop-filter: blur(16px) saturate(140%);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    height: 62px;
+  }
+
+  .menus {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    text-decoration: none;
+  }
+
+  .name {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+
+  .accent {
+    color: var(--accent);
+  }
+</style>

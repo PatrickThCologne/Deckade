@@ -1,0 +1,59 @@
+---
+/**
+ * Info menu next to the language switch: how the numbers come about, imprint and contact,
+ * feedback and privacy. Feedback opens an e-mail; while no operator address is set (local
+ * builds) it leads to the contact section of the imprint instead.
+ */
+import { OPERATOR_EMAIL } from 'astro:env/server';
+
+import { type Locale, SITE_NAME } from '../../config/site';
+import { useTranslations } from '../../lib/i18n';
+import { localePath, mailto } from '../../lib/links';
+import HeaderMenu from './HeaderMenu.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const { t } = useTranslations(locale);
+const current = Astro.url.pathname;
+
+const pages = [
+  { href: localePath(locale, 'about'), label: t('nav.method') },
+  { href: localePath(locale, 'imprint'), label: t('nav.imprintContact') },
+  {
+    href: OPERATOR_EMAIL
+      ? mailto(OPERATOR_EMAIL, t('feedback.subject', { site: SITE_NAME }))
+      : `${localePath(locale, 'imprint')}#feedback`,
+    label: t('nav.feedback'),
+  },
+  { href: localePath(locale, 'privacy'), label: t('nav.privacy') },
+];
+---
+
+<HeaderMenu label={t('nav.info')}>
+  <Fragment slot="button">
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+      <path d="M12 10.8v5.6" fill="none" stroke="currentColor" stroke-width="1.8"></path>
+      <circle cx="12" cy="7.6" r="1.1" fill="currentColor"></circle>
+    </svg>
+    <span class="label">{t('nav.info')}</span>
+  </Fragment>
+  {pages.map((page) => (
+    <li>
+      <a href={page.href} aria-current={page.href === current ? 'page' : undefined}>
+        {page.label}
+      </a>
+    </li>
+  ))}
+</HeaderMenu>
+
+<style>
+  @media (max-width: 420px) {
+    .label {
+      display: none;
+    }
+  }
+</style>

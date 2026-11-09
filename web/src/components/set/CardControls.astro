@@ -1,0 +1,510 @@
+---
+/**
+ * Sort order and filters above a card list: search, type menu, colours and mana values. Used
+ * by the set tables and the "All cards" tab; scripts/card-controls.ts makes them work.
+ */
+import type { Locale } from '../../config/site';
+import type { CardType, ManaValue, SortKey } from '../../lib/cards/sort';
+import { MANA_VALUES } from '../../lib/cards/sort';
+import { createFormatters } from '../../lib/format';
+import { useTranslations } from '../../lib/i18n';
+import { COLORS, symbolUrl } from '../../lib/mana';
+
+interface Props {
+  locale: Locale;
+  /** id of the heading, for the list's aria-labelledby. */
+  headingId: string;
+  sortKeys: readonly SortKey[];
+  /** The order the list starts in; the first sort key if not given. */
+  sort?: SortKey;
+  /** Number of cards in the list. */
+  total: number;
+  /** Cards per type; types without cards are greyed out. */
+  typeCounts: readonly (readonly [CardType, number])[];
+  /** Mana values at least one card has; the others are greyed out. */
+  manaValues: readonly ManaValue[];
+  searchLabel: string;
+}
+
+const { locale, headingId, sortKeys, sort, total, typeCounts, manaValues, searchLabel } =
+  Astro.props;
+const { t, plural } = useTranslations(locale);
+const format = createFormatters(locale);
+---
+
+<div class="toolbar">
+  <h2 id={headingId}>{t('cards.heading')}</h2>
+  <label class="sort">
+    <span class="visually-hidden">{t('cards.sort')}</span>
+    <select data-sort>
+      {sortKeys.map((key) => (
+        <option value={key} selected={key === sort}>
+          {t(`sort.${key}`)}
+        </option>
+      ))}
+    </select>
+  </label>
+</div>
+
+<div class="filters" role="group" aria-label={t('cards.filters')}>
+  <div class="filter-row">
+    <label class="search">
+      <span class="visually-hidden">{searchLabel}</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"></circle>
+        <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2"></path>
+      </svg>
+      <input type="search" placeholder={searchLabel} autocomplete="off" data-search />
+    </label>
+    <details class="type-menu" data-type-menu>
+      <summary>
+        <span class="visually-hidden">{t('cards.typeFilter')}:</span>
+        <span data-type-label data-all={t('cards.allTypes')} data-many={t('cards.typesSelected')}>
+          {t('cards.allTypes')}
+        </span>
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+          <path
+            d="m2.5 4.5 3.5 3.5 3.5-3.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+          ></path>
+        </svg>
+      </summary>
+      <div class="type-grid" role="group" aria-label={t('cards.typeFilter')}>
+        <button type="button" class="chip" aria-pressed="true" data-type-all>
+          <span class="name">{t('cards.allTypes')}</span>
+          <span class="n mono">{format.integer(total)}</span>
+        </button>
+        {typeCounts.map(([type, count]) => (
+          <button
+            type="button"
+            class="chip"
+            aria-pressed="false"
+            data-type-option={type}
+            disabled={count === 0}
+          >
+            <span class="name">{t(`type.${type}`)}</span>
+            <span class="n mono">{format.integer(count)}</span>
+          </button>
+        ))}
+      </div>
+    </details>
+  </div>
+  <div class="filter-row">
+    <div class="group">
+      <span class="label" aria-hidden="true">
+        {t('cards.filterColor')}
+      </span>
+      <div class="colors" role="group" aria-label={t('cards.colors')}>
+        {COLORS.map((color) => (
+          <button type="button" aria-pressed="false" data-color={color} title={t(`color.${color}`)}>
+            <img src={symbolUrl(color)} alt={t(`color.${color}`)} width="20" height="20" />
+          </button>
+        ))}
+      </div>
+    </div>
+    <div class="group">
+      <span class="label" aria-hidden="true">
+        {t('cards.filterMana')}
+      </span>
+      <div class="rings" role="group" aria-label={t('cards.manaFilter')}>
+        {MANA_VALUES.map((value) => (
+          <button
+            type="button"
+            class:list={['ring', { wide: value.length > 1 }]}
+            aria-pressed="false"
+            data-mana={value}
+            title={t('cards.manaValue', { value })}
+            disabled={!manaValues.includes(value)}
+          >
+            {value}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+  <div class="result" data-result hidden>
+    <output
+      data-count
+      data-template={t('cards.shown', { total: plural('count.cards', total) })}
+    ></output>
+    <button type="button" class="reset" data-reset>
+      <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+        <path d="m1.5 1.5 7 7m0-7-7 7" stroke="currentColor" stroke-width="1.6"></path>
+      </svg>
+      {t('cards.reset')}
+    </button>
+  </div>
+</div>
+
+<style>
+  /* Heading line: the sort order sits apart from the filters below */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    margin: 34px 0 10px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  /* Small caption in the style of the table head */
+  .label {
+    font-family: var(--font-mono), monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* All filters in one box */
+  .filters {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(135deg, rgb(242 193 78 / 0.07), transparent 40%), var(--surface-solid);
+    box-shadow: var(--inner-highlight);
+  }
+
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 8px;
+  }
+
+  .group {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .group + .group {
+    margin-left: 6px;
+    padding-left: 14px;
+    border-left: 1px solid var(--line);
+  }
+
+  /* Once colour and mana value no longer fit side by side, the divider would stand alone */
+  @container (width < 570px) {
+    .group + .group {
+      margin-left: 0;
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+
+  .search {
+    flex: 1 1 180px;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--text-faint);
+    transition: border-color 0.15s;
+  }
+
+  .search:focus-within {
+    border-color: var(--accent);
+  }
+
+  input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    font-size: 13.5px;
+  }
+
+  .colors {
+    display: inline-flex;
+    gap: 3px;
+  }
+
+  /* Shown while a filter is active: how many cards are left, and a way back */
+  .result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    font-size: 12.5px;
+    color: var(--text-dim);
+  }
+
+  .result[hidden] {
+    display: none;
+  }
+
+  .reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: none;
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+
+  .reset:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .type-menu {
+    position: relative;
+  }
+
+  .type-menu summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 12px 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-solid);
+    color: var(--text);
+    font-size: 13.5px;
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .type-menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .type-menu summary:hover,
+  .type-menu[open] summary {
+    border-color: var(--line-strong);
+  }
+
+  .type-menu summary svg {
+    color: var(--text-faint);
+    transition: rotate 0.2s var(--ease-out);
+  }
+
+  .type-menu[open] summary svg {
+    rotate: 180deg;
+  }
+
+  /* An active filter is marked like a pressed colour button */
+  .type-menu[data-active] summary {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .type-grid {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    width: max-content;
+    max-width: 100cqw;
+    padding: 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow), var(--inner-highlight);
+  }
+
+  .chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-solid);
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      border-color 0.15s,
+      background 0.15s;
+  }
+
+  .chip .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chip .n {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  .chip:hover:not(:disabled) {
+    border-color: var(--line-strong);
+    color: var(--text);
+  }
+
+  .chip[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+  }
+
+  .chip[aria-pressed='true'] .n {
+    color: var(--accent);
+  }
+
+  .chip:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  @container (width < 460px) {
+    .type-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* Mana value rings, pressed like the colour buttons */
+  .rings {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .ring {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--surface-solid);
+    color: var(--text-dim);
+    font-family: var(--font-display), sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .ring.wide {
+    font-size: 12px;
+    letter-spacing: -0.03em;
+  }
+
+  .ring:hover:not(:disabled) {
+    border-color: var(--text-faint);
+    color: var(--text);
+  }
+
+  .ring[aria-pressed='true'] {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .ring:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .colors button {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface-solid);
+    cursor: pointer;
+    opacity: 0.55;
+    filter: grayscale(0.6);
+    transition:
+      opacity 0.15s,
+      filter 0.15s,
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .colors button:hover {
+    opacity: 0.9;
+  }
+
+  .colors button[aria-pressed='true'] {
+    opacity: 1;
+    filter: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  select {
+    height: 36px;
+    padding: 0 34px 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-solid)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='m2.5 4.5 3.5 3.5 3.5-3.5' fill='none' stroke='%236b6f7a' stroke-width='1.6'/%3E%3C/svg%3E")
+      no-repeat right 13px center / 12px;
+    appearance: none;
+    color: var(--text);
+    font: inherit;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  select:hover {
+    border-color: var(--line-strong);
+  }
+
+  option {
+    background: var(--surface-raised);
+    color: var(--text);
+  }
+</style>

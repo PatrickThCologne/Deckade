@@ -1,0 +1,189 @@
+---
+import { SITE_NAME } from '../../config/site';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { snapshot } from '../../lib/data/load';
+import { createFormatters } from '../../lib/format';
+import { useTranslations } from '../../lib/i18n';
+import { localeFrom, localePaths } from '../../lib/routing';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFrom(Astro.params.lang);
+const { t } = useTranslations(locale);
+const format = createFormatters(locale);
+const { rules, sources } = snapshot;
+
+const certainty = [
+  { label: t('about.certainty.next.label'), text: t('about.certainty.next'), tone: 'hot' },
+  { label: t('about.certainty.date.label'), text: t('about.certainty.date'), tone: 'hot' },
+  { label: t('about.certainty.later.label'), text: t('about.certainty.later'), tone: 'calm' },
+  {
+    label: t('about.certainty.special.label'),
+    text: t('about.certainty.special'),
+    tone: 'special',
+  },
+];
+
+const dataSources = [
+  { name: 'Scryfall', href: 'https://scryfall.com', text: t('about.sources.scryfall') },
+  { name: 'Cardmarket', href: 'https://www.cardmarket.com', text: t('about.sources.cardmarket') },
+  { name: 'MTGJSON', href: 'https://mtgjson.com', text: t('about.sources.mtgjson') },
+  {
+    name: 'MTGODecklistCache',
+    href: 'https://github.com/Jiliac/MTGODecklistCache',
+    text: t('about.sources.decks'),
+  },
+];
+---
+
+<BaseLayout
+  locale={locale}
+  title={t('meta.about.title')}
+  description={t('meta.about.description', { site: SITE_NAME })}
+>
+  <article class="container about">
+    <p class="eyebrow">{t('nav.method')}</p>
+    <h1>{t('about.heading')}</h1>
+    <p class="lead">{t('about.intro', { site: SITE_NAME })}</p>
+
+    <section class="panel block">
+      <h2>{t('about.rule.heading')}</h2>
+      <p>{t('about.rule.text')}</p>
+      <a class="text-link" href={rules.sourceUrl} rel="noopener">
+        {t('about.rule.link')} ↗
+      </a>
+    </section>
+
+    <section class="block">
+      <h2>{t('about.certainty.heading')}</h2>
+      <ul class="certainty" role="list">
+        {certainty.map((item) => (
+          <li class="panel">
+            <span class:list={['pill', `pill--${item.tone}`]}>{item.label}</span>
+            <p>{item.text}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="block">
+      <h2>{t('about.formats.heading')}</h2>
+      <p>{t('about.formats.text')}</p>
+    </section>
+
+    <section class="block">
+      <h2>{t('about.sources.heading')}</h2>
+      <dl class="sources">
+        {dataSources.map((source) => (
+          <div>
+            <dt>
+              <a class="text-link" href={source.href} rel="noopener">
+                {source.name}
+              </a>
+            </dt>
+            <dd>{source.text}</dd>
+          </div>
+        ))}
+      </dl>
+      <p class="dim">
+        {t('about.updated', { date: format.date(snapshot.generatedAt.slice(0, 10)) })}
+        {sources.playRateFrom && sources.playRateTo && (
+          <span class="mono">
+            {' '}
+            {t('about.window', {
+              from: format.date(sources.playRateFrom),
+              to: format.date(sources.playRateTo),
+              decks: format.integer(sources.playRateDecks),
+            })}
+          </span>
+        )}
+      </p>
+    </section>
+
+    <section class="block">
+      <h2>{t('about.privacy.heading')}</h2>
+      <p>{t('about.privacy')}</p>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .about {
+    max-width: 860px;
+  }
+
+  h1 {
+    margin: 10px 0 14px;
+    font-size: clamp(32px, 5vw, 52px);
+  }
+
+  .lead {
+    font-size: 17px;
+    color: var(--text-dim);
+    max-width: 62ch;
+  }
+
+  .block {
+    margin-top: 40px;
+  }
+
+  .panel.block {
+    padding: 24px 28px;
+  }
+
+  h2 {
+    font-size: 21px;
+    margin-bottom: 12px;
+  }
+
+  p {
+    margin: 0 0 12px;
+  }
+
+  .certainty {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .certainty li {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 16px;
+    align-items: start;
+    padding: 16px 20px;
+  }
+
+  .certainty p {
+    margin: 0;
+    color: var(--text-dim);
+  }
+
+  .sources {
+    display: grid;
+    gap: 14px;
+    margin: 0 0 16px;
+  }
+
+  .sources dt {
+    font-weight: 600;
+  }
+
+  .sources dd {
+    margin: 2px 0 0;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 620px) {
+    .certainty li {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .panel.block {
+      padding: 18px;
+    }
+  }
+</style>

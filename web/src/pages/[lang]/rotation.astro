@@ -1,0 +1,35 @@
+---
+import BanList from '../../components/formats/BanList.astro';
+import RotationHero from '../../components/rotation/RotationHero.astro';
+import WaveSection from '../../components/rotation/WaveSection.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { formatById, standardSets } from '../../lib/data/load';
+import { useTranslations } from '../../lib/i18n';
+import { localeFrom, localePaths } from '../../lib/routing';
+import { groupIntoWaves } from '../../lib/rotation/waves';
+import { isShown } from '../../lib/timeline';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFrom(Astro.params.lang);
+const { t } = useTranslations(locale);
+const waves = groupIntoWaves(standardSets().filter(isShown));
+---
+
+<BaseLayout locale={locale} title={t('meta.home.title')} description={t('meta.home.description')}>
+  <RotationHero locale={locale} />
+  <div class="container">
+    {waves.map((wave) => (
+      <WaveSection wave={wave} locale={locale} />
+    ))}
+  </div>
+  <BanList format={formatById('standard')} locale={locale} />
+</BaseLayout>
+
+<script>
+  import { initSetOverlay } from '../../scripts/set-overlay';
+  import { initTilt } from '../../scripts/tilt';
+
+  initTilt();
+  initSetOverlay();
+</script>

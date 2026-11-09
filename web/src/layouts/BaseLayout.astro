@@ -1,0 +1,89 @@
+---
+import { Font } from 'astro:assets';
+
+import Backdrop from '../components/layout/Backdrop.astro';
+import SiteFooter from '../components/layout/SiteFooter.astro';
+import SiteHeader from '../components/layout/SiteHeader.astro';
+import { DEFAULT_LOCALE, LOCALE_TAGS, LOCALES, type Locale, SITE_NAME } from '../config/site';
+import { useTranslations } from '../lib/i18n';
+import { switchLocale, withBase } from '../lib/links';
+import '../styles/global.css';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  /** Site-relative image for link previews, e.g. a pack image. */
+  image?: string | null;
+}
+
+const { locale, title, description, image } = Astro.props;
+const { t } = useTranslations(locale);
+const pageTitle = `${title} · ${SITE_NAME}`;
+const absolute = (path: string) => new URL(path, Astro.site).href;
+const alternates = LOCALES.map((alternate) => ({
+  hreflang: LOCALE_TAGS[alternate],
+  href: absolute(switchLocale(Astro.url.pathname, alternate)),
+}));
+const defaultAlternate = absolute(switchLocale(Astro.url.pathname, DEFAULT_LOCALE));
+---
+
+<!doctype html>
+<html lang={LOCALE_TAGS[locale]}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={absolute(Astro.url.pathname)} />
+    {alternates.map((alt) => (
+      <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
+    ))}
+    <link rel="alternate" hreflang="x-default" href={defaultAlternate} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    {image && <meta property="og:image" content={absolute(withBase(image))} />}
+    <meta name="theme-color" content="#06080c" />
+    <link rel="icon" type="image/svg+xml" href={withBase('favicon.svg')} />
+    <Font cssVariable="--font-sans" preload />
+    <Font cssVariable="--font-display" preload />
+    <Font cssVariable="--font-mono" />
+  </head>
+  <body>
+    <Backdrop />
+    <a class="skip-link" href="#main">
+      {t('nav.skip')}
+    </a>
+    <SiteHeader locale={locale} />
+    <main id="main">
+      <slot />
+    </main>
+    <SiteFooter locale={locale} />
+  </body>
+</html>
+
+<style>
+  main {
+    flex: 1;
+    padding-block: 28px 72px;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: 12px;
+    top: -60px;
+    z-index: 100;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: #04110c;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .skip-link:focus {
+    top: 12px;
+  }
+</style>

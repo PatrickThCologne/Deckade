@@ -1,0 +1,30 @@
+---
+import { colorPips, symbolUrl } from '../../lib/mana';
+
+interface Props {
+  colors: string;
+}
+
+const { colors } = Astro.props;
+---
+
+<span class="pips" aria-hidden="true">
+  {colorPips(colors).map((color) => (
+    <img src={symbolUrl(color)} alt="" width="13" height="13" />
+  ))}
+</span>
+
+<style>
+  .pips {
+    display: inline-flex;
+    gap: 2px;
+    margin-right: 8px;
+    vertical-align: -2px;
+  }
+
+  img {
+    width: 13px;
+    height: 13px;
+    opacity: 0.92;
+  }
+</style>

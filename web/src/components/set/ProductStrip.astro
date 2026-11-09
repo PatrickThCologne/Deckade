@@ -1,0 +1,196 @@
+---
+/**
+ * Bundles and booster boxes side by side: name and price at a glance. The button in
+ * the corner opens what is inside, the price per booster and the Cardmarket link.
+ */
+import type { Locale } from '../../config/site';
+import { snapshot } from '../../lib/data/load';
+import type { MtgSet } from '../../lib/data/schema';
+import { createFormatters } from '../../lib/format';
+import { useTranslations } from '../../lib/i18n';
+import { cardmarketSearch } from '../../lib/links';
+import { productLabel, sortProducts } from '../../lib/products';
+
+interface Props {
+  set: MtgSet;
+  locale: Locale;
+}
+
+const { set, locale } = Astro.props;
+const { t } = useTranslations(locale);
+const format = createFormatters(locale);
+const products = sortProducts(set.products).toSorted((a, b) =>
+  a.category.localeCompare(b.category),
+);
+const priceDate = snapshot.sources.cardmarketPriceDate;
+const upcoming = set.standard?.status === 'upcoming';
+---
+
+{products.length > 0 && (
+  <section class="products" aria-label={t('products.heading')}>
+    <ul class="strip" role="list">
+      {products.map((product) => (
+        <li>
+          <details class="product">
+            <summary title={product.name}>
+              <span class="name">{productLabel(product, set.name)}</span>
+              <span class="price">{format.price(product.price)}</span>
+              <span class="toggle" aria-hidden="true"></span>
+              <span class="visually-hidden">{t('products.showContents')}</span>
+            </summary>
+            <div class="details">
+              <ul class="contents" role="list">
+                {product.contents.map((item) => (
+                  <li>
+                    <span class="count">{item.count}×</span>
+                    {t(`pack.${item.kind}`)}
+                  </li>
+                ))}
+              </ul>
+              {product.pricePerPack != null && (
+                <p>{t('products.perPackShort', { price: format.price(product.pricePerPack) })}</p>
+              )}
+              {priceDate && (
+                <p class="dim">
+                  {upcoming ? `${t('facts.preorder')} · ` : ''}
+                  {t('products.priceDate', { date: format.date(priceDate) })}
+                </p>
+              )}
+              <a href={cardmarketSearch(locale, product.name)} target="_blank" rel="noopener">
+                {t('link.cardmarket')} ↗
+              </a>
+            </div>
+          </details>
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<style>
+  .products {
+    margin-top: 16px;
+  }
+
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    gap: 10px;
+    align-items: start;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Cut corner top right: the place of the open/close button */
+  .product {
+    --cut: 18px;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+    background: linear-gradient(160deg, var(--surface-raised), var(--surface-solid) 70%);
+    border-left: 2px solid var(--accent);
+    transition: background 0.2s;
+  }
+
+  .product:hover,
+  .product[open] {
+    background: linear-gradient(160deg, var(--surface-hover), var(--surface-raised) 70%);
+  }
+
+  summary {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 34px 12px 14px;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .name {
+    font-size: 13px;
+    line-height: 1.25;
+    color: var(--text-dim);
+  }
+
+  .price {
+    font-family: var(--font-display), sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .toggle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .toggle::before,
+  .toggle::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 50%;
+    height: 2px;
+    margin-top: -1px;
+    background: var(--accent);
+    transition: transform 0.2s var(--ease-out);
+  }
+
+  .toggle::after {
+    transform: rotate(90deg);
+  }
+
+  .product[open] .toggle::after {
+    transform: rotate(0deg);
+  }
+
+  .details {
+    display: grid;
+    gap: 6px;
+    padding: 0 14px 14px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    animation: open 0.2s var(--ease-out);
+  }
+
+  .contents {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 8px 0 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+    color: var(--text);
+  }
+
+  .count {
+    display: inline-block;
+    min-width: 2.4em;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .details p {
+    margin: 0;
+  }
+
+  .details a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  @keyframes open {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+</style>

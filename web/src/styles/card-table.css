@@ -1,0 +1,156 @@
+/*
+ * The card table of the set pages and of the "All cards" tab. Global rather than scoped,
+ * because the "All cards" tab builds its rows in the browser (scripts/all-cards.ts).
+ */
+
+.card-table {
+  container-type: inline-size;
+}
+
+/* clip, not hidden: hidden would make this box the scroll container and break the sticky header */
+.card-table .table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: clip;
+  background: var(--surface-solid);
+}
+
+.card-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.card-table thead th {
+  position: sticky;
+  top: var(--sticky-top, 62px); /* below the site header; 0 inside the overlay */
+  z-index: 1;
+  padding: 10px 14px;
+  background: var(--surface-raised);
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-align: left;
+}
+
+.card-table tbody tr {
+  border-top: 1px solid var(--line);
+  transition: background 0.12s;
+}
+
+.card-table tbody tr:hover,
+.card-table tbody tr:focus-within,
+.card-table tbody tr.is-previewed {
+  background: var(--surface-hover);
+}
+
+.card-table tbody th,
+.card-table tbody td {
+  padding: 8px 14px;
+  text-align: left;
+  font-weight: 400;
+}
+
+.card-table tbody th a {
+  text-decoration: none;
+}
+
+.card-table tbody th a:hover {
+  color: var(--accent);
+}
+
+.card-table .banned {
+  margin-left: 8px;
+  font-size: 11px;
+}
+
+.card-table .num {
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.card-table td.num {
+  color: var(--text-dim);
+}
+
+.card-table td.strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.card-table .mana,
+.card-table .type,
+.card-table .set {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.card-table td.set a {
+  color: var(--text-dim);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.card-table td.set a:hover {
+  color: var(--accent);
+}
+
+/* Colour pips and mana costs: rows built in the browser do not get the scoped styles of
+   components/ui/ColorPips.astro and ManaCost.astro, so the same rules are repeated here */
+.card-table .pips {
+  display: inline-flex;
+  gap: 2px;
+  margin-right: 8px;
+  vertical-align: -2px;
+}
+
+.card-table .pips img {
+  width: 13px;
+  height: 13px;
+  opacity: 0.92;
+}
+
+.card-table .mana-cost {
+  display: inline-flex;
+  gap: 2px;
+  vertical-align: -3px;
+  white-space: nowrap;
+}
+
+.card-table .mana-cost img {
+  width: 15px;
+  height: 15px;
+}
+
+.card-table td.type {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+/* Next to the card preview the table can get narrow; the names need the room more */
+@container (width < 520px) {
+  .card-table .type {
+    display: none;
+  }
+}
+
+.card-table .empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+@media (max-width: 640px) {
+  .card-table .mana,
+  .card-table .set {
+    display: none;
+  }
+
+  .card-table tbody th,
+  .card-table tbody td {
+    padding: 8px 10px;
+  }
+}

@@ -1,0 +1,32 @@
+---
+import { manaSymbols, symbolUrl } from '../../lib/mana';
+
+interface Props {
+  cost: string;
+}
+
+const { cost } = Astro.props;
+const symbols = manaSymbols(cost);
+---
+
+{symbols.length > 0 && (
+  <span class="mana-cost" role="img" aria-label={cost.split(' // ')[0]}>
+    {symbols.map((symbol) => (
+      <img src={symbolUrl(symbol)} alt="" width="15" height="15" loading="lazy" decoding="async" />
+    ))}
+  </span>
+)}
+
+<style>
+  .mana-cost {
+    display: inline-flex;
+    gap: 2px;
+    vertical-align: -3px;
+    white-space: nowrap;
+  }
+
+  img {
+    width: 15px;
+    height: 15px;
+  }
+</style>
