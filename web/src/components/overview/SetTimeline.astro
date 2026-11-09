@@ -39,6 +39,7 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
     margin-top: 34px;
   }
 
+  /* The year in the middle, a line fading out to each side */
   h2 {
     display: flex;
     align-items: center;
@@ -48,19 +49,28 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
     color: var(--text-dim);
   }
 
+  h2::before,
   h2::after {
     content: '';
     flex: 1;
     height: 1px;
+    background: linear-gradient(90deg, transparent, var(--line-strong));
+  }
+
+  h2::after {
     background: linear-gradient(90deg, var(--line-strong), transparent);
   }
 
   /*
    * Each year is one row. The columns share the width when the fullest year fits,
    * otherwise they keep their minimum and the row scrolls sideways instead of wrapping.
+   * Shorter years sit in the middle; "safe" keeps a row that scrolls at its start, and
+   * browsers without it keep the packs on the left.
    */
   .grid {
     display: grid;
+    justify-content: start;
+    justify-content: safe center;
     grid-auto-flow: column;
     grid-auto-columns: max(
       var(--tile-min),
