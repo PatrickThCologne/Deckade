@@ -8,8 +8,10 @@
  * Each page tab (data-wall-tab) has its own row position. After a tab change the rows start at
  * the last tab's position and turn to this one's, once the page change has faded over (view
  * transition, styles/global.css). Nothing is stored: the last tab is the previous address.
+ * A tab page prerendered in the background (lib/prerender.ts) turns only once it is opened.
  */
 import { approach, driftOffset, sinkSpeed, tabTurn } from '../lib/backdrop';
+import { whenShown } from '../lib/prerender';
 
 /** px the wall sinks per px scrolled (less if the wall is too short for the page) */
 const SINK = 0.1;
@@ -103,10 +105,12 @@ export function initBackdrop(): void {
     );
     turned = turnTarget = from;
     if (to !== from) {
-      afterPageChange(() => {
-        turnTarget = to;
-        start();
-      });
+      whenShown(document, () =>
+        afterPageChange(() => {
+          turnTarget = to;
+          start();
+        }),
+      );
     }
   }
   measure();
