@@ -11,17 +11,10 @@ Open work, roughly in order. Done items move to the commit history.
       Service), see [ADR 0001](docs/adr/0001-pack-image-sources.md).
 - [ ] Background art wall: try sorting the artwork by colour.
 
-## Card list and set window
-
-- [ ] Column headers (Karte, Typ, Mana, Gespielt, Preis) no longer sticky; the filter and
-      search bar stays at the top while scrolling instead.
-- [ ] Remove the hint "Fahre über eine Karte, um sie groß zu sehen".
-- [ ] Pack and card preview: join their panel with the card list panel (one shape, like a T).
-
 ## Site
 
-- [ ] Feedback in the info menu: a form with text fields that sends to the operator e-mail.
-- [ ] Logo: "Deck" + a capital "A" ("DeckAde").
+- [ ] Feedback: the form opens the visitor's mail program. Sending without it needs a form
+      service (e.g. Formspree) or GitHub Issues; decide, then update the privacy notice.
 - [ ] Page size: a few set pages are large (The List: 6.9 MB, 0.8 MB with gzip). Split their
       card list into pages or load it as JSON.
 - [ ] Screenshots for the README.
