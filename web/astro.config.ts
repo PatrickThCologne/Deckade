@@ -25,7 +25,7 @@ export default defineConfig({
   },
   fonts: [
     { provider: fontProviders.fontsource(), name: 'IBM Plex Sans', cssVariable: '--font-sans' },
-    { provider: fontProviders.fontsource(), name: 'Chakra Petch', cssVariable: '--font-display' },
+    { provider: fontProviders.fontsource(), name: 'Marcellus', cssVariable: '--font-display' },
     { provider: fontProviders.fontsource(), name: 'IBM Plex Mono', cssVariable: '--font-mono' },
   ],
   integrations: [sitemap({ i18n: { defaultLocale: DEFAULT_LOCALE, locales: { ...LOCALE_TAGS } } })],
