@@ -129,8 +129,9 @@ const description = set.standard
   /*
    * Pack, card list and card preview form one T-shaped panel: pack and preview are the
    * crossbar (row 1), the card list is the stem (rows 1 and 2). They touch without
-   * overlapping, so the surface is continuous; the list's side borders start below the
-   * crossbar (::before and ::after).
+   * overlapping, so the surface is continuous; the list's left border starts below the pack
+   * (::before). The preview slides down along the list while scrolling; the list's right
+   * border runs above and below it (.preview figure::before and ::after).
    */
   .layout {
     display: grid;
@@ -177,13 +178,14 @@ const description = set.standard
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   }
 
+  /* As tall as the list, so the preview can follow it. The clip keeps the border lines
+     within the list; the bottom stays clear of the list's rounded corner. */
   .preview {
-    grid-area: 1 / 3;
-    display: grid;
+    grid-area: 1 / 3 / 3 / 4;
+    clip-path: inset(0 -100px var(--radius-lg));
   }
 
-  .layout::before,
-  .layout::after {
+  .layout::before {
     content: '';
     grid-area: 2 / 2;
     z-index: 1;
@@ -192,18 +194,13 @@ const description = set.standard
     pointer-events: none;
   }
 
-  .layout::after {
-    justify-self: end;
-  }
-
   /* Without a pack or a preview the list has its own border on that side */
   .layout:not(:has(.pack img)) .main {
     border-left: 1px solid var(--line);
     border-top-left-radius: var(--radius-lg);
   }
 
-  .layout:not(:has(.pack img))::before,
-  .layout:not(:has(.preview figure))::after {
+  .layout:not(:has(.pack img))::before {
     display: none;
   }
 
@@ -236,11 +233,34 @@ const description = set.standard
     font-size: clamp(28px, 3.6vw, 40px);
   }
 
+  /* Stops in line with the card filters; the margin keeps it off the list's rounded corner */
   .preview figure {
-    margin: 0;
+    position: sticky;
+    top: var(--sticky-top, 62px);
+    margin: 0 0 var(--radius-lg);
     padding: 12px;
     border-left: 0;
     border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  }
+
+  /* The list's right border above and below the preview; a screen high covers all in view */
+  .preview figure::before,
+  .preview figure::after {
+    content: '';
+    position: absolute;
+    right: 100%;
+    width: 1px;
+    height: 100vh;
+    background: var(--line);
+    pointer-events: none;
+  }
+
+  .preview figure::before {
+    bottom: 100%;
+  }
+
+  .preview figure::after {
+    top: 100%;
   }
 
   .preview img {
@@ -261,8 +281,7 @@ const description = set.standard
       grid-template-columns: 170px minmax(0, 1fr);
     }
 
-    .preview,
-    .layout::after {
+    .preview {
       display: none;
     }
 
