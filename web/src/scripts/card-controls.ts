@@ -1,6 +1,6 @@
 /**
  * The controls above a card list (components/set/CardControls.astro): search, sort order,
- * colour, mana value and type filters. They keep the selection; the list itself decides how
+ * colour, mana value, type and (on the "All cards" tab) set filters. They keep the selection; the list itself decides how
  * to show the matching cards (scripts/card-table.ts, scripts/all-cards.ts).
  */
 import {
@@ -11,6 +11,7 @@ import {
   type ManaValue,
   matchesColors,
   matchesManaValue,
+  matchesSets,
   matchesType,
   matchesWords,
   searchWords,
@@ -25,6 +26,8 @@ export interface FilterState {
   colors: Set<string>;
   types: Set<CardType>;
   mana: Set<ManaValue>;
+  /** Set codes; only the "All cards" tab has the set filter. */
+  sets: Set<string>;
   sort: SortKey;
 }
 
@@ -34,6 +37,8 @@ export interface FilterableCard extends Pick<SortableCard, 'colors' | 'cmc' | 'i
   readonly types: readonly CardType[];
   /** Names (and on set pages rules text), already normalized. */
   readonly search: string;
+  /** Every set that printed the card; only cards of the "All cards" tab know it. */
+  readonly printedIn?: readonly string[];
 }
 
 export interface Controls {
@@ -49,6 +54,7 @@ export function cardFilter(state: FilterState): (card: FilterableCard) => boolea
   return (card) =>
     matchesColors(card.colors, colors) &&
     matchesType(card.types, state.types) &&
+    matchesSets(card.printedIn, state.sets) &&
     matchesManaValue(card, state.mana) &&
     matchesWords(card.search, words);
 }
@@ -68,11 +74,13 @@ export function connectControls(root: HTMLElement, onChange: () => void): Contro
     colors: new Set(),
     types: new Set(),
     mana: new Set(),
+    sets: new Set(),
     sort: isSortKey(sort.value) ? sort.value : 'played',
   };
   const colorButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-color]')];
   const manaButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-mana]')];
-  const syncTypeMenu = connectTypeMenu(root, state.types, onChange);
+  const syncTypeMenu = connectChipMenu(root, 'type', state.types, isCardType, onChange);
+  const syncSetMenu = connectChipMenu(root, 'set', state.sets, isPresent, onChange);
   const numbers = new Intl.NumberFormat(document.documentElement.lang || undefined);
 
   search.addEventListener('input', () => {
@@ -102,6 +110,7 @@ export function connectControls(root: HTMLElement, onChange: () => void): Contro
     state.colors.clear();
     state.types.clear();
     state.mana.clear();
+    state.sets.clear();
     onChange();
     search.focus(); // the reset button hides itself, so focus goes back to the start
   });
@@ -117,9 +126,10 @@ export function connectControls(root: HTMLElement, onChange: () => void): Contro
         press(button, isManaValue(value) && state.mana.has(value));
       }
       syncTypeMenu();
+      syncSetMenu();
 
-      const filtering =
-        state.query.trim() !== '' || state.colors.size + state.types.size + state.mana.size > 0;
+      const selected = state.colors.size + state.types.size + state.mana.size + state.sets.size;
+      const filtering = state.query.trim() !== '' || selected > 0;
       result.hidden = !filtering;
       count.textContent = (count.dataset.template ?? '').replace('{shown}', numbers.format(shown));
     },
@@ -134,26 +144,33 @@ function toggle<T>(selection: Set<T>, value: T): void {
   if (!selection.delete(value)) selection.add(value);
 }
 
+function isPresent(value: string | undefined): value is string {
+  return Boolean(value);
+}
+
 /**
- * The type menu: several types can be picked, 'all' clears them. Returns the function that
- * shows the selection (pressed chips, summary text); the menu closes on a click outside or
- * Escape.
+ * A drop-down menu of chips (types, sets): several can be picked, 'all' clears them. The markup
+ * uses data-{kind}-menu, -label, -all and -option. Returns the function that shows the selection
+ * (pressed chips, summary text); the menu closes on a click outside or Escape.
  */
-function connectTypeMenu(
+function connectChipMenu<T extends string>(
   root: HTMLElement,
-  selected: Set<CardType>,
+  kind: 'type' | 'set',
+  selected: Set<T>,
+  isValue: (value: string | undefined) => value is T,
   onChange: () => void,
 ): () => void {
-  const menu = root.querySelector<HTMLDetailsElement>('[data-type-menu]');
-  const label = root.querySelector<HTMLElement>('[data-type-label]');
-  const all = root.querySelector<HTMLButtonElement>('[data-type-all]');
-  const options = [...root.querySelectorAll<HTMLButtonElement>('[data-type-option]')];
+  const menu = root.querySelector<HTMLDetailsElement>(`[data-${kind}-menu]`);
+  const label = root.querySelector<HTMLElement>(`[data-${kind}-label]`);
+  const all = root.querySelector<HTMLButtonElement>(`[data-${kind}-all]`);
+  const options = [...root.querySelectorAll<HTMLButtonElement>(`[data-${kind}-option]`)];
   if (!menu || !label || !all) return () => {};
+  const valueOf = (option: HTMLButtonElement) => option.getAttribute(`data-${kind}-option`) ?? '';
 
   for (const option of options) {
     option.addEventListener('click', () => {
-      const type = option.dataset.typeOption;
-      if (isCardType(type)) toggle(selected, type);
+      const value = valueOf(option);
+      if (isValue(value)) toggle(selected, value);
       onChange();
     });
   }
@@ -178,8 +195,8 @@ function connectTypeMenu(
 
   return () => {
     const pressed = options.filter((option) => {
-      const type = option.dataset.typeOption;
-      return isCardType(type) && selected.has(type);
+      const value = valueOf(option);
+      return isValue(value) && selected.has(value);
     });
     for (const option of options) press(option, pressed.includes(option));
     press(all, selected.size === 0);

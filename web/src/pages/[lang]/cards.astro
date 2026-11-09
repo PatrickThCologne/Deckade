@@ -24,6 +24,17 @@ const { t } = useTranslations(locale);
 const format = createFormatters(locale);
 const catalog = cardCatalog(locale);
 const sets = overviewSets();
+// Cards per set for the set menu: every set that printed a card counts it.
+const cardsPerSet = new Map<string, number>();
+for (const card of catalog) {
+  for (const code of card.printedIn) cardsPerSet.set(code, (cardsPerSet.get(code) ?? 0) + 1);
+}
+const setOptions = sets.map((set) => ({
+  code: set.code,
+  name: set.name,
+  year: set.releasedAt.slice(0, 4),
+  count: cardsPerSet.get(set.code) ?? 0,
+}));
 const typeCounts = CARD_TYPES.filter((type) => type !== 'other').map(
   (type) => [type, catalog.filter((card) => card.types.includes(type)).length] as const,
 );
@@ -82,6 +93,7 @@ const stats: HeroStat[] = [
         typeCounts={typeCounts}
         manaValues={MANA_VALUES}
         searchLabel={t('cards.searchName')}
+        sets={setOptions.filter((set) => set.count > 0)}
       />
       <div class="table-wrap">
         <table>

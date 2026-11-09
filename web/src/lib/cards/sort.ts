@@ -110,6 +110,14 @@ export function matchesType(types: readonly CardType[], selected: ReadonlySet<Ca
   return selected.size === 0 || types.some((type) => selected.has(type));
 }
 
+/** Set filter of the "All cards" tab: any set that printed the card counts. */
+export function matchesSets(
+  printedIn: readonly string[] | undefined,
+  selected: ReadonlySet<string>,
+): boolean {
+  return selected.size === 0 || (printedIn ?? []).some((code) => selected.has(code));
+}
+
 /** Mana value choices of the filter; the last one collects everything from 7 up. */
 export const MANA_VALUES = ['0', '1', '2', '3', '4', '5', '6', '7+'] as const;
 export type ManaValue = (typeof MANA_VALUES)[number];

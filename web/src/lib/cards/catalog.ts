@@ -30,6 +30,8 @@ export interface CatalogCard extends SortableCard {
   readonly banned: boolean;
   /** The set of the printing shown: the newest one, on German pages the newest German one. */
   readonly setCode: string;
+  /** Every set that printed the card, for the set filter: the shown one first, then newest first. */
+  readonly printedIn: readonly string[];
   readonly imageNormal: string | null;
   readonly scryfallUrl: string;
 }
@@ -70,6 +72,7 @@ function catalogCard(printings: readonly Printing[], locale: Locale): CatalogCar
     isLand: card.isLand,
     banned: printings.some((p) => p.card.banned),
     setCode: printing.setCode,
+    printedIn: [...new Set([printing, ...newestFirst].map((p) => p.setCode))],
     imageNormal: shown.imageNormal,
     scryfallUrl: shown.scryfallUrl,
   };
@@ -96,6 +99,8 @@ type EncodedCard = [
   setCode: string,
   image: string,
   scryfall: string,
+  /** The other sets that printed the card, separated by spaces; usually empty. */
+  otherSets: string,
 ];
 
 export interface CatalogFile {
@@ -148,6 +153,7 @@ export function encodeCatalog(
       card.setCode,
       card.imageNormal ? shortImage(card.imageNormal) : '',
       shortScryfall(card.scryfallUrl),
+      card.printedIn.filter((code) => code !== card.setCode).join(' '),
     ]),
   };
 }
@@ -167,6 +173,7 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
       setCode,
       image,
       url,
+      otherSets,
     ]) => {
       const [main, ...all] = [...types].map((index) => CARD_TYPES[Number(index)]);
       return {
@@ -182,6 +189,7 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
         isLand: (flags & 1) !== 0,
         banned: (flags & 2) !== 0,
         setCode,
+        printedIn: [setCode, ...(otherSets ? otherSets.split(' ') : [])],
         imageNormal: image ? fullImage(image) : null,
         scryfallUrl: expand(url, SCRYFALL_BASE),
       };

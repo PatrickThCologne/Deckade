@@ -1,7 +1,8 @@
 ---
 /**
- * Sort order and filters above a card list: search, type menu, colours and mana values. Used
- * by the set tables and the "All cards" tab; scripts/card-controls.ts makes them work.
+ * Sort order and filters above a card list: search, type menu, colours and mana values, and on
+ * the "All cards" tab a set menu. Used by the set tables and the "All cards" tab;
+ * scripts/card-controls.ts makes them work.
  */
 import type { Locale } from '../../config/site';
 import type { CardType, ManaValue, SortKey } from '../../lib/cards/sort';
@@ -24,12 +25,22 @@ interface Props {
   /** Mana values at least one card has; the others are greyed out. */
   manaValues: readonly ManaValue[];
   searchLabel: string;
+  /** Sets for the set menu, newest first, with their number of cards; no set menu without. */
+  sets?: readonly SetOption[];
 }
 
-const { locale, headingId, sortKeys, sort, total, typeCounts, manaValues, searchLabel } =
+interface SetOption {
+  code: string;
+  name: string;
+  year: string;
+  count: number;
+}
+
+const { locale, headingId, sortKeys, sort, total, typeCounts, manaValues, searchLabel, sets } =
   Astro.props;
 const { t, plural } = useTranslations(locale);
 const format = createFormatters(locale);
+const setsByYear = Map.groupBy(sets ?? [], (set) => set.year);
 ---
 
 <div class="toolbar">
@@ -56,7 +67,7 @@ const format = createFormatters(locale);
       </svg>
       <input type="search" placeholder={searchLabel} autocomplete="off" data-search />
     </label>
-    <details class="type-menu" data-type-menu>
+    <details class="chip-menu" data-type-menu>
       <summary>
         <span class="visually-hidden">{t('cards.typeFilter')}:</span>
         <span data-type-label data-all={t('cards.allTypes')} data-many={t('cards.typesSelected')}>
@@ -90,6 +101,53 @@ const format = createFormatters(locale);
         ))}
       </div>
     </details>
+    {sets && (
+      <details class="chip-menu" data-set-menu>
+        <summary>
+          <span class="visually-hidden">{t('cards.setFilter')}:</span>
+          <span
+            class="summary-label"
+            data-set-label
+            data-all={t('cards.allSets')}
+            data-many={t('cards.setsSelected')}
+          >
+            {t('cards.allSets')}
+          </span>
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+            <path
+              d="m2.5 4.5 3.5 3.5 3.5-3.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+            ></path>
+          </svg>
+        </summary>
+        <div class="set-panel" role="group" aria-label={t('cards.setFilter')}>
+          <button type="button" class="chip" aria-pressed="true" data-set-all>
+            <span class="name">{t('cards.allSets')}</span>
+          </button>
+          {[...setsByYear].map(([year, list]) => (
+            <div class="year">
+              <p class="label">{year}</p>
+              <div class="set-grid">
+                {list.map((set) => (
+                  <button
+                    type="button"
+                    class="chip"
+                    aria-pressed="false"
+                    data-set-option={set.code}
+                    title={set.name}
+                  >
+                    <span class="name">{set.name}</span>
+                    <span class="n mono">{format.integer(set.count)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </details>
+    )}
   </div>
   <div class="filter-row">
     <div class="group">
@@ -293,11 +351,11 @@ const format = createFormatters(locale);
     color: var(--accent);
   }
 
-  .type-menu {
+  .chip-menu {
     position: relative;
   }
 
-  .type-menu summary {
+  .chip-menu summary {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -316,26 +374,26 @@ const format = createFormatters(locale);
       box-shadow 0.15s;
   }
 
-  .type-menu summary::-webkit-details-marker {
+  .chip-menu summary::-webkit-details-marker {
     display: none;
   }
 
-  .type-menu summary:hover,
-  .type-menu[open] summary {
+  .chip-menu summary:hover,
+  .chip-menu[open] summary {
     border-color: var(--line-strong);
   }
 
-  .type-menu summary svg {
+  .chip-menu summary svg {
     color: var(--text-faint);
     transition: rotate 0.2s var(--ease-out);
   }
 
-  .type-menu[open] summary svg {
+  .chip-menu[open] summary svg {
     rotate: 180deg;
   }
 
   /* An active filter is marked like a pressed colour button */
-  .type-menu[data-active] summary {
+  .chip-menu[data-active] summary {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-soft);
   }
@@ -355,6 +413,43 @@ const format = createFormatters(locale);
     border-radius: var(--radius-lg);
     background: var(--surface-raised);
     box-shadow: var(--shadow), var(--inner-highlight);
+  }
+
+  /* Over 150 sets: a scrolling panel, grouped by year, opening to the left */
+  .set-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 5;
+    display: grid;
+    gap: 10px;
+    width: min(560px, calc(100cqw - 24px));
+    max-height: min(60vh, 480px);
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow), var(--inner-highlight);
+  }
+
+  .year {
+    display: grid;
+    gap: 6px;
+  }
+
+  .set-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  /* A long set name would push the menu out of the row */
+  .summary-label {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .chip {
@@ -412,6 +507,15 @@ const format = createFormatters(locale);
   @container (width < 460px) {
     .type-grid {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    .set-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .set-panel {
+      right: auto;
+      left: 0;
     }
   }
 
