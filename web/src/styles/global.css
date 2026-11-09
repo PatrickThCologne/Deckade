@@ -58,7 +58,9 @@
 
 /*
  * Moving to another page cross-fades instead of flashing white or black. The art wall is
- * captured on its own (Backdrop.astro) and kept below the page while it happens.
+ * captured on its own (Backdrop.astro) and kept below the page while it happens; the page
+ * on top is captured as `page`. The root is not captured: its snapshot is always opaque and
+ * would hide the wall, so the screen went black.
  */
 @view-transition {
   navigation: auto;
@@ -70,9 +72,25 @@
   }
 }
 
+:root {
+  view-transition-name: none;
+}
+
+body {
+  view-transition-name: page;
+}
+
 ::view-transition-group(backdrop) {
   z-index: -1;
 }
+
+/* Short, so a tab change feels immediate */
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 0.15s;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
