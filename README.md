@@ -2,84 +2,55 @@
 
 **Which Magic: The Gathering sets are in Standard right now – and when do they rotate out?**
 
-Deckade is a bilingual (German / English) website that answers that question with
-nothing but public data: every Magic set since 1993 on one timeline, marked where Standard,
-Pioneer and Modern begin; the Standard rotation in detail; every card with its Cardmarket
-price and how often it is played in tournaments; bundle and booster box prices. The data
-refreshes daily.
+Deckade is a bilingual (German / English) fan website that answers that question with nothing
+but public data:
 
-The project consists of two parts with a clear contract between them:
-
-| Part                    | Stack                                                    | Responsibility                                                    |
-| ----------------------- | -------------------------------------------------------- | ----------------------------------------------------------------- |
-| [`pipeline/`](pipeline) | Python 3.12, httpx, Pillow · pytest, mypy (strict), ruff | Fetch the sources, apply the rotation rule, write a JSON snapshot |
-| [`web/`](web)           | Astro 7, TypeScript (strict), Zod · Vitest, Prettier     | Validate the snapshot and render a static, SEO-friendly website   |
+- every Magic set since 1993 on one timeline
+- the Standard rotation in detail
+- every card with its market price and how often it is played in tournaments
+- bundle and booster box prices
 
 ## Features
 
-- **Set overview** – every set newest first, grouped by year. Faded marker lines show the key
-  points: which sets rotate out next, where Standard, Pioneer and Modern begin. Sets that do not
-  follow their era (e.g. Modern Horizons, reprint sets) carry a small format badge. Which sets
-  are legal where is computed from Scryfall card data, not typed in by hand.
-- **Rotation** – the Standard sets grouped into rotation waves, the next rotation as the headline
-  ("early 2027 · in about 3 months") and the Standard banned list.
-- **Deck import** – reserved tab for the next step.
-- **One page per set** – opens as an overlay above the overview (the URL changes, Back closes it,
-  a click next to the columns returns); the same page also works on its own for links and search
-  engines. Release date, card count, Standard status, a compact strip with every bundle and
-  booster box price, and the full card list.
-- **Card list** – search, colour filter (cards that fit a deck of the chosen colours), sorting
-  by play rate, market value or mana value, and a large preview of the hovered card.
-- **Honest about certainty** – see below. Nothing is presented as fact that is only an estimate.
-- **German and English**, switchable in the header; every page exists in both languages with
-  `hreflang` alternates. A missing translation is a compile error.
-- **Fast and indexable** – fully static HTML, no client framework, self-hosted fonts,
-  view transitions between overview and set pages. Works without JavaScript; scripts only
-  add filtering, sorting and the preview.
+- **All sets** – a timeline by year. Each set opens as an overlay with its own URL: release
+  date, card count, product prices and the full card list.
+- **All cards** – every card once (cheapest printing, newest image), with search in name and
+  rules text, filters for colour, mana value and type, and a large card preview.
+- **Standard rotation** – the Standard sets grouped by when they leave, the next rotation as
+  the headline. Estimates are labelled as estimates.
+- **German and English** – every page in both languages; German pages show German card names
+  and images wherever a German printing exists.
+- **Static and fast** – plain HTML without a client framework and self-hosted fonts; JavaScript
+  only adds filtering, sorting and the set overlay.
 
-## How rotation is determined
+## Technical implementation
 
-The rule is official ([Wizards of the Coast](https://magic.wizards.com/en/formats/standard)):
-_once per year, after the first premier set Prerelease of the year, the six oldest sets in
-Standard rotate out._ The site only claims what follows from it:
+The project consists of two parts with a clear contract between them:
 
-| Statement                  | Basis                                           | Shown as                                  |
-| -------------------------- | ----------------------------------------------- | ----------------------------------------- |
-| Which six sets rotate next | The rule plus release dates (Scryfall)          | "rotates out early 2027"                  |
-| The exact rotation day     | Estimated (Prerelease ≈ release − 7 days)       | Month/year only until set in `rules.toml` |
-| When later sets rotate     | Earliest possible date under the current rule   | "stays until at least early 2028"         |
-| Foundations                | Mark Rosewater, reported by Wargamer and others | "stays until at least 2029"               |
+| Part                    | Stack                                                    | Responsibility                                                   |
+| ----------------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
+| [`pipeline/`](pipeline) | Python 3.12, httpx, Pillow · pytest, mypy (strict), ruff | Fetch and process the data, write a JSON snapshot and the images |
+| [`web/`](web)           | Astro 7, TypeScript (strict), Zod · Vitest, Prettier     | Validate the snapshot and render a static, SEO-friendly website  |
 
-The logic lives in [`pipeline/src/rotation_radar/domain/rotation.py`](pipeline/src/rotation_radar/domain/rotation.py)
-and is covered by unit tests, including the edge case of a special-rule set among the six oldest.
-Once Wizards announces the date, set `official_rotation_date` in
-[`pipeline/rules.toml`](pipeline/rules.toml) and the site switches to the exact day.
-
-## Architecture
+### Architecture
 
 ```mermaid
 flowchart LR
-  subgraph Sources
-    S[Scryfall<br/>sets · bulk card data · banned lists]
-    C[Cardmarket<br/>daily price guide]
-    M[MTGJSON<br/>sealed products]
-    D[MTGODecklistCache<br/>tournament decks]
-    T[TCGplayer CDN<br/>pack photos]
-  end
+  X[External sources<br/>REST APIs · bulk files · images] --> A
   subgraph pipeline [pipeline/ · Python]
-    A[sources/*<br/>adapters] --> B[domain/*<br/>pure logic, unit-tested] --> E[snapshot.py<br/>JSON contract]
-    A --> I[images.py<br/>pack cut-outs]
+    A[sources/*<br/>HTTP adapters with cache] --> B[domain/*<br/>pure logic, unit-tested] --> E[snapshot.py<br/>JSON contract]
+    A --> I[images.py<br/>image processing]
   end
   subgraph web [web/ · Astro]
     V[lib/data/schema.ts<br/>Zod validation] --> P[pages + components<br/>static HTML]
   end
-  S & C & M & D --> A
-  T --> I
   E -->|snapshot.json, cards/*.json| V
   I -->|public/images| P
-  P --> G[GitHub Pages]
+  P -->|daily deploy| G[GitHub Pages]
 ```
 
+- **Everything happens at build time.** The pipeline collects and processes the data once per
+  build; the deployed site is plain static files, without a server or a database.
 - **Domain logic is pure.** `pipeline/src/rotation_radar/domain` has no network or file access;
   adapters in `sources/` translate raw responses into domain objects.
 - **One data contract.** The pipeline writes camelCase JSON (`snapshot.py`, `SCHEMA_VERSION`);
@@ -88,15 +59,15 @@ flowchart LR
 - **Wording is logic, too.** `web/src/lib/rotation/describe.ts` turns rotation data into text
   for both languages and is tested with the real dictionaries.
 
-## Project structure
+### Project structure
 
 ```
 pipeline/
   rules.toml                 rotation rule parameters, official date, special rules
   src/rotation_radar/
     domain/                  sets, rotation, cards, products, play rate (pure)
-    sources/                 http client, Scryfall (API + bulk file), MTGJSON, Cardmarket, decklists
-    images.py                pack cut-outs (white background removal) and mana symbols
+    sources/                 HTTP client and one adapter per external source
+    images.py                image processing: pack cut-outs and mana symbols
     snapshot.py              data contract and JSON writer
     build.py, cli.py         orchestration: python -m rotation_radar build
   tests/
@@ -106,9 +77,9 @@ web/
     lib/                     data loading, i18n, formatting, rotation text, sorting
     components/ layouts/ pages/ scripts/ styles/
     data/generated/          snapshot written by the pipeline (not committed)
-  public/images/             pack images and mana symbols written by the pipeline (not committed)
+  public/images/             images written by the pipeline (not committed)
   tests/
-.github/workflows/           CI and the daily refresh + deploy
+.github/workflows/           CI on every push, daily refresh + deploy
 ```
 
 ## Getting started
@@ -147,12 +118,14 @@ All of them run in [CI](.github/workflows/ci.yml) on every push and pull request
 
 ## Deployment
 
-[`deploy.yml`](.github/workflows/deploy.yml) runs daily: it rebuilds the snapshot, builds the
-site and publishes it to GitHub Pages (enable _Settings → Pages → Source: GitHub Actions_).
-`SITE_URL` and `BASE_PATH` configure the public address. The imprint and the privacy notice
-name the operator from the repository variables `OPERATOR_NAME`, `OPERATOR_ADDRESS` and
-`OPERATOR_EMAIL` (_Settings → Secrets and variables → Actions → Variables_), so personal data
-stays out of the code.
+[`deploy.yml`](.github/workflows/deploy.yml) runs daily at 04:30 UTC and can be started by hand
+under _Actions → Refresh data and deploy → Run workflow_. It rebuilds the snapshot with fresh
+prices, builds the site and publishes it to GitHub Pages (enable _Settings → Pages → Source:
+GitHub Actions_). A push to `main` does not deploy; code changes go live with the next run.
+`SITE_URL` and `BASE_PATH`
+configure the public address. The imprint and the privacy notice name the operator from the
+repository variables `OPERATOR_NAME`, `OPERATOR_ADDRESS` and `OPERATOR_EMAIL` (_Settings →
+Secrets and variables → Actions → Variables_), so personal data stays out of the code.
 
 ## Before going public
 
