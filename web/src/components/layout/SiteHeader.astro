@@ -1,5 +1,5 @@
 ---
-import { type Locale, SITE_NAME_PARTS } from '../../config/site';
+import { type Locale, SITE_NAME, SITE_NAME_PARTS } from '../../config/site';
 import { localePath } from '../../lib/links';
 import InfoMenu from './InfoMenu.astro';
 import LanguageSwitcher from './LanguageSwitcher.astro';
@@ -9,14 +9,17 @@ interface Props {
 }
 
 const { locale } = Astro.props;
+// The logo writes the gold part with a capital letter: "DeckAde". Everywhere else it is "Deckade".
+const [deck, ade] = SITE_NAME_PARTS;
+const gold = ade.charAt(0).toUpperCase() + ade.slice(1);
 ---
 
 <header class="site-header">
   <div class="container bar">
-    <a class="brand" href={localePath(locale)}>
+    <a class="brand" href={localePath(locale)} aria-label={SITE_NAME}>
       <span class="name">
-        {SITE_NAME_PARTS[0]}
-        <span class="accent">{SITE_NAME_PARTS[1]}</span>
+        {deck}
+        <span class="accent">{gold}</span>
       </span>
     </a>
     <div class="menus">
