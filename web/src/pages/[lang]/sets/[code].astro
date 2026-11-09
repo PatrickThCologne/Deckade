@@ -126,48 +126,29 @@ const description = set.standard
     color: var(--accent);
   }
 
+  /*
+   * Pack, card list and card preview form one T-shaped panel: pack and preview are the
+   * crossbar (row 1), the card list is the stem (rows 1 and 2). They touch without
+   * overlapping, so the surface is continuous; the list's side borders start below the
+   * crossbar (::before and ::after).
+   */
   .layout {
     display: grid;
     grid-template-columns: 210px minmax(0, 1fr) 270px;
-    align-items: start;
+    grid-template-rows: auto 1fr;
     cursor: zoom-out;
   }
 
-  /* The space around the columns is the way back. */
+  /* The space around the panel is the way back. */
   .layout > * {
     cursor: auto;
   }
 
-  .pack,
-  .preview {
-    position: sticky;
-    top: var(--sticky-top-panels, 86px);
-    z-index: 1;
-  }
-
-  /*
-   * The pack and the card preview are attached to the sides of the card list, so the three
-   * form one T-shaped panel. Each overlaps the list's border by a pixel to hide the seam.
-   */
   .pack {
-    margin-right: -1px;
+    grid-area: 1 / 1;
     padding: 16px;
     border-right: 0;
     border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-  }
-
-  .preview figure {
-    margin-left: -1px;
-    border-left: 0;
-    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-  }
-
-  .layout:has(.pack img) .main {
-    border-top-left-radius: 0;
-  }
-
-  .layout:has(.preview figure) .main {
-    border-top-right-radius: 0;
   }
 
   .pack:empty {
@@ -188,18 +169,47 @@ const description = set.standard
     filter: invert(1) opacity(0.7);
   }
 
-  /* Fixed columns: a set without a pack panel must not pull the card list to the left */
   .main {
-    grid-column: 2;
+    grid-area: 1 / 2 / 3 / 3;
+    position: relative;
+    padding: 22px 24px 26px;
+    border-inline: 0;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   }
 
   .preview {
-    grid-column: 3;
+    grid-area: 1 / 3;
+    display: grid;
   }
 
-  .main {
-    position: relative;
-    padding: 22px 24px 26px;
+  .layout::before,
+  .layout::after {
+    content: '';
+    grid-area: 2 / 2;
+    z-index: 1;
+    width: 1px;
+    background: var(--line);
+    pointer-events: none;
+  }
+
+  .layout::after {
+    justify-self: end;
+  }
+
+  /* Without a pack or a preview the list has its own border on that side */
+  .layout:not(:has(.pack img)) .main {
+    border-left: 1px solid var(--line);
+    border-top-left-radius: var(--radius-lg);
+  }
+
+  .layout:not(:has(.pack img))::before,
+  .layout:not(:has(.preview figure))::after {
+    display: none;
+  }
+
+  .layout:not(:has(.preview figure)) .main {
+    border-right: 1px solid var(--line);
+    border-top-right-radius: var(--radius-lg);
   }
 
   .close {
@@ -229,6 +239,8 @@ const description = set.standard
   .preview figure {
     margin: 0;
     padding: 12px;
+    border-left: 0;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
   }
 
   .preview img {
@@ -249,11 +261,13 @@ const description = set.standard
       grid-template-columns: 170px minmax(0, 1fr);
     }
 
-    .preview {
+    .preview,
+    .layout::after {
       display: none;
     }
 
-    .layout:has(.preview figure) .main {
+    .main {
+      border-right: 1px solid var(--line);
       border-top-right-radius: var(--radius-lg);
     }
   }
@@ -261,24 +275,26 @@ const description = set.standard
   @media (max-width: 720px) {
     .layout {
       grid-template-columns: 1fr;
+      grid-template-rows: none;
       gap: 12px;
     }
 
     .pack {
-      position: static;
+      grid-area: auto;
       width: 150px;
       justify-self: center;
-      margin-right: 0;
       border-right: 1px solid var(--line);
       border-radius: var(--radius-lg);
     }
 
-    .layout:has(.pack img) .main {
-      border-top-left-radius: var(--radius-lg);
+    .main {
+      grid-area: auto;
+      border-left: 1px solid var(--line);
+      border-radius: var(--radius-lg);
     }
 
-    .main {
-      grid-column: auto;
+    .layout::before {
+      display: none;
     }
 
     .main {

@@ -207,7 +207,6 @@ html.has-overlay {
   /* Sticky offsets count from inside the padding: -28px keeps the filter bar at the top edge,
      so no rows show above it. */
   --sticky-top: -28px;
-  --sticky-top-panels: 16px;
   position: fixed;
   inset: 0;
   width: 100%;
