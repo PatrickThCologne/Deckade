@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Search logic: query interpretation, retrieval and recommendations. No database or
+       provider code here; those come in through interfaces. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="RotationRadar.Search.Tests" />
+  </ItemGroup>
+
+</Project>
