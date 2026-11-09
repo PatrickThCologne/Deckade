@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 from dataclasses import dataclass
 from datetime import date
@@ -11,6 +12,7 @@ from PIL import Image, ImageDraw
 from rotation_radar.domain.rotation import Certainty
 from rotation_radar.images import (
     PackImageStore,
+    art_hues,
     cut_out,
     make_upright,
     pack_file_name,
@@ -128,6 +130,49 @@ def test_pack_file_names_contain_code_and_set_name() -> None:
 class NoDownloads:
     def get_bytes(self, url: str) -> bytes:
         raise AssertionError(f"unexpected download: {url}")
+
+
+class FakeArt:
+    """Serves a plain-coloured PNG per URL; unknown URLs fail like a broken download."""
+
+    def __init__(self, colours: dict[str, tuple[int, int, int]]) -> None:
+        self.colours = colours
+        self.requested: list[str] = []
+
+    def get_bytes(self, url: str) -> bytes:
+        self.requested.append(url)
+        if url not in self.colours:
+            raise OSError("connection lost")
+        buffer = io.BytesIO()
+        Image.new("RGB", (60, 40), self.colours[url]).save(buffer, "PNG")
+        return buffer.getvalue()
+
+
+def test_art_hues_are_read_once_and_kept_in_the_cache(tmp_path: Path) -> None:
+    cache = tmp_path / "art-hues.json"
+    http = FakeArt({"https://img/blue.jpg": (0, 0, 255), "https://img/grey.jpg": (90, 90, 90)})
+
+    first = art_hues(
+        cast(HttpClient, http), ["https://img/blue.jpg", "https://img/grey.jpg"], cache
+    )
+    again = art_hues(cast(HttpClient, NoDownloads()), ["https://img/blue.jpg"], cache)
+
+    assert first == {"https://img/blue.jpg": 240, "https://img/grey.jpg": None}
+    assert again == {"https://img/blue.jpg": 240}
+    assert http.requested == ["https://img/blue.jpg", "https://img/grey.jpg"]
+    # Only artwork still in use stays in the cache
+    assert json.loads(cache.read_text(encoding="utf-8")) == {"https://img/blue.jpg": 240}
+
+
+def test_an_artwork_that_cannot_be_read_gets_no_colour_and_is_tried_again(
+    tmp_path: Path,
+) -> None:
+    cache = tmp_path / "art-hues.json"
+
+    hues = art_hues(cast(HttpClient, FakeArt({})), ["https://img/missing.jpg"], cache)
+
+    assert hues == {"https://img/missing.jpg": None}
+    assert json.loads(cache.read_text(encoding="utf-8")) == {}
 
 
 def test_pack_images_under_earlier_names_are_renamed_not_downloaded(tmp_path: Path) -> None:

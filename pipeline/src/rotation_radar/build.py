@@ -22,7 +22,7 @@ from rotation_radar.config import (
     USER_AGENT,
     Paths,
 )
-from rotation_radar.domain.art import featured_art
+from rotation_radar.domain.art import featured_art, with_hues
 from rotation_radar.domain.cards import (
     COLOR_ORDER,
     CardRow,
@@ -49,7 +49,7 @@ from rotation_radar.domain.rotation import (
     standard_candidates,
 )
 from rotation_radar.domain.sets import MtgSet, SetStatus
-from rotation_radar.images import PackImageStore, store_symbols
+from rotation_radar.images import PackImageStore, art_hues, store_symbols
 from rotation_radar.rules import RotationRules
 from rotation_radar.snapshot import (
     RULE_SOURCE,
@@ -153,6 +153,8 @@ def build(
         packs = PackImageStore(http, paths.image_dir)
         pack_images = {s.code: _pack_image(s, packs, wizards_http) for s in catalog}
         packs.remove_unused(path for path in pack_images.values() if path)
+        art = featured_art(_recent_main_sets(standard, today), printings, prices, FEATURED_PER_SET)
+        hues = art_hues(http, (a.image_url for a in art), paths.cache_dir / "art-hues.json")
         store_symbols(
             scryfall_http,
             scryfall.symbol_svgs(),
@@ -183,9 +185,7 @@ def build(
             for s in catalog
         ),
         formats=format_entries,
-        featured_art=featured_art(
-            _recent_main_sets(standard, today), printings, prices, FEATURED_PER_SET
-        ),
+        featured_art=with_hues(art, hues),
     )
     write_snapshot(
         snapshot, {code: cards_by_set.get(code, []) for code in catalog_codes}, paths.data_dir

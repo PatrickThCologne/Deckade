@@ -1,4 +1,5 @@
-"""Booster pack cut-outs and mana symbols, stored as static files for the website.
+"""Booster pack cut-outs and mana symbols, stored as static files for the website, and the
+main colour of the background artwork (``art_hues``).
 
 Official images from Wizards mostly come transparent already; they are only cropped, turned
 to face the viewer (``make_upright``) and scaled. The official photos of 2019/2020 come on a
@@ -28,6 +29,7 @@ from typing import cast
 from PIL import Image, ImageChops, ImageFilter
 
 from rotation_radar.config import WIZARDS_IMAGE_HOST
+from rotation_radar.domain.art import main_hue
 from rotation_radar.sources.http import HttpClient
 
 log = logging.getLogger(__name__)
@@ -41,8 +43,10 @@ WEBP_QUALITY = 88
 OFFICIAL_FRAME = 4  # grey frame around the official photos of 2019/2020; blocks the flood fill
 UPRIGHT_TOLERANCE = 0.02  # corners this close to the bounding box (share of the width): upright
 UPRIGHT_MARGIN = 0.04  # room for edges that bulge past the corners (share of the width)
+HUE_SAMPLE_SIZE = (48, 36)  # enough for an artwork's main colour; art crops are ~626 x 457
 
 Pixel = tuple[int, int, int, int]
+RGB = tuple[int, int, int]
 Point = tuple[float, float]
 
 
@@ -247,6 +251,34 @@ def _downscale(image: Image.Image) -> Image.Image:
 
 
 LARGE_SOURCE = 1000  # photos are scaled to this before the cut-out
+
+
+def art_hues(http: HttpClient, urls: Iterable[str], cache_file: Path) -> dict[str, int | None]:
+    """Main colour of each artwork (``domain.art.main_hue``) by image URL.
+
+    The art crops are only read here, never stored or changed. Results are kept in
+    ``cache_file``, so each image is downloaded once; Scryfall gives a changed image a new
+    URL. An image that cannot be read gets no colour and is tried again next time.
+    """
+    cached: dict[str, int | None] = (
+        json.loads(cache_file.read_text(encoding="utf-8")) if cache_file.exists() else {}
+    )
+    hues: dict[str, int | None] = {}
+    for url in urls:
+        if url not in cached:
+            try:
+                image = Image.open(io.BytesIO(http.get_bytes(url))).convert("RGB")
+            except Exception as error:  # a missing colour must not break the whole build
+                log.warning("No colour for artwork %s: %s", url, error)
+                hues[url] = None
+                continue
+            sample = image.resize(HUE_SAMPLE_SIZE, Image.Resampling.BOX)
+            cached[url] = main_hue(cast(list[RGB], list(sample.get_flattened_data())))
+        hues[url] = cached[url]
+    kept = {url: cached[url] for url in hues if url in cached}
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+    cache_file.write_text(json.dumps(kept, indent=2, sort_keys=True), encoding="utf-8")
+    return hues
 
 
 class PackImageStore:

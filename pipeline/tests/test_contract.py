@@ -160,6 +160,15 @@ def contract_snapshot() -> tuple[Snapshot, dict[str, list[CardRow]]]:
                 set_name="Duskmourn: House of Horror",
                 artist="Someone",
                 image_url=f"{IMAGES}/art_crop/front/c/d/cd.jpg",
+                hue=17,
+            ),
+            FeaturedArt(
+                card_name="Grey Ghost",
+                set_code="dsk",
+                set_name="Duskmourn: House of Horror",
+                artist="Someone Else",
+                image_url=f"{IMAGES}/art_crop/front/g/h/gh.jpg",
+                hue=None,
             ),
         ),
     )

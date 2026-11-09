@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "generatedAt": "2026-11-09T04:30:00+00:00",
   "rotation": {
     "day": "2027-01-22",
@@ -150,7 +150,16 @@
       "setCode": "dsk",
       "setName": "Duskmourn: House of Horror",
       "artist": "Someone",
-      "imageUrl": "https://cards.scryfall.io/art_crop/front/c/d/cd.jpg"
+      "imageUrl": "https://cards.scryfall.io/art_crop/front/c/d/cd.jpg",
+      "hue": 17
+    },
+    {
+      "cardName": "Grey Ghost",
+      "setCode": "dsk",
+      "setName": "Duskmourn: House of Horror",
+      "artist": "Someone Else",
+      "imageUrl": "https://cards.scryfall.io/art_crop/front/g/h/gh.jpg",
+      "hue": null
     }
   ]
 }
