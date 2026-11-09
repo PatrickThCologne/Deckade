@@ -112,8 +112,9 @@ public sealed partial class RuleBasedQueryParser : IQueryInterpreter
 
     private static double Number(string text) => double.Parse(text, CultureInfo.InvariantCulture);
 
+    // The group makes both boundaries apply to every alternative, not only the first and last
     private static Regex WordRegex(string words) =>
-        new($@"(?<![\p{{L}}]){words}(?![\p{{L}}])", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        new($@"(?<![\p{{L}}])(?:{words})(?![\p{{L}}])", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     [GeneratedRegex(@"\b(farblos\w*|colorless)\b", RegexOptions.IgnoreCase)]
     private static partial Regex ColorlessRegex();
