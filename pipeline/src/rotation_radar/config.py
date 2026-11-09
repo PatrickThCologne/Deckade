@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 USER_AGENT = "Deckade/0.1 (data pipeline of a Magic: The Gathering fan site)"
@@ -12,9 +13,11 @@ MTGJSON_SET_LIST = "https://mtgjson.com/api/v5/SetList.json"
 CARDMARKET_PRICE_GUIDE = (
     "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json"
 )
-TCGPLAYER_PRODUCT_IMAGE = (
-    "https://tcgplayer-cdn.tcgplayer.com/product/{product_id}_in_{size}x{size}.jpg"
-)
+WIZARDS_PRODUCT_PAGE = "https://wpn.wizards.com/en/products/{slug}"
+WIZARDS_IMAGE_HOST = "https://images.ctfassets.net/"
+# The oldest set whose product page shows a single booster (checked 2026-11-09 for every set
+# on the site). Older sets have none; Modern Horizons and Core Set 2020 after it have none either.
+OFFICIAL_PACK_IMAGES_SINCE = date(2019, 5, 3)  # War of the Spark
 
 GITHUB_API = "https://api.github.com"
 GITHUB_RAW = "https://raw.githubusercontent.com"

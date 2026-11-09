@@ -170,6 +170,7 @@ export const en: Record<UiKey, string> = {
   'about.sources.heading': 'Data sources',
   'about.sources.scryfall': 'Sets, release dates, legality, mana costs and card images.',
   'about.sources.mtgjson': 'Bundles and booster boxes with their contents.',
+  'about.sources.wizards': 'Official product images of the boosters of recent sets.',
   'about.sources.decks':
     'Public tournament decklists from MTGO and Melee. “Played” is the share of these decks of the last 30 days that contain a card (main deck or sideboard). Arena games are not included.',
   'about.updated': 'The data is refreshed daily. Last update: {date}.',

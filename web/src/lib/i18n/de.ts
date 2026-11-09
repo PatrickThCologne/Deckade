@@ -169,6 +169,7 @@ export const de = {
   'about.sources.heading': 'Datenquellen',
   'about.sources.scryfall': 'Sets, Erscheinungsdaten, Legalität, Manakosten und Kartenbilder.',
   'about.sources.mtgjson': 'Bundles und Booster Boxes mit ihrem Inhalt.',
+  'about.sources.wizards': 'Offizielle Produktbilder der Booster neuerer Sets.',
   'about.sources.decks':
     'Öffentliche Turnierdecklisten von MTGO und Melee. „Gespielt“ ist der Anteil dieser Decks der letzten 30 Tage, in denen eine Karte steckt (Haupt- oder Sideboard). Arena-Partien sind nicht enthalten.',
   'about.updated': 'Die Daten werden täglich neu geladen. Letzter Stand: {date}.',
