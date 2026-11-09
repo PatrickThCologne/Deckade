@@ -84,7 +84,6 @@ export const de = {
   'cards.sort': 'Sortierung',
   'cards.empty': 'Keine Karte passt zu diesem Filter.',
   'cards.banned': 'gebannt',
-  'cards.preview': 'Fahre über eine Karte, um sie groß zu sehen.',
   'cards.shown': '{shown} von {total}',
   'sort.played': 'am meisten gespielt',
   'sort.value-desc': 'Marktwert absteigend',

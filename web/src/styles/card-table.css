@@ -7,7 +7,7 @@
   container-type: inline-size;
 }
 
-/* clip, not hidden: hidden would make this box the scroll container and break the sticky header */
+/* clip, not hidden: hidden would make this box a scroll container */
 .card-table .table-wrap {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -22,9 +22,6 @@
 }
 
 .card-table thead th {
-  position: sticky;
-  top: var(--sticky-top, 62px); /* below the site header; 0 inside the overlay */
-  z-index: 1;
   padding: 10px 14px;
   background: var(--surface-raised);
   font-family: var(--font-mono), monospace;

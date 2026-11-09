@@ -86,7 +86,6 @@ export const en: Record<UiKey, string> = {
   'cards.sort': 'Sort',
   'cards.empty': 'No card matches this filter.',
   'cards.banned': 'banned',
-  'cards.preview': 'Hover over a card to see it large.',
   'cards.shown': '{shown} of {total}',
   'sort.played': 'most played',
   'sort.value-desc': 'Market value: high to low',

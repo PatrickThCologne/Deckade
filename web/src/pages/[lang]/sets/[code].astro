@@ -66,8 +66,10 @@ const description = set.standard
     </a>
     <div class="layout" data-leave-area>
       <aside class="pack panel">
-        {set.packImage && (
+        {set.packImage ? (
           <img src={withBase(set.packImage)} alt="" width="300" height="540" data-pack-image />
+        ) : (
+          set.iconUrl && <img class="icon" src={set.iconUrl} alt="" width="96" height="96" />
         )}
       </aside>
 
@@ -100,7 +102,6 @@ const description = set.standard
             </figcaption>
           </figure>
         )}
-        <p class="hint">{t('cards.preview')}</p>
       </aside>
     </div>
   </div>
@@ -128,12 +129,11 @@ const description = set.standard
   .layout {
     display: grid;
     grid-template-columns: 210px minmax(0, 1fr) 270px;
-    gap: 24px;
     align-items: start;
     cursor: zoom-out;
   }
 
-  /* Each column has its own background; the space between them is the way back. */
+  /* The space around the columns is the way back. */
   .layout > * {
     cursor: auto;
   }
@@ -142,10 +142,32 @@ const description = set.standard
   .preview {
     position: sticky;
     top: var(--sticky-top-panels, 86px);
+    z-index: 1;
   }
 
+  /*
+   * The pack and the card preview are attached to the sides of the card list, so the three
+   * form one T-shaped panel. Each overlaps the list's border by a pixel to hide the seam.
+   */
   .pack {
+    margin-right: -1px;
     padding: 16px;
+    border-right: 0;
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  }
+
+  .preview figure {
+    margin-left: -1px;
+    border-left: 0;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  }
+
+  .layout:has(.pack img) .main {
+    border-top-left-radius: 0;
+  }
+
+  .layout:has(.preview figure) .main {
+    border-top-right-radius: 0;
   }
 
   .pack:empty {
@@ -156,6 +178,23 @@ const description = set.standard
     width: 100%;
     height: auto;
     filter: drop-shadow(0 22px 30px rgb(0 0 0 / 0.6));
+  }
+
+  /* Sets without an official pack image show their symbol, as on the overview */
+  .pack .icon {
+    display: block;
+    width: 96px;
+    margin: 24px auto;
+    filter: invert(1) opacity(0.7);
+  }
+
+  /* Fixed columns: a set without a pack panel must not pull the card list to the left */
+  .main {
+    grid-column: 2;
+  }
+
+  .preview {
+    grid-column: 3;
   }
 
   .main {
@@ -205,13 +244,6 @@ const description = set.standard
     color: var(--text-dim);
   }
 
-  .hint {
-    margin: 10px 4px 0;
-    font-size: 12px;
-    color: var(--text-faint);
-    text-align: center;
-  }
-
   @media (max-width: 1120px) {
     .layout {
       grid-template-columns: 170px minmax(0, 1fr);
@@ -219,6 +251,10 @@ const description = set.standard
 
     .preview {
       display: none;
+    }
+
+    .layout:has(.preview figure) .main {
+      border-top-right-radius: var(--radius-lg);
     }
   }
 
@@ -232,6 +268,17 @@ const description = set.standard
       position: static;
       width: 150px;
       justify-self: center;
+      margin-right: 0;
+      border-right: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+    }
+
+    .layout:has(.pack img) .main {
+      border-top-left-radius: var(--radius-lg);
+    }
+
+    .main {
+      grid-column: auto;
     }
 
     .main {

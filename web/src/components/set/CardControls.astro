@@ -169,8 +169,11 @@ const format = createFormatters(locale);
     gap: 10px;
   }
 
-  /* All filters in one box */
+  /* All filters in one box, which stays in view while the list scrolls under it */
   .filters {
+    position: sticky;
+    top: var(--sticky-top, 62px); /* below the site header; 0 inside the overlay */
+    z-index: 2;
     display: grid;
     gap: 10px;
     margin-bottom: 14px;
@@ -179,7 +182,14 @@ const format = createFormatters(locale);
     border-radius: var(--radius-lg);
     background:
       linear-gradient(135deg, rgb(242 193 78 / 0.07), transparent 40%), var(--surface-solid);
-    box-shadow: var(--inner-highlight);
+    box-shadow: var(--shadow), var(--inner-highlight);
+  }
+
+  /* On phones the box would cover a third of the screen: there it scrolls away */
+  @media (max-width: 720px), (max-height: 600px) {
+    .filters {
+      position: static;
+    }
   }
 
   .filter-row {
