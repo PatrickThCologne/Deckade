@@ -33,20 +33,9 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      # The site is built from a fresh data snapshot (generated data is not committed)
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - uses: actions/cache@v4
-        with:
-          path: |
-            pipeline/.cache
-            web/public/images
-          key: pipeline-${{ github.run_id }}
-          restore-keys: pipeline-
-      - run: pip install -e ../pipeline && python -m rotation_radar build --root ..
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # The small contract snapshot written by the pipeline's tests (tests/contract) stands in
+      # for live data: fast and reproducible. Live data is only fetched by the deployment.
+      - run: mkdir -p src/data && cp -r tests/contract src/data/generated
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
