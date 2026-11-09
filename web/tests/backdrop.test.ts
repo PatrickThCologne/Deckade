@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { approach, artRows, creditedArtists, driftOffset, sinkSpeed } from '../src/lib/backdrop';
+import {
+  approach,
+  artRows,
+  creditedArtists,
+  driftOffset,
+  sinkSpeed,
+  tabTurn,
+} from '../src/lib/backdrop';
 
 describe('art rows', () => {
   it('fills every row and never repeats a sequence', () => {
@@ -41,6 +48,21 @@ describe('scroll movement', () => {
     expect(oneFrame).toBeGreaterThan(0);
     expect(oneFrame).toBeLessThan(100);
     expect(approach(99.8, 100, 16, 90)).toBe(100);
+  });
+});
+
+describe('tab change', () => {
+  const tabs = ['/de/', '/de/cards/', '/de/rotation/'];
+
+  it('turns the rows from the last tab to this one, in the direction of the move', () => {
+    expect(tabTurn(tabs, '/de/rotation/', '/de/', 700)).toEqual({ from: 0, to: 1400 });
+    expect(tabTurn(tabs, '/de/', '/de/cards/', 700)).toEqual({ from: 700, to: 0 });
+  });
+
+  it('rests in place without a tab to come from', () => {
+    expect(tabTurn(tabs, '/de/cards/', undefined, 700)).toEqual({ from: 700, to: 700 });
+    expect(tabTurn(tabs, '/de/cards/', '/de/about/', 700)).toEqual({ from: 700, to: 700 });
+    expect(tabTurn(tabs, '/de/about/', '/de/cards/', 700)).toEqual({ from: 0, to: 0 });
   });
 });
 

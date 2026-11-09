@@ -56,6 +56,23 @@ export function approach(
   return Math.abs(target - next) < 0.5 ? target : next;
 }
 
+/**
+ * Where the rows start and stop on a page: each page tab (`tabs`, by path) has its own position,
+ * `step` apart. Coming from another tab, the rows start at that tab's position and turn to this
+ * one's -- one way when moving right, the other when moving left. Other pages rest at 0.
+ */
+export function tabTurn(
+  tabs: readonly string[],
+  current: string,
+  previous: string | undefined,
+  step: number,
+): { from: number; to: number } {
+  const here = tabs.indexOf(current);
+  if (here < 0) return { from: 0, to: 0 };
+  const before = previous === undefined ? -1 : tabs.indexOf(previous);
+  return { from: (before < 0 ? here : before) * step, to: here * step };
+}
+
 /** Artists for the credit line in the footer: each once, in alphabetical order. */
 export function creditedArtists(artists: readonly string[], locale: string): string[] {
   return [...new Set(artists)].sort(new Intl.Collator(locale).compare);

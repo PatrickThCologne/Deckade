@@ -4,8 +4,12 @@
  * fades in once the reader leaves the top. The movement follows the scroll position with a
  * short glide. Only transform and opacity change, so the browser does not repaint. With
  * reduced motion the wall stands still and only the darkening remains.
+ *
+ * Each page tab (data-wall-tab) has its own row position. After a tab change the rows start at
+ * the last tab's position and turn to this one's, once the page change has faded over (view
+ * transition, styles/global.css). Nothing is stored: the last tab is the previous address.
  */
-import { approach, driftOffset, sinkSpeed } from '../lib/backdrop';
+import { approach, driftOffset, sinkSpeed, tabTurn } from '../lib/backdrop';
 
 /** px the wall sinks per px scrolled (less if the wall is too short for the page) */
 const SINK = 0.1;
@@ -16,6 +20,11 @@ const ROW_PHASE = 137;
 /** px of scrolling until the dark layer is fully there */
 const DIM_DISTANCE = 700;
 const GLIDE_MS = 140;
+/** px of scrolling the rows drift on by per tab */
+const TURN = 700;
+const TURN_GLIDE_MS = 260;
+/** Turn even if the page change is not reported (older browsers) */
+const TURN_FALLBACK_MS = 600;
 
 interface Row {
   element: HTMLElement;
@@ -38,6 +47,9 @@ export function initBackdrop(): void {
   );
   let sink = 0;
   let shown = window.scrollY;
+  // Drift on top of the scroll position: this tab's position, or the last tab's while turning
+  let turned = 0;
+  let turnTarget = 0;
   let frame = 0;
   let last = 0;
 
@@ -53,16 +65,19 @@ export function initBackdrop(): void {
     if (!wall) return;
     wall.style.transform = `translate3d(0, ${-shown * sink}px, 0)`;
     for (const { element, speed, phase, loop } of rows) {
-      element.style.transform = `translate3d(${driftOffset(shown, speed, phase, loop)}px, 0, 0)`;
+      const offset = driftOffset(shown + turned, speed, phase, loop);
+      element.style.transform = `translate3d(${offset}px, 0, 0)`;
     }
   };
 
   const tick = (now: number) => {
     const target = window.scrollY;
-    shown = wall ? approach(shown, target, last ? now - last : 16, GLIDE_MS) : target;
+    const elapsed = last ? now - last : 16;
+    shown = wall ? approach(shown, target, elapsed, GLIDE_MS) : target;
+    turned = approach(turned, turnTarget, elapsed, TURN_GLIDE_MS);
     last = now;
     render();
-    frame = shown === target ? 0 : requestAnimationFrame(tick);
+    frame = shown === target && turned === turnTarget ? 0 : requestAnimationFrame(tick);
   };
 
   const start = () => {
@@ -78,8 +93,50 @@ export function initBackdrop(): void {
       render();
     });
   }
+  if (wall) {
+    const tabs = [...document.querySelectorAll<HTMLAnchorElement>('a[data-wall-tab]')];
+    const { from, to } = tabTurn(
+      tabs.map((tab) => tab.pathname),
+      window.location.pathname,
+      previousPath(),
+      TURN,
+    );
+    turned = turnTarget = from;
+    if (to !== from) {
+      afterPageChange(() => {
+        turnTarget = to;
+        start();
+      });
+    }
+  }
   measure();
   render();
+}
+
+/** Path of the page the reader came from, if it is on this site. */
+function previousPath(): string | undefined {
+  const from = ('navigation' in window && navigation.activation?.from?.url) || document.referrer;
+  if (!from) return undefined;
+  const url = new URL(from);
+  return url.origin === window.location.origin ? url.pathname : undefined;
+}
+
+/** Runs `turn` once the page change has faded over, or at once without a view transition. */
+function afterPageChange(turn: () => void): void {
+  let done = false;
+  const turnOnce = () => {
+    if (done) return;
+    done = true;
+    turn();
+  };
+  const after = (transition: ViewTransition | null | undefined) => {
+    if (transition) transition.finished.then(turnOnce, turnOnce);
+    else turnOnce();
+  };
+  if (document.activeViewTransition) after(document.activeViewTransition);
+  else
+    window.addEventListener('pagereveal', (event) => after(event.viewTransition), { once: true });
+  window.setTimeout(turnOnce, TURN_FALLBACK_MS);
 }
 
 /**
