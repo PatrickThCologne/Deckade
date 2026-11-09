@@ -1,0 +1,58 @@
+# Standard rotation rules.
+#
+# The rule is official (https://magic.wizards.com/en/formats/standard, read 2026-11-03):
+#   "Once per year, after the first premier set Prerelease of the year,
+#    the six oldest sets in Standard rotate out."
+# Everything below configures how the pipeline applies it.
+
+rotating_set_count = 6
+
+# The Prerelease usually takes place one week before a set's release. Used to
+# estimate the rotation date until Wizards announces it.
+prerelease_lead_days = 7
+
+# A released set counts as "in Standard" when at least this share of its cards is
+# Standard-legal (guards against promo-heavy or supplemental sets).
+legal_share_threshold = 0.8
+
+# Standard spans roughly three years; older sets are not even considered.
+lookback_years = 4
+
+# Set this as soon as Wizards announces the exact rotation date, e.g. "2027-01-29".
+# Until then the site only shows the estimated month and year.
+official_rotation_date = ""
+
+# Sets that do not follow the yearly rotation.
+[special_rules.fdn]
+legal_until_at_least = 2029
+source = "Mark Rosewater, reported by Wargamer and others (2024); not stated on the Wizards Standard page"
+
+# Non-rotating formats shown next to Standard. Which sets are legal is NOT hard-coded:
+# a set counts when at least `legal_share_threshold` of its cards is legal in the format
+# according to Scryfall. `earliest_release` and `set_types` only narrow the candidates.
+[formats.pioneer]
+name = "Pioneer"
+set_types = ["expansion", "core"]
+earliest_release = "2012-10-05" # Return to Ravnica; "sets from Return to Ravnica, forward" (Wizards)
+info_url = "https://magic.wizards.com/en/formats/pioneer"
+banlist_url = "https://magic.wizards.com/en/banned-restricted-list#pioneer-banned"
+
+[formats.modern]
+name = "Modern"
+set_types = ["expansion", "core", "draft_innovation"]
+earliest_release = "2003-07-28" # Eighth Edition
+info_url = "https://magic.wizards.com/en/formats/modern"
+banlist_url = "https://magic.wizards.com/en/banned-restricted-list#modern-banned"
+
+[formats.commander]
+name = "Commander"
+set_types = ["expansion", "core", "masters", "draft_innovation"]
+earliest_release = "1993-08-05" # Limited Edition Alpha; "cards from throughout Magic's history" (Wizards)
+info_url = "https://magic.wizards.com/en/formats/commander"
+banlist_url = "https://magic.wizards.com/en/banned-restricted-list#commander-banned"
+
+# Sets left off the website entirely (no tile, no set page, not counted). Give a reason.
+[catalog]
+hidden = [
+  "mbc", # Mystery Booster Commander Edition: no booster image; removed on request, 2026-11-07
+]

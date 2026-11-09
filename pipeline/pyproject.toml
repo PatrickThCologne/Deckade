@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rotation-radar-pipeline"
+version = "0.1.0"
+description = "Builds the Deckade data snapshot from public Magic: The Gathering data sources."
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28",
+    "pillow>=11.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+
+[project.scripts]
+rotation-radar = "rotation_radar.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "C4", "N", "UP", "SIM", "RET", "PTH", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
