@@ -8,7 +8,7 @@ name: Refresh data and deploy
 
 on:
   schedule:
-    - cron: '30 4 * * *' # after the nightly price guide is published
+    - cron: '30 4 * * *' # once a day; Scryfall's bulk data and the decklists change daily
   workflow_dispatch:
 
 permissions:
