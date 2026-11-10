@@ -61,8 +61,11 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
   }
 
   .hero {
-    /* How far the light reaches from its brightest point, along the edge and round the corner */
+    /* How far the light reaches from its brightest point: to the left, along the edge and
+       round the corner; to the right at least as far, and from the last tab on past the top
+       right corner (--light-span, set by the script), as the banner is wider on that side */
     --light-reach: min(560px, 45vw);
+    --light-reach-right: max(var(--light-reach), var(--light-span, 0px));
   }
 
   .hero[data-light-glide] {
@@ -105,9 +108,12 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
      light sits there exactly under the tabs. Layers, from top to bottom of the list: the top
      edge; on round the top left corner, down the left edge; on round the bottom left corner,
      along the bottom; on round the top right corner, down the right edge; and under all of
-     them the gold line down the left edge, fading towards the bottom. */
+     them the gold line down the left edge, fading towards the bottom. To the right the light
+     keeps more of its strength for longer (--light-held at three quarters of the way), so it
+     still shows where it turns the far corner. */
   .surface::before {
     --light: rgb(242 193 78 / var(--light-on, 0));
+    --light-held: rgb(242 193 78 / calc(var(--light-on, 0) * 0.65));
     --past-left: var(--light-x);
     --past-bottom-left: calc(var(--light-x) + var(--light-h, 0px));
     --past-right: calc(var(--light-w, 0px) - var(--light-x));
@@ -120,15 +126,21 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
           90deg,
           transparent calc(var(--light-x) - var(--light-reach)),
           var(--light) var(--light-x),
-          transparent calc(var(--light-x) + var(--light-reach))
+          var(--light-held) calc(var(--light-x) + var(--light-reach-right) * 0.75),
+          transparent calc(var(--light-x) + var(--light-reach-right))
         )
         0 0 / 100% 2px no-repeat,
       linear-gradient(180deg, var(--light), transparent) 0 calc(var(--past-left) * -1) / 2px
         var(--light-reach) no-repeat,
       linear-gradient(90deg, var(--light), transparent) calc(var(--past-bottom-left) * -1) 100% /
         var(--light-reach) 2px no-repeat,
-      linear-gradient(180deg, var(--light), transparent) 100% calc(var(--past-right) * -1) / 2px
-        var(--light-reach) no-repeat,
+      linear-gradient(
+          180deg,
+          var(--light),
+          var(--light-held) calc(var(--light-reach-right) * 0.75),
+          transparent var(--light-reach-right)
+        )
+        100% calc(var(--past-right) * -1) / 2px var(--light-reach-right) no-repeat,
       linear-gradient(180deg, rgb(242 193 78 / 0.4), rgb(242 193 78 / 0.08)) 0 0 / 2px 100%
         no-repeat;
     pointer-events: none;

@@ -38,3 +38,11 @@ export function followTabs<T extends EventTarget>(
 export function tabFootCentre(left: number, width: number, leanX: number): number {
   return left + (width - leanX) / 2;
 }
+
+/**
+ * How far the light must reach to the right so that, starting under the last tab, it turns
+ * the banner's top right corner and runs `past` pixels down the right edge.
+ */
+export function reachPastCorner(frameWidth: number, lastTabCentre: number, past: number): number {
+  return frameWidth - lastTabCentre + past;
+}

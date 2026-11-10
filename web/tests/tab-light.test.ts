@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { followTabs, tabFootCentre } from '../src/lib/tab-light';
+import { followTabs, reachPastCorner, tabFootCentre } from '../src/lib/tab-light';
 
 describe('followTabs', () => {
   const DELAY = 90;
@@ -52,5 +52,12 @@ describe('followTabs', () => {
 describe('tabFootCentre', () => {
   it('is the middle of the foot, which is narrower than the box by the lean', () => {
     expect(tabFootCentre(100, 130, 10)).toBe(160);
+  });
+});
+
+describe('reachPastCorner', () => {
+  it('reaches from the last tab to the top right corner and on down the edge', () => {
+    // Banner 1160 wide, last tab's middle at 463: 697 to the corner, then 120 down
+    expect(reachPastCorner(1160, 463, 120)).toBe(817);
   });
 });
