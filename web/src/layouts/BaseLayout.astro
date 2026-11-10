@@ -72,6 +72,14 @@ const speculationRules = JSON.stringify({
   </body>
 </html>
 
+<script>
+  import { VISIT_COUNTER } from '../config/site';
+  import { startCounting } from '../lib/visit-counter';
+
+  // Only the published site counts; the count script also skips localhost on its own
+  if (import.meta.env.PROD) startCounting(document, VISIT_COUNTER);
+</script>
+
 <style>
   main {
     flex: 1;

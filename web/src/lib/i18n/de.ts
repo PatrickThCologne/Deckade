@@ -176,7 +176,7 @@ export const de = {
   'about.window': '(Turnierdecks {from} – {to}: {decks})',
   'about.privacy.heading': 'Datenschutz',
   'about.privacy':
-    'Die Seite setzt keine Cookies und kein Tracking ein. Kartenbilder werden direkt von Scryfall geladen; dabei erhält Scryfall deine IP-Adresse.',
+    'Die Seite setzt keine Cookies ein. Besuche zählt sie mit GoatCounter, ohne Cookies und ohne deine IP-Adresse zu speichern. Kartenbilder werden direkt von Scryfall geladen; dabei erhält Scryfall deine IP-Adresse.',
 
   'footer.art': 'Artworks im Hintergrund von',
   'footer.data':
@@ -236,7 +236,7 @@ export const de = {
     'Welche Daten beim Besuch dieser Seite anfallen und wer sie verarbeitet.',
   'privacy.heading': 'Datenschutzerklärung',
   'privacy.intro':
-    'Kurz gesagt: keine Cookies, kein Tracking, keine Statistik, keine Konten und nichts, was im Browser gespeichert wird. Daten fallen nur an, weil Seiten und Bilder von Servern geladen werden.',
+    'Kurz gesagt: keine Cookies, keine Konten und nichts, was im Browser gespeichert wird. Daten fallen nur an, weil Seiten und Bilder von Servern geladen werden und Besuche gezählt werden, ohne deine IP-Adresse zu speichern.',
   'privacy.controller.heading': 'Verantwortlich',
   'privacy.controller.missing': 'Name und E-Mail-Adresse werden beim Veröffentlichen eingetragen.',
   'privacy.hosting.heading': 'Hosting bei GitHub Pages',
@@ -247,6 +247,10 @@ export const de = {
   'privacy.images.text':
     'Kartenbilder, Set-Symbole und die Artworks im Hintergrund werden direkt von Servern der Scryfall LLC (USA) geladen. Dabei erhält Scryfall deine IP-Adresse und technische Angaben deines Browsers. Rechtsgrundlage ist das berechtigte Interesse, die Karten zu zeigen, um die es auf dieser Seite geht (Art. 6 Abs. 1 lit. f DSGVO).',
   'privacy.images.link': 'Datenschutz bei Scryfall',
+  'privacy.counter.heading': 'Besucherzählung mit GoatCounter',
+  'privacy.counter.text':
+    'Damit ich sehe, wie oft die Seite besucht wird, meldet sie jeden Seitenaufruf an GoatCounter, einen Dienst, den eine Einzelperson in Irland betreibt; die Server stehen bei der Hetzner Online GmbH in Deutschland und Finnland. Übertragen werden die aufgerufene Seite, die Seite, von der du kommst, Browser, Betriebssystem, Sprache, Bildschirmgröße und deine IP-Adresse. Nach eigenen Angaben speichert GoatCounter von der IP-Adresse nur das Land und alles andere nur als Summen; um Besuche nicht doppelt zu zählen, hält es IP-Adresse und Browserkennung bis zu 8 Stunden im Arbeitsspeicher. In deinem Browser wird nichts gespeichert. Rechtsgrundlage ist das berechtigte Interesse zu wissen, ob und wie die Seite genutzt wird (Art. 6 Abs. 1 lit. f DSGVO).',
+  'privacy.counter.link': 'Datenschutz bei GoatCounter',
   'privacy.local.heading': 'Was ohne Dritte auskommt',
   'privacy.local.text':
     'Schriften, Mana-Symbole und Booster-Bilder liegen auf demselben Server wie die Seite. Links zu Scryfall, Cardmarket oder Wizards of the Coast übertragen erst etwas, wenn du sie anklickst; ab dann gilt der Datenschutz der jeweiligen Seite.',

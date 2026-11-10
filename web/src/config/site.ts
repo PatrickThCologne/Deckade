@@ -7,6 +7,16 @@ export const SITE_NAME = SITE_NAME_PARTS.join('');
 /** The public repository: source code and the issue tracker the feedback form can open. */
 export const SOURCE_REPO = 'https://github.com/PatrickThCologne/Deckade';
 
+/**
+ * Visitor counting with GoatCounter (docs/adr/0004-visitor-counting.md): the public count
+ * address and the pinned script with its hash (from goatcounter.com/help/countjs-versions).
+ */
+export const VISIT_COUNTER = {
+  endpoint: 'https://vazabee.goatcounter.com/count',
+  script: 'https://gc.zgo.at/count.v5.js',
+  integrity: 'sha384-atnOLvQb9t+jTSipvd75X2yginT4PjVbqDdlJAmxMm+wYElFmeR6EmLP5bYeoRVQ',
+} as const;
+
 export const LOCALES = ['de', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
 // The root address forwards here, and so does the 404 page's language and the x-default link
