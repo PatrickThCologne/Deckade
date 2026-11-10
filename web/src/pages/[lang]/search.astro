@@ -6,12 +6,9 @@
  */
 import HeroPanel from '../../components/hero/HeroPanel.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { CARD_TYPES, SORT_KEYS } from '../../lib/cards/sort';
 import { useTranslations } from '../../lib/i18n';
 import { withBase } from '../../lib/links';
-import { COLORS } from '../../lib/mana';
 import { localeFrom, localePaths } from '../../lib/routing';
-import { KEYWORDS } from '../../lib/search/keywords';
 
 export const getStaticPaths = localePaths;
 
@@ -34,18 +31,6 @@ const examples =
       ];
 
 const labels = {
-  colors: Object.fromEntries(COLORS.map((color) => [color, t(`color.${color}`)])),
-  types: Object.fromEntries(CARD_TYPES.map((type) => [type, t(`type.${type}`)])),
-  keywords: Object.fromEntries(KEYWORDS.map((keyword) => [keyword, t(`keyword.${keyword}`)])),
-  sorts: Object.fromEntries(SORT_KEYS.map((key) => [key, t(`sort.${key}`)])),
-  understood: t('search.understood'),
-  colorless: t('search.colorless'),
-  exactly: t('search.exactly'),
-  manaMax: t('search.manaMax'),
-  manaExact: t('search.manaExact'),
-  priceMax: t('search.priceMax'),
-  name: t('search.name'),
-  ignored: t('search.ignored'),
   count: t('search.count'),
   none: t('search.none'),
   loading: t('cards.loading'),
@@ -56,7 +41,7 @@ const labels = {
 ---
 
 <BaseLayout locale={locale} title={t('search.title')} description={t('search.text')}>
-  <HeroPanel tab="search" locale={locale} eyebrow={t('search.eyebrow')} title={t('search.title')}>
+  <HeroPanel tab="search" locale={locale} title={t('search.title')}>
     <p>{t('search.text')}</p>
   </HeroPanel>
 
@@ -90,7 +75,6 @@ const labels = {
       </p>
     </form>
 
-    <p class="understood" data-understood aria-live="polite" hidden></p>
     <p class="status" data-status hidden></p>
     <ul class="results" role="list" data-results></ul>
     <button type="button" class="more" data-more hidden></button>
@@ -179,42 +163,9 @@ const labels = {
     color: var(--accent);
   }
 
-  /* What the request was read as: a caption, then one small pill per filter */
-  .understood {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    margin: 16px 0 0;
-  }
-
-  .understood[hidden],
   .status[hidden],
   .more[hidden] {
     display: none;
-  }
-
-  .understood :global(.caption) {
-    margin-right: 4px;
-    font-family: var(--font-mono), monospace;
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-faint);
-  }
-
-  .understood :global(.chip) {
-    padding: 3px 10px;
-    border: 1px solid rgb(242 193 78 / 0.45);
-    border-radius: 999px;
-    color: var(--text);
-    font-size: 13px;
-  }
-
-  .understood :global(.chip--ignored) {
-    border-color: var(--line);
-    color: var(--text-faint);
   }
 
   .status {

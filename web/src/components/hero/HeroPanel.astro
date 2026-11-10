@@ -13,7 +13,8 @@ import type { HeroStat } from './types';
 interface Props {
   tab: Tab;
   locale: Locale;
-  eyebrow: string;
+  /** A short label above the title; the search tab has none */
+  eyebrow?: string;
   title: string;
   stats?: readonly HeroStat[];
   radar?: boolean;
@@ -29,7 +30,7 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
       {radar && <div class="radar"></div>}
     </div>
     <div class="copy">
-      <p class="eyebrow">{eyebrow}</p>
+      {eyebrow && <p class="eyebrow">{eyebrow}</p>}
       <h1 id="hero-title">{title}</h1>
       <slot />
     </div>

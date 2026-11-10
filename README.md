@@ -19,8 +19,8 @@ but public data:
 - **Standard rotation** – the Standard sets grouped by when they leave, the next rotation as
   the headline. Estimates are labelled as estimates.
 - **Search** – a request in plain German or English („günstige rote Kreaturen mit Eile“) becomes
-  filters for colour, type, keyword, mana value, price and order. It runs in the browser and
-  shows how the request was understood ([ADR 0002](docs/adr/0002-natural-language-search.md)).
+  filters for colour, type, keyword, mana value, price and order. It runs in the browser
+  ([ADR 0002](docs/adr/0002-natural-language-search.md)).
 - **German and English** – every page in both languages; German pages show German card names
   and images wherever a German printing exists.
 - **Static and fast** – plain HTML without a client framework and self-hosted fonts; JavaScript

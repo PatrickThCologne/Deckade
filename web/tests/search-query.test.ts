@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { CARD_TYPES, normalizeForSearch, SORT_KEYS } from '../src/lib/cards/sort';
-import { type ChipLabels, queryChips } from '../src/lib/search/chips';
-import { cardKeywords, KEYWORDS } from '../src/lib/search/keywords';
+import { normalizeForSearch } from '../src/lib/cards/sort';
+import { cardKeywords } from '../src/lib/search/keywords';
 import {
   nameRank,
   parseQuery,
@@ -185,51 +184,6 @@ describe('cardKeywords', () => {
 
   it('reads the two-word keywords', () => {
     expect(cardKeywords('First strike\nDouble strike')).toEqual(['first-strike', 'double-strike']);
-  });
-});
-
-describe('queryChips', () => {
-  const labels: ChipLabels = {
-    colors: { W: 'Weiß', U: 'Blau', B: 'Schwarz', R: 'Rot', G: 'Grün' },
-    types: Object.fromEntries(
-      CARD_TYPES.map((type) => [type, `type:${type}`]),
-    ) as ChipLabels['types'],
-    keywords: Object.fromEntries(KEYWORDS.map((k) => [k, `kw:${k}`])) as ChipLabels['keywords'],
-    sorts: Object.fromEntries(SORT_KEYS.map((key) => [key, `sort:${key}`])) as ChipLabels['sorts'],
-    colorless: 'farblos',
-    exactly: 'genau {colors}',
-    manaMax: 'bis {n} Mana',
-    manaExact: '{n} Mana',
-    priceMax: 'bis {price}',
-    name: 'Name enthält „{words}“',
-    ignored: 'nicht berücksichtigt: {words}',
-  };
-  const chips = (request: string) =>
-    queryChips(parseQuery(request), labels, (euro) => `${euro} €`).map((chip) =>
-      chip.ignored ? `(${chip.text})` : chip.text,
-    );
-
-  it('names every filter in the order of the request form', () => {
-    expect(chips('günstige rote Kreaturen mit Eile bis 3 Mana unter 2 € und Kartenziehen')).toEqual(
-      [
-        'Rot',
-        'type:creature',
-        'kw:haste',
-        'bis 3 Mana',
-        'bis 2 €',
-        'sort:value-asc',
-        '(nicht berücksichtigt: kartenziehen)',
-      ],
-    );
-  });
-
-  it('names exact colours, colourless and an exact mana value', () => {
-    expect(chips('Azorius 2-drops')).toEqual(['genau Weiß + Blau', '2 Mana']);
-    expect(chips('farblos')).toEqual(['farblos']);
-  });
-
-  it('shows a request without filters as a name search', () => {
-    expect(chips('Lightning Bolt')).toEqual(['Name enthält „lightning bolt“']);
   });
 });
 

@@ -1,13 +1,12 @@
 /**
- * The search tab (pages/[lang]/search.astro): reads the request (lib/search/query.ts), shows
- * how it was understood and lists the matching cards of the "All cards" list as images. The
- * list is large, so it is loaded with the first search, not with the page.
+ * The search tab (pages/[lang]/search.astro): reads the request (lib/search/query.ts) and lists
+ * the matching cards of the "All cards" list as images. The list is large, so it is loaded with
+ * the first search, not with the page.
  */
 import { isLocale } from '../config/site';
 import { type CatalogCard, type CatalogFile, decodeCatalog } from '../lib/cards/catalog';
 import { compareCards, normalizeForSearch } from '../lib/cards/sort';
 import { createFormatters } from '../lib/format';
-import { type ChipLabels, queryChips } from '../lib/search/chips';
 import {
   nameRank,
   parseQuery,
@@ -20,8 +19,7 @@ const STEP = 48;
 /** Typing pauses this long before the search runs */
 const TYPING_DELAY_MS = 350;
 
-interface Labels extends ChipLabels {
-  readonly understood: string;
+interface Labels {
   readonly count: string;
   readonly none: string;
   readonly loading: string;
@@ -39,12 +37,11 @@ export async function initCardSearch(): Promise<void> {
   const root = document.querySelector<HTMLElement>('[data-card-search]');
   const form = root?.querySelector<HTMLFormElement>('[data-search-form]');
   const input = form?.querySelector<HTMLInputElement>('input[name="q"]');
-  const understood = root?.querySelector<HTMLElement>('[data-understood]');
   const status = root?.querySelector<HTMLElement>('[data-status]');
   const list = root?.querySelector<HTMLElement>('[data-results]');
   const more = root?.querySelector<HTMLButtonElement>('[data-more]');
   const src = root?.dataset.src;
-  if (!root || !form || !input || !understood || !status || !list || !more || !src) return;
+  if (!root || !form || !input || !status || !list || !more || !src) return;
 
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Labels;
   const format = createFormatters(isLocale(root.dataset.locale) ? root.dataset.locale : 'de');
@@ -115,14 +112,6 @@ export async function initCardSearch(): Promise<void> {
   const run = async (request: string) => {
     latest = request;
     const query = parseQuery(request);
-    const chips = request.trim() ? queryChips(query, labels, format.price) : [];
-    understood.replaceChildren(
-      element('span', 'caption', labels.understood),
-      ...chips.map((chip) =>
-        element('span', chip.ignored ? 'chip chip--ignored' : 'chip', chip.text),
-      ),
-    );
-    understood.hidden = chips.length === 0;
     list.replaceChildren();
     more.hidden = true;
     shown = 0;

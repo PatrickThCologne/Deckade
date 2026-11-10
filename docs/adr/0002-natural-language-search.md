@@ -26,8 +26,9 @@ mana value, a price and an order ("cheap", "popular").
   (`lib/search/keywords.ts`): only lines made up entirely of keywords count, so "creatures
   with flying can't block" gives no keyword. The catalog carries them as one extra field. The
   German names were checked against the German card texts in the pipeline data on 2026-11-10.
-- The page shows how the request was understood, one label per filter, and which words it did
-  not use. A request without any filter is a name search, with the exact name first.
+- Words the rules do not know are left out rather than finding nothing. A request without any
+  filter is a name search, with the exact name first. A first version listed what was
+  understood, one label per filter; it was taken out again to keep the page plain.
 - The request stays in the address (`?q=`), so a search can be shared. Nothing is stored.
 - The C# code in `api/` stays for a later phase and is not deployed.
 
@@ -38,7 +39,7 @@ mana value, a price and an order ("cheap", "popular").
 - The card list loads with the first search, not with the page: 4.5 MB for 29,451 cards, about
   1.7 MB compressed (measured 2026-11-10). The keyword field adds about 0.1 MB (2 %).
 - Only what the rules know is understood. "Kartenziehen", "Removal" or "like Lightning Bolt"
-  are shown as not used. Rules text is not in the card list, so it is not searched.
+  are left out without notice. Rules text is not in the card list, so it is not searched.
 - Later phases, if wanted: more rules (card draw, removal, tribes) from the rules text at build
   time; similar cards from embeddings computed in the pipeline with a local model and shipped
   as a short list of neighbours per card; a server with a model only if that is not enough.
