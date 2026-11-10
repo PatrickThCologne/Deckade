@@ -2,7 +2,8 @@
 /**
  * The page tabs. They stand on the top edge of the banner like folder tabs, leaning at the
  * same angle as the banner's edge (--lean). On hover the light along the banner's top edge
- * glides over under the tab (scripts/tab-light.ts).
+ * glides over under the tab (scripts/tab-light.ts), and a thin gold line runs up the tab's
+ * left edge, round the corner and settles along its top.
  */
 import type { Locale } from '../../config/site';
 import { useTranslations } from '../../lib/i18n';
@@ -112,6 +113,59 @@ const tabs = [
   .tab:focus-visible {
     --tab-bg: rgb(30 33 42 / 0.94);
     color: var(--text);
+  }
+
+  /* The gold line on hover, a little inside the tab's edge and leaning with it. Two layers: the
+     upright part grows from the tab's foot up the left side, then the top part runs from the
+     corner to about the middle. Both fade out away from the corner, the upright one by half
+     the tab's height, like the light under the tabs. The upright part ends a pixel below the
+     corner, so the two do not cover the corner pixel twice. They stay while the pointer rests
+     and fade out when it leaves. */
+  .tab:not([aria-current])::after {
+    --trace: rgb(242 193 78 / 0.75);
+    --trace-length: 55%;
+    content: '';
+    position: absolute;
+    inset: 5px calc(var(--lean-x) + 7px) 0 7px;
+    transform: skewX(var(--lean));
+    transform-origin: bottom left;
+    background:
+      linear-gradient(var(--trace) 15%, transparent 60%) 0 100% / 1px calc(100% - 1px) no-repeat,
+      linear-gradient(90deg, var(--trace) 35%, transparent) 0 0 / var(--trace-length) 1px no-repeat;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+  }
+
+  .tab:not([aria-current]):is(:hover, :focus-visible)::after {
+    opacity: 1;
+    transition: none;
+    animation: tab-trace 0.5s cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  @keyframes tab-trace {
+    0% {
+      background-size:
+        1px 0,
+        0 1px;
+    }
+    40% {
+      background-size:
+        1px calc(100% - 1px),
+        0 1px;
+      animation-timing-function: cubic-bezier(0.22, 0.9, 0.24, 1);
+    }
+    100% {
+      background-size:
+        1px calc(100% - 1px),
+        var(--trace-length) 1px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tab:not([aria-current]):is(:hover, :focus-visible)::after {
+      animation: none;
+    }
   }
 
   .tab[aria-current='page'] {
