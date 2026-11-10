@@ -10,7 +10,7 @@ export const en: Record<UiKey, string> = {
     '{name} in Standard: {rotation}. {cards} with price and tournament play rate.',
   'meta.about.title': 'How we determine rotation',
   'meta.about.description':
-    'How {site} knows when a set leaves Standard, how certain each statement is and where the data comes from.',
+    'How {site} knows when a set leaves Standard, and where the data comes from.',
 
   'nav.skip': 'Skip to content',
   'nav.method': 'Methodology',
@@ -30,7 +30,7 @@ export const en: Record<UiKey, string> = {
   'hero.stat.legal': 'in Standard right now',
   'hero.stat.decks': 'tournament decks analysed',
   'hero.stat.banned': 'banned',
-  'hero.method': 'How certain is this?',
+  'hero.method': 'How we work this out',
 
   'when.early': 'early {year}',
   'when.on': 'on {date}',
@@ -43,7 +43,6 @@ export const en: Record<UiKey, string> = {
   'wave.laterUnknown': 'Rotates out later',
   'wave.special': 'Special rule: stays until at least {year}',
   'wave.badge.official': 'official',
-  'wave.badge.earliest': 'earliest possible under the current rule',
   'wave.badge.special': 'per Wizards',
   'wave.maybe': 'possibly',
   'wave.upcoming': 'releases {date}',
@@ -153,22 +152,19 @@ export const en: Record<UiKey, string> = {
   'about.rule.text':
     'According to Wizards of the Coast, once per year, after the Prerelease of the year’s first premier set, the six oldest sets rotate out of Standard. New sets are legal from their release.',
   'about.rule.link': 'Wizards’ Standard page',
-  'about.certainty.heading': 'How certain is each statement?',
+  'about.certainty.heading': 'Date and exceptions',
   'about.certainty.next.label': 'Next rotation',
   'about.certainty.next':
     'Which six sets rotate out next follows directly from the rule and the release dates.',
   'about.certainty.date.label': 'Date',
   'about.certainty.date':
-    'Wizards usually announces the exact day shortly before. Until then we estimate it (Prerelease about one week before release) and show “early 2027” instead of a day.',
-  'about.certainty.later.label': 'Later sets',
-  'about.certainty.later':
-    'For all later sets we only name the earliest possible date (“stays until at least …”). Projecting exactly when they rotate would not be backed by anything.',
+    'Wizards usually announces the exact day shortly before. Until then we estimate it (Prerelease about one week before release) and show “early 2027” instead of a day. Once the day is set, it is marked “official”.',
   'about.certainty.special.label': 'Special rules',
   'about.certainty.special':
     'According to Mark Rosewater, Foundations stays legal until at least 2029. This is not on Wizards’ Standard page; it was reported by Wargamer and others.',
-  'about.formats.heading': 'Pioneer, Modern and Commander',
-  'about.formats.text':
-    'These formats do not rotate. Which sets are legal in them is not written down by hand: a set counts when at least 80% of its cards are allowed in the format according to Scryfall (banned cards included). The banned lists come from Scryfall as well; Wizards’ official list is authoritative.',
+  'about.banlist.heading': 'Banned list',
+  'about.banlist.text':
+    'The banned cards on the “Standard Rotation” tab come from Scryfall. Wizards’ official list is authoritative.',
   'about.sources.heading': 'Data sources',
   'about.sources.scryfall': 'Sets, release dates, legality, mana costs and card images.',
   'about.sources.mtgjson': 'Bundles and booster boxes with their contents.',
