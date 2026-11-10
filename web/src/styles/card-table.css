@@ -151,3 +151,24 @@
     padding: 8px 10px;
   }
 }
+
+/* Phones: a long press on a row shows the card above the finger (scripts/press-preview.ts).
+   The browser's own long-press menu and text selection would get in the way. */
+@media (hover: none) {
+  .card-table tbody tr {
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+}
+
+.card-table tbody tr.is-pressed {
+  background: var(--surface-hover);
+}
+
+.press-preview {
+  position: fixed;
+  z-index: 1000;
+  border-radius: 4.75% / 3.5%;
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.6);
+  pointer-events: none;
+}

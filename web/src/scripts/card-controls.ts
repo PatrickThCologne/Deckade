@@ -18,6 +18,7 @@ import {
   type SortableCard,
   type SortKey,
 } from '../lib/cards/sort';
+import { connectPressPreview } from './press-preview';
 
 const COLOR_ORDER = 'WUBRG';
 
@@ -233,4 +234,5 @@ export function connectPreview(body: HTMLTableSectionElement, scope: ParentNode)
   body.addEventListener('pointerover', (event) => show(rowOf(event.target)));
   body.addEventListener('focusin', (event) => show(rowOf(event.target)));
   show(body.rows[0] ?? null);
+  connectPressPreview(body);
 }
