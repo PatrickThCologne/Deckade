@@ -47,11 +47,11 @@ const labels = {
   more: t('cards.more'),
 };
 const stats: HeroStat[] = [
-  { value: format.integer(catalog.length), label: t('allCards.stat.cards'), tone: 'accent' },
+  { value: format.integer(catalog.length), label: t('allCards.stat.cards'), tone: 'special' },
   {
     value: format.integer(sets.length),
     label: t('overview.stat.sets'),
-    tone: 'special',
+    tone: 'accent',
     href: localePath(locale),
   },
 ];

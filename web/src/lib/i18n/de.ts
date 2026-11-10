@@ -214,7 +214,6 @@ export const de = {
   'overview.eyebrow': 'Set-Übersicht',
   'overview.title': 'Alle Sets',
   'overview.stat.sets': 'Sets',
-  'overview.stat.cards': 'Karten in allen Sets',
   'search.eyebrow': 'Bald verfügbar',
   'search.title': 'Suche',
   'search.text':

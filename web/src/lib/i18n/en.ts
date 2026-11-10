@@ -215,7 +215,6 @@ export const en: Record<UiKey, string> = {
   'overview.eyebrow': 'Set overview',
   'overview.title': 'All sets',
   'overview.stat.sets': 'sets',
-  'overview.stat.cards': 'cards in all sets',
   'search.eyebrow': 'Coming soon',
   'search.title': 'Search',
   'search.text':
