@@ -5,12 +5,13 @@
   --bg: #08090c;
   --grain-opacity: 0.07;
 
-  --surface: rgb(16 18 24 / 0.82);
-  --surface-solid: #101218;
-  --surface-raised: #161922;
-  --surface-hover: #1c202b;
-  --line: rgb(170 178 196 / 0.12);
-  --line-strong: rgb(170 178 196 / 0.24);
+  /* A slightly warm black, matching the banner's black and gold rather than a cool blue */
+  --surface: rgb(15 14 13 / 0.84);
+  --surface-solid: #11100e;
+  --surface-raised: #181613;
+  --surface-hover: #201d18;
+  --line: rgb(196 186 160 / 0.12);
+  --line-strong: rgb(196 186 160 / 0.24);
 
   --text: #eceae4;
   --text-dim: #a3a6af;
