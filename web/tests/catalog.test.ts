@@ -118,6 +118,7 @@ describe('catalog file', () => {
     );
     expect(decoded[0]?.scryfallUrl).toBe('https://scryfall.com/card/m20/39/de');
     expect(decoded[0]).toMatchObject({ banned: true, isLand: false });
+    expect(decoded[0]?.keywords).toEqual(['flying', 'vigilance']);
     expect(decoded[1]).toMatchObject({ isLand: true, imageNormal: null, type: 'land' });
   });
 
