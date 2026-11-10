@@ -110,7 +110,8 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
      along the bottom; on round the top right corner, down the right edge; and under all of
      them the gold line down the left edge, fading towards the bottom. To the right the light
      keeps more of its strength for longer (--light-held at three quarters of the way), so it
-     still shows where it turns the far corner. */
+     still shows where it turns the far corner. The upright lines and the bottom one start
+     2px off their corner, so no two lines lie on top of each other there. */
   .surface::before {
     --light: rgb(242 193 78 / var(--light-on, 0));
     --light-held: rgb(242 193 78 / calc(var(--light-on, 0) * 0.65));
@@ -130,9 +131,9 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
           transparent calc(var(--light-x) + var(--light-reach-right))
         )
         0 0 / 100% 2px no-repeat,
-      linear-gradient(180deg, var(--light), transparent) 0 calc(var(--past-left) * -1) / 2px
+      linear-gradient(180deg, var(--light), transparent) 0 calc(2px - var(--past-left)) / 2px
         var(--light-reach) no-repeat,
-      linear-gradient(90deg, var(--light), transparent) calc(var(--past-bottom-left) * -1) 100% /
+      linear-gradient(90deg, var(--light), transparent) calc(2px - var(--past-bottom-left)) 100% /
         var(--light-reach) 2px no-repeat,
       linear-gradient(
           180deg,
@@ -140,14 +141,15 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
           var(--light-held) calc(var(--light-reach-right) * 0.75),
           transparent var(--light-reach-right)
         )
-        100% calc(var(--past-right) * -1) / 2px var(--light-reach-right) no-repeat,
-      linear-gradient(180deg, rgb(242 193 78 / 0.4), rgb(242 193 78 / 0.08)) 0 0 / 2px 100%
-        no-repeat;
+        100% calc(2px - var(--past-right)) / 2px var(--light-reach-right) no-repeat,
+      linear-gradient(180deg, rgb(242 193 78 / 0.4), rgb(242 193 78 / 0.08)) 0 2px / 2px
+        calc(100% - 4px) no-repeat;
     pointer-events: none;
   }
 
   /* Thin gold corners whose arms fade out along the edges; shorter on narrow screens, so
-     they stay corners instead of meeting */
+     they stay corners instead of meeting. The upright arms start a pixel off the corner, so
+     the two arms do not cover the corner pixel twice. */
   .surface::after {
     --corner: rgb(242 193 78 / 0.7);
     --arm: min(160px, 22vw);
@@ -158,13 +160,15 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
     z-index: 1;
     background:
       linear-gradient(90deg, var(--corner), transparent) 0 0 / var(--arm) 1px no-repeat,
-      linear-gradient(180deg, var(--corner), transparent) 0 0 / 1px var(--arm-v) no-repeat,
+      linear-gradient(180deg, var(--corner), transparent) 0 1px / 1px var(--arm-v) no-repeat,
       linear-gradient(270deg, var(--corner), transparent) 100% 0 / var(--arm) 1px no-repeat,
-      linear-gradient(180deg, var(--corner), transparent) 100% 0 / 1px var(--arm-v) no-repeat,
+      linear-gradient(180deg, var(--corner), transparent) 100% 1px / 1px var(--arm-v) no-repeat,
       linear-gradient(90deg, var(--corner), transparent) 0 100% / var(--arm) 1px no-repeat,
-      linear-gradient(0deg, var(--corner), transparent) 0 100% / 1px var(--arm-v) no-repeat,
+      linear-gradient(0deg, var(--corner), transparent) 0 calc(100% - 1px) / 1px var(--arm-v)
+        no-repeat,
       linear-gradient(270deg, var(--corner), transparent) 100% 100% / var(--arm) 1px no-repeat,
-      linear-gradient(0deg, var(--corner), transparent) 100% 100% / 1px var(--arm-v) no-repeat;
+      linear-gradient(0deg, var(--corner), transparent) 100% calc(100% - 1px) / 1px var(--arm-v)
+        no-repeat;
     pointer-events: none;
   }
 
@@ -312,6 +316,36 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
 
   .stat--special .value {
     color: var(--special);
+  }
+
+  @media (width > 900px) {
+    .card {
+      min-height: var(--hero-height);
+    }
+
+    /* Four figures stand two by two, so the headline keeps the room it has on the other tabs */
+    .stats:has(> li:nth-child(4)) {
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      row-gap: 14px;
+    }
+
+    /* Each figure in the middle of its column */
+    .stats:has(> li:nth-child(4)) .stat {
+      flex: 1;
+    }
+
+    .stats:has(> li:nth-child(4)) li:nth-child(3)::before {
+      display: none;
+    }
+
+    .stats:has(> li:nth-child(4)) li:nth-child(odd) .stat {
+      padding-left: 0;
+    }
+
+    .stats:has(> li:nth-child(4)) li:nth-child(even) .stat {
+      padding-right: 0;
+    }
   }
 
   @media (max-width: 900px) {

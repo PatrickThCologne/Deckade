@@ -36,11 +36,11 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
   }
 
   /* The banner above leans from its top left corner, so the middle of its shape lies half
-     its slant left of the page's middle (24px for the 207px banner at -13deg). The years
+     its slant left of the page's middle (28px for the 240px banner at -13deg). The years
      stand under that middle instead. Narrow screens have an upright banner. */
   @media (width > 900px) {
     .timeline {
-      translate: calc(207px * tan(var(--lean)) / 2) 0;
+      translate: calc(var(--hero-height) * tan(var(--lean)) / 2) 0;
     }
   }
 

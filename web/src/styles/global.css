@@ -44,6 +44,10 @@
      line. The banner's lower left corner reaches into the page margin, hence less lean
      where that margin is narrow; on small screens the banner is straight. */
   --lean: -13deg;
+
+  /* Every tab's banner is this high on wide screens (components/hero/HeroPanel.astro), so the
+     page below starts at the same place on every tab */
+  --hero-height: 240px;
 }
 
 @media (901px <= width <= 1264px) {
