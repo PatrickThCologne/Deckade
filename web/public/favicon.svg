@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <!-- The gem of the logo (components/layout/SiteHeader.astro): a frame with a filled core -->
-  <rect width="32" height="32" rx="8" fill="#06080c"/>
   <g transform="rotate(45 16 16)" fill="#f2c14e">
     <rect x="7.875" y="7.875" width="16.25" height="16.25" fill="none" stroke="#f2c14e" stroke-width="3.75"/>
     <rect x="13.5" y="13.5" width="5" height="5"/>
