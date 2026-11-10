@@ -141,9 +141,13 @@ prices, builds the site and publishes it to GitHub Pages (enable _Settings → P
 GitHub Actions_). A push to `main` does not deploy; code changes go live with the next run.
 Each run starts with the [CI](.github/workflows/ci.yml) checks; if one fails, nothing is
 deployed and the site stays as it was.
-`SITE_URL` and `BASE_PATH` configure the public address. The imprint and the privacy notice name the operator from the
-repository variables `OPERATOR_NAME`, `OPERATOR_ADDRESS` and `OPERATOR_EMAIL` (_Settings →
-Secrets and variables → Actions → Variables_), so personal data stays out of the code.
+`SITE_URL` and `BASE_PATH` configure the public address: `<owner>.github.io/<repository>/`,
+or an own domain when the repository variable `SITE_URL` holds it (for example
+`https://deckade.de`, the same domain as under _Settings → Pages → Custom domain_). The
+imprint and the privacy notice
+name the operator from the repository variables `OPERATOR_NAME`, `OPERATOR_ADDRESS` and
+`OPERATOR_EMAIL` (_Settings → Secrets and variables → Actions → Variables_), so personal data
+stays out of the code.
 
 ## Before going public
 

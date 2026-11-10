@@ -63,8 +63,11 @@ jobs:
       - run: npm run build
         working-directory: web
         env:
-          SITE_URL: https://${{ github.repository_owner }}.github.io
-          BASE_PATH: /${{ github.event.repository.name }}/
+          # An own domain: the repository variable SITE_URL (e.g. https://deckade.de), with the
+          # same domain under Settings > Pages > Custom domain. Without it the site lives at
+          # <owner>.github.io/<repository>/.
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io', github.repository_owner) }}
+          BASE_PATH: ${{ vars.SITE_URL && '/' || format('/{0}/', github.event.repository.name) }}
           # Shown in the imprint and privacy notice; set under Settings > Secrets and variables > Variables
           OPERATOR_NAME: ${{ vars.OPERATOR_NAME }}
           OPERATOR_ADDRESS: ${{ vars.OPERATOR_ADDRESS }}
