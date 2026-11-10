@@ -1,6 +1,8 @@
 # Daily, or started by hand (Actions -> Refresh data and deploy -> Run workflow): rebuild
 # the data snapshot with fresh prices, build the site and publish it on GitHub Pages.
 # A push to main does not deploy; code changes go live with the next run.
+# The CI checks (ci.yml) run first; if one fails, nothing is deployed and the site stays as
+# it was.
 # Requires Settings -> Pages -> Source: "GitHub Actions".
 name: Refresh data and deploy
 
@@ -11,17 +13,25 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/ci.yml
+
   deploy:
     name: Build and deploy
+    needs: checks
     runs-on: ubuntu-latest
+    # Only this job may publish to GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

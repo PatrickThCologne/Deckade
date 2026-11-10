@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # The deployment runs these checks first and stops if one fails (deploy.yml)
+  workflow_call:
 
 jobs:
   pipeline:

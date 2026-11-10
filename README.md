@@ -128,6 +128,8 @@ writes. After an intended change of the data contract, run
 under _Actions → Refresh data and deploy → Run workflow_. It rebuilds the snapshot with fresh
 prices, builds the site and publishes it to GitHub Pages (enable _Settings → Pages → Source:
 GitHub Actions_). A push to `main` does not deploy; code changes go live with the next run.
+Each run starts with the [CI](.github/workflows/ci.yml) checks; if one fails, nothing is
+deployed and the site stays as it was.
 `SITE_URL` and `BASE_PATH` configure the public address. The imprint and the privacy notice name the operator from the
 repository variables `OPERATOR_NAME`, `OPERATOR_ADDRESS` and `OPERATOR_EMAIL` (_Settings →
 Secrets and variables → Actions → Variables_), so personal data stays out of the code.
