@@ -9,7 +9,8 @@ export const SOURCE_REPO = 'https://github.com/PatrickThCologne/Deckade';
 
 export const LOCALES = ['de', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
-export const DEFAULT_LOCALE: Locale = 'de';
+// The root address forwards here, and so does the 404 page's language and the x-default link
+export const DEFAULT_LOCALE: Locale = 'en';
 
 /** BCP 47 tags used for number and date formatting and for hreflang. */
 export const LOCALE_TAGS: Record<Locale, string> = {
