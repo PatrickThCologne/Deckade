@@ -32,7 +32,10 @@ export function switchLocale(
   return prefix + `${target}/` + inner;
 }
 
-/** E-mail link with a prefilled subject. */
-export function mailto(address: string, subject: string): string {
-  return `mailto:${address}?subject=${encodeURIComponent(subject)}`;
+/** E-mail link with a prefilled subject and, if given, a prefilled text. */
+export function mailto(address: string, subject: string, body?: string): string {
+  const fields = [`subject=${encodeURIComponent(subject)}`];
+  // RFC 6068: line breaks in the text are written as CRLF
+  if (body) fields.push(`body=${encodeURIComponent(body.replace(/\r?\n/g, '\r\n'))}`);
+  return `mailto:${address}?${fields.join('&')}`;
 }

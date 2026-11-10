@@ -1,0 +1,191 @@
+---
+/**
+ * Feedback form, opened from the info menu (scripts/feedback.ts). A static site cannot send
+ * e-mail, so the form opens the visitor's mail program with the text filled in.
+ */
+import { type Locale, SITE_NAME } from '../../config/site';
+import { useTranslations } from '../../lib/i18n';
+import { mailto } from '../../lib/links';
+
+interface Props {
+  locale: Locale;
+  address: string;
+}
+
+const { locale, address } = Astro.props;
+const { t } = useTranslations(locale);
+const subject = t('feedback.subject', { site: SITE_NAME });
+const topics = [t('feedback.topic.bug'), t('feedback.topic.idea'), t('feedback.topic.other')];
+---
+
+<dialog class="feedback" data-feedback-dialog aria-labelledby="feedback-title">
+  <form data-feedback-form data-address={address} data-subject={subject}>
+    <button class="close" type="button" data-feedback-close aria-label={t('overlay.close')}>
+      ✕
+    </button>
+    <h2 id="feedback-title">{t('nav.feedback')}</h2>
+    <p class="intro">{t('feedback.intro')}</p>
+    <label>
+      <span class="label">{t('feedback.topic')}</span>
+      <select name="topic">
+        {topics.map((topic) => (
+          <option>{topic}</option>
+        ))}
+      </select>
+    </label>
+    <label>
+      <span class="label">{t('feedback.message')}</span>
+      <textarea name="message" rows="6" maxlength="1500" required></textarea>
+    </label>
+    <p class="sent" data-feedback-sent hidden>
+      {t('feedback.fallback')} <a href={mailto(address, subject)}>{address}</a>
+    </p>
+    <div class="actions">
+      <button type="button" class="secondary" data-feedback-close>
+        {t('feedback.cancel')}
+      </button>
+      <button type="submit" class="primary">
+        {t('feedback.send')}
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  import { initFeedback } from '../../scripts/feedback';
+
+  initFeedback();
+</script>
+
+<style>
+  .feedback {
+    width: min(480px, calc(100% - 32px));
+    padding: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    background: var(--surface-solid);
+    color: var(--text);
+    box-shadow: var(--shadow), var(--inner-highlight);
+  }
+
+  .feedback::backdrop {
+    background: rgb(4 6 10 / 0.58);
+    backdrop-filter: blur(3px);
+  }
+
+  form {
+    position: relative;
+    display: grid;
+    gap: 16px;
+    padding: 24px;
+  }
+
+  h2 {
+    margin: 0 40px 0 0;
+    font-size: 22px;
+  }
+
+  .intro,
+  .sent {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--text-dim);
+  }
+
+  .sent[hidden] {
+    display: none;
+  }
+
+  label {
+    display: grid;
+    gap: 6px;
+  }
+
+  /* Small caption in the style of the table head */
+  .label {
+    font-family: var(--font-mono), monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  select,
+  textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  select:focus,
+  textarea:focus {
+    border-color: var(--accent);
+    outline: 0;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .actions button {
+    height: 38px;
+    padding: 0 18px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font: inherit;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+
+  .secondary {
+    background: none;
+    color: var(--text-dim);
+  }
+
+  .secondary:hover {
+    border-color: var(--line-strong);
+    color: var(--text);
+  }
+
+  .primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+  }
+
+  .primary:hover {
+    filter: brightness(1.08);
+  }
+
+  .close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: none;
+    color: var(--text-dim);
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .close:hover {
+    color: var(--text);
+    border-color: var(--line-strong);
+  }
+</style>

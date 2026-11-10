@@ -8,7 +8,7 @@ export const de = {
     '{name} in Standard: {rotation}. {cards} mit Preis und Spielanteil in Turnierdecks.',
   'meta.about.title': 'So bestimmen wir die Rotation',
   'meta.about.description':
-    'Woher {site} weiß, wann ein Set aus Standard rotiert, wie sicher die Angaben sind und woher die Daten kommen.',
+    'Woher {site} weiß, wann ein Set aus Standard rotiert, und woher die Daten kommen.',
 
   'nav.skip': 'Zum Inhalt springen',
   'nav.method': 'So rechnen wir',
@@ -28,7 +28,7 @@ export const de = {
   'hero.stat.legal': 'gerade in Standard',
   'hero.stat.decks': 'Turnierdecks ausgewertet',
   'hero.stat.banned': 'gebannt',
-  'hero.method': 'Wie sicher ist das?',
+  'hero.method': 'So bestimmen wir das',
 
   'when.early': 'Anfang {year}',
   'when.on': 'am {date}',
@@ -41,7 +41,6 @@ export const de = {
   'wave.laterUnknown': 'Rotiert später',
   'wave.special': 'Sonderregel: bleibt mindestens bis {year}',
   'wave.badge.official': 'offiziell',
-  'wave.badge.earliest': 'frühestmöglich nach heutiger Regel',
   'wave.badge.special': 'laut Wizards',
   'wave.maybe': 'evtl.',
   'wave.upcoming': 'erscheint {date}',
@@ -80,11 +79,13 @@ export const de = {
   'cards.allTypes': 'Alle Typen',
   'cards.manaFilter': 'Nach Manawert filtern',
   'cards.typesSelected': '{count} Typen',
+  'cards.setFilter': 'Nach Set filtern',
+  'cards.allSets': 'Alle Sets',
+  'cards.setsSelected': '{count} Sets',
   'cards.manaValue': 'Manawert {value}',
   'cards.sort': 'Sortierung',
   'cards.empty': 'Keine Karte passt zu diesem Filter.',
   'cards.banned': 'gebannt',
-  'cards.preview': 'Fahre über eine Karte, um sie groß zu sehen.',
   'cards.shown': '{shown} von {total}',
   'sort.played': 'am meisten gespielt',
   'sort.value-desc': 'Marktwert absteigend',
@@ -150,25 +151,23 @@ export const de = {
   'about.rule.text':
     'Laut Wizards of the Coast rotieren einmal im Jahr, nach dem Prerelease des ersten Premier-Sets des Jahres, die sechs ältesten Sets aus Standard. Neue Sets sind ab ihrem Erscheinen legal.',
   'about.rule.link': 'Standard-Seite von Wizards',
-  'about.certainty.heading': 'Wie sicher ist welche Angabe?',
+  'about.certainty.heading': 'Termin und Ausnahmen',
   'about.certainty.next.label': 'Nächste Rotation',
   'about.certainty.next':
     'Welche sechs Sets als Nächstes rotieren, folgt direkt aus der Regel und den Erscheinungsterminen.',
   'about.certainty.date.label': 'Termin',
   'about.certainty.date':
-    'Den genauen Tag nennt Wizards meist erst kurz vorher. Bis dahin schätzen wir ihn (Prerelease etwa eine Woche vor dem Release) und zeigen nur „Anfang 2027“ statt eines Tagesdatums.',
-  'about.certainty.later.label': 'Spätere Sets',
-  'about.certainty.later':
-    'Für alle späteren Sets nennen wir nur den frühestmöglichen Termin („bleibt mindestens bis …“). Eine Hochrechnung, wann genau sie rotieren, wäre nicht belegt.',
+    'Den genauen Tag nennt Wizards meist erst kurz vorher. Bis dahin schätzen wir ihn (Prerelease etwa eine Woche vor dem Release) und zeigen nur „Anfang 2027“ statt eines Tagesdatums. Steht der Tag fest, ist er als „offiziell“ markiert.',
   'about.certainty.special.label': 'Sonderregeln',
   'about.certainty.special':
     'Foundations ist laut Mark Rosewater mindestens bis 2029 legal. Das steht nicht auf der Standard-Seite von Wizards, sondern wurde unter anderem von Wargamer berichtet.',
-  'about.formats.heading': 'Pioneer, Modern und Commander',
-  'about.formats.text':
-    'Diese Formate rotieren nicht. Welche Sets darin legal sind, schreiben wir nicht von Hand fest: Ein Set zählt, wenn mindestens 80 % seiner Karten laut Scryfall im Format erlaubt sind (gebannte Karten mitgezählt). Die Bannlisten kommen ebenfalls von Scryfall; maßgeblich ist die offizielle Liste von Wizards.',
+  'about.banlist.heading': 'Bannliste',
+  'about.banlist.text':
+    'Die gebannten Karten im Reiter „Standard Rotation“ kommen von Scryfall. Maßgeblich ist die offizielle Liste von Wizards.',
   'about.sources.heading': 'Datenquellen',
   'about.sources.scryfall': 'Sets, Erscheinungsdaten, Legalität, Manakosten und Kartenbilder.',
   'about.sources.mtgjson': 'Bundles und Booster Boxes mit ihrem Inhalt.',
+  'about.sources.wizards': 'Offizielle Produktbilder der Booster neuerer Sets.',
   'about.sources.decks':
     'Öffentliche Turnierdecklisten von MTGO und Melee. „Gespielt“ ist der Anteil dieser Decks der letzten 30 Tage, in denen eine Karte steckt (Haupt- oder Sideboard). Arena-Partien sind nicht enthalten.',
   'about.updated': 'Die Daten werden täglich neu geladen. Letzter Stand: {date}.',
@@ -210,16 +209,15 @@ export const de = {
   'col.set': 'Set',
   'tabs.rotation': 'Standard Rotation',
   'tabs.rotation.short': 'Rotation',
-  'tabs.deck': 'Deck importieren',
-  'tabs.deck.short': 'Deck',
+  'tabs.search': 'Suche',
+  'tabs.search.short': 'Suche',
   'overview.eyebrow': 'Set-Übersicht',
   'overview.title': 'Alle Sets',
   'overview.stat.sets': 'Sets',
-  'overview.stat.cards': 'Karten in allen Sets',
-  'deck.eyebrow': 'Bald verfügbar',
-  'deck.title': 'Deck importieren',
-  'deck.text':
-    'Hier kannst du bald eine Deckliste einfügen und sehen, welche Karten wann rotieren und was das Deck wert ist.',
+  'search.eyebrow': 'Bald verfügbar',
+  'search.title': 'Suche',
+  'search.text':
+    'Hier kannst du bald in ganz normaler Sprache nach Karten suchen, zum Beispiel „günstige rote Kreaturen mit Eile“.',
   'overview.text':
     '{count} Sets von {oldest} ({year}) bis heute. Ein Klick auf ein Päckchen zeigt alle Karten und Preise.',
   'products.showContents': 'Inhalt anzeigen',
@@ -252,6 +250,16 @@ export const de = {
   'nav.imprintContact': 'Impressum & Kontakt',
   'nav.feedback': 'Feedback geben',
   'feedback.subject': 'Feedback zu {site}',
+  'feedback.intro':
+    'Was ist dir aufgefallen? Beim Absenden öffnet sich dein E-Mail-Programm mit deinem Text, abschicken kannst du ihn dort.',
+  'feedback.topic': 'Worum geht es?',
+  'feedback.topic.bug': 'Fehler',
+  'feedback.topic.idea': 'Idee oder Wunsch',
+  'feedback.topic.other': 'Sonstiges',
+  'feedback.message': 'Deine Nachricht',
+  'feedback.send': 'Als E-Mail öffnen',
+  'feedback.cancel': 'Abbrechen',
+  'feedback.fallback': 'Es öffnet sich nichts? Schreib direkt an',
   'meta.imprint.title': 'Impressum & Kontakt',
   'meta.imprint.description': 'Wer {site} betreibt und wie du Feedback geben kannst.',
   'imprint.heading': 'Impressum & Kontakt',

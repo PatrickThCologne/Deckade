@@ -78,13 +78,16 @@ export function createRotationText(locale: Locale, estimate: RotationEstimate) {
       }
     },
 
-    /** Small note next to a wave title; the next rotation only gets one once it is official. */
+    /**
+     * Small note next to a wave title: the next rotation gets one once it is official, the
+     * later waves none, as their title already says "at least until".
+     */
     waveBadge(wave: Wave): string | null {
       switch (wave.kind) {
         case 'next':
           return isOfficial ? t('wave.badge.official') : null;
         case 'later':
-          return t('wave.badge.earliest');
+          return null;
         case 'special':
           return t('wave.badge.special');
       }

@@ -50,6 +50,12 @@ describe('tiles and waves', () => {
     expect(createRotationText('de', ESTIMATED).waveBadge(next!)).toBeNull();
     expect(createRotationText('de', OFFICIAL).waveBadge(next!)).toBe('offiziell');
   });
+
+  it('adds no note to the later waves, their title already says "at least until"', () => {
+    const [later] = groupIntoWaves([standardSet('dft', '2025-02-14', rotation({ wave: 1 }))]);
+    expect(later!.kind).toBe('later');
+    expect(createRotationText('de', ESTIMATED).waveBadge(later!)).toBeNull();
+  });
 });
 
 describe('product labels', () => {

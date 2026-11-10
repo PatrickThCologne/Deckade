@@ -1,21 +1,52 @@
 import { describe, expect, it } from 'vitest';
 
-import { approach, artRows, creditedArtists, driftOffset, sinkSpeed } from '../src/lib/backdrop';
+import { approach, colourRows, creditedArtists, driftOffset, sinkSpeed } from '../src/lib/backdrop';
 
 describe('art rows', () => {
-  it('fills every row and never repeats a sequence', () => {
-    const rows = artRows(['a', 'b', 'c', 'd', 'e'], 4, 3);
+  const art = (name: string, hue: number | null) => ({ name, hue });
+  const names = (rows: { name: string }[][]) => rows.map((row) => row.map((a) => a.name));
+
+  it('runs from red at the top through green and blue to violet, grey last', () => {
+    const items = [
+      art('grey', null),
+      art('blue', 230),
+      art('green', 120),
+      art('pink-red', 350),
+      art('violet', 285),
+      art('yellow', 55),
+    ];
+    expect(names(colourRows(items, 6, 1))).toEqual([
+      ['pink-red'],
+      ['yellow'],
+      ['green'],
+      ['blue'],
+      ['violet'],
+      ['grey'],
+    ]);
+  });
+
+  it('fills every row, each a little further along, and never repeats a sequence', () => {
+    const items = ['a', 'b', 'c', 'd', 'e'].map((name, index) => art(name, index * 60));
+    const rows = names(colourRows(items, 4, 3));
+
+    // Starts spread evenly over the five: 0, 1.25, 2.5, 3.75, rounded
     expect(rows).toEqual([
       ['a', 'b', 'c'],
+      ['b', 'c', 'd'],
       ['d', 'e', 'a'],
-      ['c', 'e', 'b'],
-      ['d', 'a', 'd'],
+      ['e', 'a', 'b'],
     ]);
-    expect(rows.every((row) => row.length === 3)).toBe(true);
+    expect(new Set(rows.map((row) => row.join())).size).toBe(rows.length);
+  });
+
+  it('repeats the artworks when a row is longer than all of them', () => {
+    expect(names(colourRows([art('a', 0), art('b', 90)], 1, 5))).toEqual([
+      ['a', 'b', 'a', 'b', 'a'],
+    ]);
   });
 
   it('has no rows without artworks', () => {
-    expect(artRows([], 4, 3)).toEqual([]);
+    expect(colourRows([], 4, 3)).toEqual([]);
   });
 });
 

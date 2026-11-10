@@ -21,7 +21,7 @@ from rotation_radar.domain.products import PackCount
 from rotation_radar.domain.rotation import RotationEstimate, SetRotation
 from rotation_radar.domain.sets import SetStatus
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 RULE_SOURCE = "https://magic.wizards.com/en/formats/standard"
 
 

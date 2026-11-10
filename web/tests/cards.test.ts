@@ -7,6 +7,7 @@ import {
   matchesColors,
   matchesManaValue,
   matchesQuery,
+  matchesSets,
   matchesType,
   type SortableCard,
   type SortKey,
@@ -100,6 +101,13 @@ describe('filters', () => {
     expect(matchesType(['instant'], new Set(['sorcery', 'land'] as const))).toBe(false);
     expect(matchesType(['instant'], new Set(['sorcery', 'instant'] as const))).toBe(true);
     expect(matchesType(['instant'], new Set())).toBe(true);
+  });
+
+  it('filters by the sets that printed a card', () => {
+    expect(matchesSets(['fdn', 'm20'], new Set(['m20', 'dsk']))).toBe(true);
+    expect(matchesSets(['fdn'], new Set(['m20']))).toBe(false);
+    expect(matchesSets(['fdn'], new Set())).toBe(true);
+    expect(matchesSets(undefined, new Set())).toBe(true);
   });
 
   it('filters by several mana values without lands, 7 and up together', () => {

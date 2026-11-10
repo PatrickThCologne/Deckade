@@ -4,7 +4,9 @@
    price guide and recent Standard decklists.
 2. Rules: Standard status and rotation; which sets are legal in Pioneer, Modern and
    Commander (from the card legalities in the bulk file).
-3. Enrichment for every set that is legal anywhere: card rows, products, pack images.
+3. Enrichment for every set that is legal anywhere: card rows, products, pack images
+   (official images from Wizards where a product page has one; the website shows the set
+   symbol for the others).
 """
 
 from __future__ import annotations
@@ -14,8 +16,13 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 
-from rotation_radar.config import PLAY_RATE_WINDOW_DAYS, USER_AGENT, Paths
-from rotation_radar.domain.art import featured_art
+from rotation_radar.config import (
+    OFFICIAL_PACK_IMAGES_SINCE,
+    PLAY_RATE_WINDOW_DAYS,
+    USER_AGENT,
+    Paths,
+)
+from rotation_radar.domain.art import featured_art, with_hues
 from rotation_radar.domain.cards import (
     COLOR_ORDER,
     CardRow,
@@ -31,7 +38,6 @@ from rotation_radar.domain.products import (
     Product,
     ProductCategory,
     SealedProduct,
-    choose_pack_art,
     parse_contents,
 )
 from rotation_radar.domain.rotation import (
@@ -43,7 +49,7 @@ from rotation_radar.domain.rotation import (
     standard_candidates,
 )
 from rotation_radar.domain.sets import MtgSet, SetStatus
-from rotation_radar.images import SMALL_SOURCE, PackImageStore, store_symbols
+from rotation_radar.images import PackImageStore, art_hues, store_symbols
 from rotation_radar.rules import RotationRules
 from rotation_radar.snapshot import (
     RULE_SOURCE,
@@ -64,6 +70,8 @@ from rotation_radar.sources.http import HttpClient
 from rotation_radar.sources.mtgjson import fetch_sealed_products
 from rotation_radar.sources.scryfall import REQUEST_INTERVAL, ScryfallClient
 from rotation_radar.sources.scryfall_bulk import BulkCards
+from rotation_radar.sources.wizards import REQUEST_INTERVAL as WIZARDS_INTERVAL
+from rotation_radar.sources.wizards import find_pack_image
 
 log = logging.getLogger(__name__)
 
@@ -101,6 +109,7 @@ def build(
             headers={"Accept": "application/json"},
         ) as scryfall_http,
         HttpClient(user_agent=USER_AGENT) as http,
+        HttpClient(user_agent=USER_AGENT, min_interval=WIZARDS_INTERVAL) as wizards_http,
     ):
         scryfall = ScryfallClient(scryfall_http)
         all_sets = scryfall.sets()
@@ -142,11 +151,10 @@ def build(
         )
         sealed = fetch_sealed_products(http, catalog_codes)
         packs = PackImageStore(http, paths.image_dir)
-        standard_codes = {s.code for s in standard.sets}
-        pack_images = {
-            s.code: _pack_image(s, sealed.get(s.code, ()), packs, large=s.code in standard_codes)
-            for s in catalog
-        }
+        pack_images = {s.code: _pack_image(s, packs, wizards_http) for s in catalog}
+        packs.remove_unused(path for path in pack_images.values() if path)
+        art = featured_art(_recent_main_sets(standard, today), printings, prices, FEATURED_PER_SET)
+        hues = art_hues(http, (a.image_url for a in art), paths.cache_dir / "art-hues.json")
         store_symbols(
             scryfall_http,
             scryfall.symbol_svgs(),
@@ -177,9 +185,7 @@ def build(
             for s in catalog
         ),
         formats=format_entries,
-        featured_art=featured_art(
-            _recent_main_sets(standard, today), printings, prices, FEATURED_PER_SET
-        ),
+        featured_art=with_hues(art, hues),
     )
     write_snapshot(
         snapshot, {code: cards_by_set.get(code, []) for code in catalog_codes}, paths.data_dir
@@ -297,15 +303,14 @@ def _banned(printings: Iterable[Printing]) -> tuple[BannedCard, ...]:
     )
 
 
-def _pack_image(
-    mtg_set: MtgSet, sealed: Sequence[SealedProduct], packs: PackImageStore, *, large: bool
-) -> str | None:
-    art = choose_pack_art(sealed)
-    if art is None or art.tcgplayer_id is None:
+def _pack_image(mtg_set: MtgSet, packs: PackImageStore, wizards_http: HttpClient) -> str | None:
+    """The official pack image; None for older sets, which have none."""
+    if mtg_set.released_at < OFFICIAL_PACK_IMAGES_SINCE:
         return None
-    if large:
-        return packs.ensure(mtg_set.code, mtg_set.name, art.tcgplayer_id)
-    return packs.ensure(mtg_set.code, mtg_set.name, art.tcgplayer_id, size=SMALL_SOURCE)
+    stored = packs.official(mtg_set.code, mtg_set.name)
+    if stored is None and (url := find_pack_image(wizards_http, mtg_set.name)):
+        return packs.ensure_official(mtg_set.code, mtg_set.name, url)
+    return stored
 
 
 def _set_entry(
