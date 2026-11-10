@@ -1,8 +1,8 @@
 /**
- * On phones each year's packs stand as a fan (components/overview/SetTimeline.astro): swiping
- * turns the pack in the middle to face the viewer. Tapping a pack at the side brings it to the
- * middle; tapping the one in the middle opens it. Wider screens and reduced motion keep the
- * plain row.
+ * On phones a row of packs stands as a fan (each year of the overview, each group on the
+ * rotation tab; styles/coverflow.css): swiping turns the pack in the middle to face the
+ * viewer. Tapping a pack at the side brings it to the middle; tapping the one in the middle
+ * opens it. Wider screens and reduced motion keep the plain row.
  */
 import { fanPose, middleIndex } from '../lib/coverflow';
 

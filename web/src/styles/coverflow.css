@@ -1,0 +1,43 @@
+/*
+ * The phone fan of a row of packs (scripts/coverflow.ts places and turns the packs): the year
+ * rows of the overview and the rotation tab's groups. Global, as both components share it.
+ * The selector repeats the row's attributes so it wins over each component's own row layout.
+ */
+@media (max-width: 560px) {
+  /* Across the whole phone, each pack snaps to the middle, the first and last one too. The
+     packs overlap, so one step from pack to pack is narrower than a pack. */
+  .fan-row[data-fan-row][data-fan] {
+    --fan-tile: 118px;
+    --fan-step: 84px;
+    position: relative;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    margin-inline: calc(var(--gutter) * -1);
+    /* 50% is half the row without the gutters it reaches into */
+    padding: 16px calc(50% + var(--gutter) - var(--fan-step) / 2) 6px;
+    perspective: 700px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .fan-row[data-fan-row][data-fan] > * {
+    --tile-art-height: 190px;
+    flex: 0 0 var(--fan-tile);
+    min-width: 0; /* the wider name below must not widen the pack */
+    margin-inline: calc((var(--fan-step) - var(--fan-tile)) / 2);
+    scroll-snap-align: center;
+    will-change: transform;
+  }
+
+  /* Only the pack in the middle says what it is, wider than the pack itself */
+  .fan-row[data-fan-row][data-fan] :is(.name, .sub) {
+    width: min(240px, 70vw);
+    transition: opacity 0.2s;
+  }
+
+  .fan-row[data-fan-row][data-fan] > :not([data-front]) :is(.name, .sub) {
+    opacity: 0;
+  }
+}

@@ -5,6 +5,7 @@ import { createRotationText } from '../../lib/rotation/describe';
 import type { Wave } from '../../lib/rotation/waves';
 import { setTile } from '../../lib/tiles';
 import SetTile from './SetTile.astro';
+import '../../styles/coverflow.css';
 
 interface Props {
   wave: Wave;
@@ -21,7 +22,7 @@ const headingId = `wave-${wave.kind}-${wave.index ?? wave.legalUntilAtLeast}`;
     <h2 id={headingId}>{text.waveTitle(wave)}</h2>
     {text.waveBadge(wave) && <span class="badge mono">{text.waveBadge(wave)}</span>}
   </header>
-  <div class="grid">
+  <div class="grid fan-row" data-fan-row>
     {wave.sets.map((set) => (
       <SetTile tile={setTile(set, locale)} locale={locale} />
     ))}

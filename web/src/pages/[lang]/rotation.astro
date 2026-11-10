@@ -27,9 +27,11 @@ const waves = groupIntoWaves(standardSets().filter(isShown));
 </BaseLayout>
 
 <script>
+  import { initCoverflow } from '../../scripts/coverflow';
   import { initSetOverlay } from '../../scripts/set-overlay';
   import { initTilt } from '../../scripts/tilt';
 
+  initCoverflow();
   initTilt();
   initSetOverlay();
 </script>

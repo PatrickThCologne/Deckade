@@ -4,6 +4,7 @@ import { overviewSets } from '../../lib/data/load';
 import { groupByYear } from '../../lib/timeline';
 import { setTile } from '../../lib/tiles';
 import SetTile from '../rotation/SetTile.astro';
+import '../../styles/coverflow.css';
 
 interface Props {
   locale: Locale;
@@ -19,7 +20,7 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
   {years.map((group) => (
     <section class="year" aria-labelledby={`year-${group.year}`}>
       <h2 id={`year-${group.year}`}>{group.year}</h2>
-      <div class="grid" data-fan-row>
+      <div class="grid fan-row" data-fan-row>
         {group.sets.map((set) => (
           <SetTile tile={setTile(set, locale)} locale={locale} />
         ))}
@@ -104,42 +105,6 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
     .timeline {
       --tile-art-height: 150px;
       --tile-min: 128px; /* about 2.6 packs wide: the cut-off one shows the row goes on */
-    }
-
-    /* The fan (scripts/coverflow.ts places and turns the packs): across the whole phone,
-       each pack snaps to the middle, the first and last one too. The packs overlap, so one
-       step from pack to pack is narrower than a pack. */
-    .grid[data-fan] {
-      --fan-tile: 118px;
-      --fan-step: 84px;
-      position: relative;
-      display: flex;
-      gap: 0;
-      margin-inline: calc(var(--gutter) * -1);
-      /* 50% is half the row without the gutters it reaches into */
-      padding: 16px calc(50% + var(--gutter) - var(--fan-step) / 2) 6px;
-      perspective: 700px;
-      scroll-snap-type: x mandatory;
-      scrollbar-width: none;
-    }
-
-    .grid[data-fan] > :global(*) {
-      --tile-art-height: 190px;
-      flex: 0 0 var(--fan-tile);
-      min-width: 0; /* the wider name below must not widen the pack */
-      margin-inline: calc((var(--fan-step) - var(--fan-tile)) / 2);
-      scroll-snap-align: center;
-      will-change: transform;
-    }
-
-    /* Only the pack in the middle says what it is, wider than the pack itself */
-    .grid[data-fan] :global(:is(.name, .sub)) {
-      width: min(240px, 70vw);
-      transition: opacity 0.2s;
-    }
-
-    .grid[data-fan] > :global(:not([data-front])) :global(:is(.name, .sub)) {
-      opacity: 0;
     }
   }
 </style>
