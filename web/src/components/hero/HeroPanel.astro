@@ -34,6 +34,7 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
       <h1 id="hero-title">{title}</h1>
       <slot />
     </div>
+    <slot name="aside" />
     {stats.length > 0 && (
       <ul class="stats" role="list">
         {stats.map((stat) => {

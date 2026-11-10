@@ -39,6 +39,9 @@ const examples =
         'blue spell that synergizes with Elementals',
       ];
 
+// What the request may name, each with an example, on the banner's right
+const guide = ['colors', 'types', 'limits', 'synergies', 'answers', 'order'] as const;
+
 const labels = {
   count: t('search.count'),
   none: t('search.none'),
@@ -54,6 +57,17 @@ const labels = {
     <p>
       {t('search.text')} <span class="wip">{t('search.wip')}</span>
     </p>
+    <section class="guide" slot="aside" aria-labelledby="search-guide">
+      <h2 id="search-guide">{t('search.guide.heading')}</h2>
+      <dl>
+        {guide.map((topic) => (
+          <div>
+            <dt>{t(`search.guide.${topic}`)}</dt>
+            <dd>{t(`search.guide.${topic}.example`)}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   </HeroPanel>
 
   <div
@@ -125,6 +139,53 @@ const labels = {
   .wip {
     color: var(--special);
     white-space: nowrap;
+  }
+
+  /* What the search understands, two columns on the banner's right; a thin rule sets it apart
+     from the text */
+  .guide {
+    padding-left: 28px;
+    border-left: 1px solid var(--line);
+  }
+
+  .guide h2 {
+    margin: 0 0 10px;
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .guide dl {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 10px 32px;
+    margin: 0;
+  }
+
+  .guide dt {
+    color: var(--text);
+    font-size: 13.5px;
+  }
+
+  .guide dd {
+    margin: 2px 0 0;
+    color: var(--text-dim);
+    font-size: 12.5px;
+  }
+
+  @media (max-width: 900px) {
+    .guide {
+      padding: 14px 0 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .guide dl {
+      grid-template-columns: 1fr;
+    }
   }
 
   .ask {
