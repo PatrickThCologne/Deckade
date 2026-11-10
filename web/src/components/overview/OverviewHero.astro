@@ -4,9 +4,7 @@ import type { Locale } from '../../config/site';
 import { cardCatalog, overviewSets } from '../../lib/data/load';
 import { createFormatters, yearOf } from '../../lib/format';
 import { useTranslations } from '../../lib/i18n';
-import { localePath, withBase } from '../../lib/links';
-import { groupByYear } from '../../lib/timeline';
-import { setTile } from '../../lib/tiles';
+import { localePath } from '../../lib/links';
 import HeroPanel from '../hero/HeroPanel.astro';
 import type { HeroStat } from '../hero/types';
 
@@ -31,19 +29,6 @@ const stats: HeroStat[] = [
     href: localePath(locale, 'cards'),
   },
 ];
-
-// PROTOTYPE (dev server only): design options A and B, see components/overview/DesignOptions.astro
-const newest = sets[0] ? setTile(sets[0], locale) : null;
-const upcoming = sets[0]?.standard?.status === 'upcoming';
-const perYear = new Map(groupByYear(sets).map((group) => [group.year, group.sets.length]));
-const firstYear = Math.min(...perYear.keys());
-const lastYear = Math.max(...perYear.keys());
-const yearBars = Array.from({ length: lastYear - firstYear + 1 }, (_, i) => ({
-  year: firstYear + i,
-  count: perYear.get(firstYear + i) ?? 0,
-}));
-const mostPerYear = Math.max(...yearBars.map((bar) => bar.count));
-const de = locale === 'de';
 ---
 
 <HeroPanel
@@ -61,41 +46,5 @@ const de = locale === 'de';
         year: yearOf(oldest.releasedAt),
       })}
     </p>
-  )}
-  {import.meta.env.DEV && (
-    <Fragment slot="aside">
-      {newest && (
-        <a class="dx-spot" href={newest.href} data-hero-aside>
-          {newest.packImage && (
-            <img src={withBase(newest.packImage)} alt="" width="300" height="540" />
-          )}
-          <span class="dx-spot-text">
-            <span class="dx-kicker">
-              {upcoming ? (de ? 'Nächstes Set' : 'Next set') : de ? 'Neuestes Set' : 'Newest set'}
-            </span>
-            <span class="dx-spot-name">{newest.name}</span>
-            <span class="dx-spot-date mono">{newest.subline}</span>
-            <span class="dx-spot-more">{de ? 'Karten ansehen →' : 'See the cards →'}</span>
-          </span>
-        </a>
-      )}
-      <div class="dx-years" data-hero-aside>
-        <p class="dx-kicker">{de ? 'Sets pro Jahr' : 'Sets per year'}</p>
-        <div class="dx-bars">
-          {yearBars.map((bar) => (
-            <a
-              href={`#year-${bar.year}`}
-              style={`--h: ${bar.count / mostPerYear}`}
-              title={`${bar.year}: ${bar.count} Sets`}
-              aria-label={`${bar.year}: ${bar.count} Sets`}
-            />
-          ))}
-        </div>
-        <p class="dx-ends mono">
-          <span>{firstYear}</span>
-          <span>{lastYear}</span>
-        </p>
-      </div>
-    </Fragment>
   )}
 </HeroPanel>

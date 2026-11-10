@@ -34,7 +34,6 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
       <h1 id="hero-title">{title}</h1>
       <slot />
     </div>
-    <slot name="aside" />
     {stats.length > 0 && (
       <ul class="stats" role="list">
         {stats.map((stat) => {
@@ -84,7 +83,7 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
     align-items: center;
     /* More room on the right: the slanted right edge comes closer towards the bottom, and the
        figures keep a clear distance from it */
-    padding: 22px clamp(56px, 7vw, 100px) 22px clamp(20px, 3vw, 32px);
+    padding: 22px clamp(56px, 11vw, 180px) 22px clamp(20px, 3vw, 32px);
   }
 
   /* See-through, so the artwork behind shows. Leans like the tabs: its left edge continues
@@ -290,7 +289,7 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
 
   .value {
     font-family: var(--font-display), sans-serif;
-    font-size: 26px;
+    font-size: 31px;
     font-weight: var(--font-display-weight);
     line-height: 1.1;
   }
@@ -300,7 +299,7 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
     max-width: 14em;
     color: var(--text-dim);
     font-family: var(--font-display), sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: 0.12em;
     line-height: 1.35;
     text-transform: uppercase;

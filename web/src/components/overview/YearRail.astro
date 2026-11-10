@@ -1,0 +1,94 @@
+---
+/**
+ * A rail of all years in the left margin beside the packs, on wide screens. The year being read
+ * stands in its middle, largest and in gold; the others shrink and close up with their distance
+ * from it, like a fisheye lens, and the list slides along as the page scrolls
+ * (scripts/year-rail.ts). Each year jumps to its row.
+ */
+import type { Locale } from '../../config/site';
+import { overviewSets } from '../../lib/data/load';
+import { useTranslations } from '../../lib/i18n';
+import { groupByYear } from '../../lib/timeline';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const { t } = useTranslations(locale);
+const years = groupByYear(overviewSets()).map((group) => group.year);
+---
+
+<nav class="rail" aria-label={t('overview.years')} data-year-rail>
+  <ol class="list" role="list" data-year-list>
+    {years.map((year) => (
+      <li>
+        <a href={`#year-${year}`} data-year={year}>
+          {year}
+        </a>
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<script>
+  import { initYearRail } from '../../scripts/year-rail';
+
+  initYearRail();
+</script>
+
+<style>
+  .rail {
+    display: none;
+  }
+
+  /* Centred, a little to the right, between the window's edge and the banner's leaning left
+     edge (taken halfway down); the list fades out at both ends */
+  @media (width >= 1360px) {
+    .rail {
+      --edge: calc((100vw - min(100vw, var(--content-width))) / 2 + var(--gutter));
+      position: fixed;
+      top: calc(50% + 34px);
+      left: calc((var(--edge) - 28px) * 0.56);
+      z-index: 5;
+      display: block;
+      height: min(62vh, 560px);
+      overflow: hidden;
+      translate: -50% -50%;
+      mask: linear-gradient(transparent, #000 24%, #000 76%, transparent);
+    }
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* --swell runs from 0 far from the focus to 1 at it */
+  a {
+    display: block;
+    padding-block: calc(1px + 7px * var(--swell, 0));
+    color: color-mix(in srgb, var(--accent) calc(var(--swell, 0) * 100%), var(--text-faint));
+    font-family: var(--font-display), sans-serif;
+    font-size: calc(13px + 11px * var(--swell, 0));
+    line-height: 1.15;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    opacity: calc(0.5 + 0.5 * var(--swell, 0));
+    transition: color 0.15s;
+  }
+
+  a:hover,
+  a:focus-visible {
+    color: var(--text);
+    opacity: 1;
+  }
+
+  a[aria-current] {
+    color: var(--accent);
+  }
+</style>

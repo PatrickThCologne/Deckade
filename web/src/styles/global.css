@@ -57,6 +57,14 @@
   }
 }
 
+/* Wide screens get a wider page, up to 1520px, keeping 100px on each side for the overview's
+   year rail (components/overview/YearRail.astro) */
+@media (width >= 1360px) {
+  :root {
+    --content-width: max(1240px, min(1520px, 100vw - 200px));
+  }
+}
+
 /* ---------- Base ---------- */
 *,
 *::before,

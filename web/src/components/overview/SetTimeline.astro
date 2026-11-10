@@ -19,12 +19,7 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
 <div class="container timeline" style={`--per-row: ${perRow}`}>
   {years.map((group) => (
     <section class="year" aria-labelledby={`year-${group.year}`}>
-      <h2
-        id={`year-${group.year}`}
-        data-count={import.meta.env.DEV ? group.sets.length : undefined}
-      >
-        {group.year}
-      </h2>
+      <h2 id={`year-${group.year}`}>{group.year}</h2>
       <div class="grid fan-row" data-fan-row>
         {group.sets.map((set) => (
           <SetTile tile={setTile(set, locale)} locale={locale} />
@@ -54,6 +49,14 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
     margin-top: 34px;
   }
 
+  /* Bigger packs on the wider page */
+  @media (width >= 1360px) {
+    .timeline {
+      --tile-art-height: 232px;
+      --tile-min: 150px;
+    }
+  }
+
   /* The year in the middle, a line fading out to each side */
   h2 {
     display: flex;
@@ -61,6 +64,8 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
     gap: 14px;
     margin-bottom: 4px;
     font-size: 20px;
+    /* A jump from the year rail ends a little below the sticky header */
+    scroll-margin-top: 100px;
     /* A touch brighter than the dim text, still below the full white of the headings */
     color: color-mix(in srgb, var(--text) 35%, var(--text-dim));
   }

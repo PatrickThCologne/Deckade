@@ -216,6 +216,7 @@ export const en: Record<UiKey, string> = {
   'overview.eyebrow': 'Set overview',
   'overview.title': 'All sets',
   'overview.stat.sets': 'sets',
+  'overview.years': 'Years',
   'search.title': 'Search',
   'search.text':
     'Describe the cards you are looking for. The search understands colours, card types, keywords, mana value, price limits and "cheap" or "popular". It runs entirely in your browser.',

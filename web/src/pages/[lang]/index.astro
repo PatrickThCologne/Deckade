@@ -1,7 +1,7 @@
 ---
 import OverviewHero from '../../components/overview/OverviewHero.astro';
 import SetTimeline from '../../components/overview/SetTimeline.astro';
-import DesignOptions from '../../components/overview/DesignOptions.astro';
+import YearRail from '../../components/overview/YearRail.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { useTranslations } from '../../lib/i18n';
 import { localeFrom, localePaths } from '../../lib/routing';
@@ -19,7 +19,7 @@ const { t } = useTranslations(locale);
 >
   <OverviewHero locale={locale} />
   <SetTimeline locale={locale} />
-  {import.meta.env.DEV && <DesignOptions locale={locale} />}
+  <YearRail locale={locale} />
 </BaseLayout>
 
 <script>

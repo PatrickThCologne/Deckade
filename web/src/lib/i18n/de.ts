@@ -215,6 +215,7 @@ export const de = {
   'overview.eyebrow': 'Set-Übersicht',
   'overview.title': 'Alle Sets',
   'overview.stat.sets': 'Sets',
+  'overview.years': 'Jahre',
   'search.title': 'Suche',
   'search.text':
     'Beschreib, welche Karten du suchst. Die Suche versteht Farben, Kartentypen, Fähigkeiten, Manawert, Preisgrenzen und „günstig“ oder „beliebt“. Sie läuft ganz in deinem Browser.',

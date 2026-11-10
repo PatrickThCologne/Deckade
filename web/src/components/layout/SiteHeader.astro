@@ -43,7 +43,7 @@ const [deck, gold] = SITE_NAME_PARTS;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    height: 62px;
+    height: 68px;
   }
 
   .menus {
@@ -62,8 +62,14 @@ const [deck, gold] = SITE_NAME_PARTS;
   .name {
     font-family: var(--font-display), sans-serif;
     font-weight: var(--font-display-weight);
-    font-size: 22px;
+    font-size: 30px;
     letter-spacing: 0.01em;
+  }
+
+  @media (max-width: 480px) {
+    .name {
+      font-size: 25px;
+    }
   }
 
   .accent {
@@ -74,9 +80,9 @@ const [deck, gold] = SITE_NAME_PARTS;
   .gem {
     position: relative;
     display: inline-block;
-    width: 8px;
-    height: 8px;
-    margin: 0 5px 3px;
+    width: 10px;
+    height: 10px;
+    margin: 0 6px 4px;
     border: 1.5px solid var(--accent);
     transform: rotate(45deg);
   }
