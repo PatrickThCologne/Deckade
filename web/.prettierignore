@@ -5,3 +5,6 @@ src/data/generated/
 # written by the pipeline (pipeline/tests/test_contract.py), byte for byte
 tests/contract/
 public/
+# Lighthouse reports (lighthouserc.json), written by `npm run` in CI and locally
+.lighthouseci/
+lighthouse/
