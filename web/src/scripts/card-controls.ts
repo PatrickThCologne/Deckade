@@ -132,6 +132,7 @@ export function connectControls(root: HTMLElement, onChange: () => void): Contro
       const selected = state.colors.size + state.types.size + state.mana.size + state.sets.size;
       const filtering = state.query.trim() !== '' || selected > 0;
       result.hidden = !filtering;
+      count.hidden = !filtering;
       count.textContent = (count.dataset.template ?? '').replace('{shown}', numbers.format(shown));
     },
   };

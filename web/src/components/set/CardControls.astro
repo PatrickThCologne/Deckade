@@ -44,7 +44,15 @@ const setsByYear = Map.groupBy(sets ?? [], (set) => set.year);
 ---
 
 <div class="toolbar">
-  <h2 id={headingId}>{t('cards.heading')}</h2>
+  <div class="heading">
+    <h2 id={headingId}>{t('cards.heading')}</h2>
+    <output
+      class="count mono"
+      data-count
+      data-template={t('cards.shown', { total: plural('count.cards', total) })}
+      hidden
+    ></output>
+  </div>
   <label class="sort">
     <span class="visually-hidden">{t('cards.sort')}</span>
     <select data-sort>
@@ -181,18 +189,14 @@ const setsByYear = Map.groupBy(sets ?? [], (set) => set.year);
         ))}
       </div>
     </div>
-  </div>
-  <div class="result" data-result hidden>
-    <output
-      data-count
-      data-template={t('cards.shown', { total: plural('count.cards', total) })}
-    ></output>
-    <button type="button" class="reset" data-reset>
-      <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-        <path d="m1.5 1.5 7 7m0-7-7 7" stroke="currentColor" stroke-width="1.6"></path>
-      </svg>
-      {t('cards.reset')}
-    </button>
+    <div class="result" data-result hidden>
+      <button type="button" class="reset" data-reset title={t('cards.reset')}>
+        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+          <path d="m1.5 1.5 7 7m0-7-7 7" stroke="currentColor" stroke-width="1.6"></path>
+        </svg>
+        <span class="reset-label">{t('cards.reset')}</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -209,6 +213,18 @@ const setsByYear = Map.groupBy(sets ?? [], (set) => set.year);
 
   h2 {
     font-size: 20px;
+  }
+
+  /* While a filter is active, how many cards are left, next to the heading */
+  .heading {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .count {
+    font-size: 12px;
+    color: var(--text-dim);
   }
 
   /* Small caption in the style of the table head */
@@ -343,20 +359,15 @@ const setsByYear = Map.groupBy(sets ?? [], (set) => set.year);
     gap: 3px;
   }
 
-  /* Shown while a filter is active: how many cards are left, and a way back */
+  /* While a filter is active, the way back: at the end of the colour and mana row. Its room
+     stays kept when no filter is on, so nothing moves. */
   .result {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding-top: 10px;
-    border-top: 1px solid var(--line);
-    font-size: 12.5px;
-    color: var(--text-dim);
+    display: inline-flex;
+    margin-left: auto;
   }
 
   .result[hidden] {
-    display: none;
+    visibility: hidden;
   }
 
   .reset {
@@ -379,6 +390,26 @@ const setsByYear = Map.groupBy(sets ?? [], (set) => set.year);
   .reset:hover {
     border-color: var(--accent);
     color: var(--accent);
+  }
+
+  /* In a narrow list (the set pages) only the cross fits behind the mana values; the label
+     stays for screen readers and as the tooltip */
+  @container (width < 760px) {
+    .reset {
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+    }
+
+    .reset-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
   }
 
   .chip-menu {
