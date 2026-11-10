@@ -1,0 +1,112 @@
+---
+/**
+ * PROTOTYPE, only in the dev server: a switcher for the overview's design options, and the year
+ * rail of one of them. Not for the published site.
+ */
+import type { Locale } from '../../config/site';
+import { overviewSets } from '../../lib/data/load';
+import { groupByYear } from '../../lib/timeline';
+import '../../styles/design-options.css';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const years = groupByYear(overviewSets()).map((group) => group.year);
+const de = locale === 'de';
+
+const heroOptions = [
+  ['0', de ? 'Aktuell' : 'Current'],
+  ['a', de ? 'A · Nächstes Set' : 'A · Next set'],
+  ['b', de ? 'B · Sets pro Jahr' : 'B · Sets per year'],
+] as const;
+const sideOptions = [
+  ['0', de ? 'Aktuell' : 'Current'],
+  ['1', de ? '1 · Jahresleiste' : '1 · Year rail'],
+  ['2', de ? '2 · Jahr links' : '2 · Year on the left'],
+  ['3', de ? '3 · Breiter' : '3 · Wider'],
+  ['4', de ? '4 · Zeitachse' : '4 · Spine'],
+] as const;
+---
+
+<nav class="dx-rail" aria-label={de ? 'Jahre' : 'Years'} data-dx-rail>
+  {years.map((year) => (
+    <a href={`#year-${year}`} data-year={year}>
+      {year}
+    </a>
+  ))}
+</nav>
+
+<aside class="dx-switch" aria-label="Design-Optionen">
+  <p class="dx-title">
+    Design-Optionen <span>nur lokal</span>
+  </p>
+  <p class="dx-group">Panel</p>
+  <div class="dx-buttons" data-dx-set="hero">
+    {heroOptions.map(([value, label]) => (
+      <button type="button" data-value={value}>
+        {label}
+      </button>
+    ))}
+  </div>
+  <p class="dx-group">{de ? 'Seiten' : 'Sides'}</p>
+  <div class="dx-buttons" data-dx-set="side">
+    {sideOptions.map(([value, label]) => (
+      <button type="button" data-value={value}>
+        {label}
+      </button>
+    ))}
+  </div>
+</aside>
+
+<script>
+  const root = document.documentElement;
+  const read = (key: string) => {
+    try {
+      return localStorage.getItem(`dx-${key}`) ?? '0';
+    } catch {
+      return '0';
+    }
+  };
+  const apply = (key: string, value: string) => {
+    root.dataset[`${key}Variant`] = value;
+    try {
+      localStorage.setItem(`dx-${key}`, value);
+    } catch {
+      /* the choice just is not kept */
+    }
+    for (const button of document.querySelectorAll<HTMLButtonElement>(
+      `[data-dx-set="${key}"] button`,
+    )) {
+      button.setAttribute('aria-pressed', String(button.dataset.value === value));
+    }
+  };
+  for (const group of document.querySelectorAll<HTMLElement>('[data-dx-set]')) {
+    const key = group.dataset.dxSet!;
+    apply(key, read(key));
+    group.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest('button');
+      if (button?.dataset.value) apply(key, button.dataset.value);
+    });
+  }
+
+  // The rail marks the year in the middle of the screen
+  const rail = document.querySelector<HTMLElement>('[data-dx-rail]');
+  if (rail) {
+    const links = new Map(
+      [...rail.querySelectorAll<HTMLAnchorElement>('a')].map((a) => [a.dataset.year, a]),
+    );
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const year = entry.target.querySelector('h2')?.id.replace('year-', '');
+          for (const [key, link] of links) link.toggleAttribute('data-active', key === year);
+        }
+      },
+      { rootMargin: '-45% 0px -50% 0px' },
+    );
+    for (const section of document.querySelectorAll('.timeline .year')) observer.observe(section);
+  }
+</script>

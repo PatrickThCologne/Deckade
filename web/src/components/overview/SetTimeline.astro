@@ -19,7 +19,12 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
 <div class="container timeline" style={`--per-row: ${perRow}`}>
   {years.map((group) => (
     <section class="year" aria-labelledby={`year-${group.year}`}>
-      <h2 id={`year-${group.year}`}>{group.year}</h2>
+      <h2
+        id={`year-${group.year}`}
+        data-count={import.meta.env.DEV ? group.sets.length : undefined}
+      >
+        {group.year}
+      </h2>
       <div class="grid fan-row" data-fan-row>
         {group.sets.map((set) => (
           <SetTile tile={setTile(set, locale)} locale={locale} />
