@@ -179,9 +179,8 @@ export const en: Record<UiKey, string> = {
   'about.privacy':
     'This site uses no cookies. It counts visits with GoatCounter, without cookies and without storing your IP address. Card images are loaded directly from Scryfall, which therefore receives your IP address.',
 
-  'footer.art': 'Background artwork by',
-  'footer.data':
-    'Card and product data from Scryfall and MTGJSON, play rates from public tournament lists. As of {date}.',
+  'footer.art': 'Background artists ({count})',
+  'footer.data': 'Data from Scryfall, MTGJSON and tournament lists, as of {date}.',
 
   'notFound.title': 'Page not found',
   'notFound.text': 'This page does not exist (anymore). Maybe the set has rotated out?',

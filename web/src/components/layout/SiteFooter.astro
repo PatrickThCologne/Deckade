@@ -27,27 +27,31 @@ const links = [
 ---
 
 <footer class="site-footer">
-  <div class="inner">
-    <nav aria-label={t('nav.info')}>
-      {links.map((link) => (
-        <a href={link.href}>{link.label}</a>
-      ))}
-    </nav>
-    <p>
-      <span class="data">{t('footer.data', { date: updated })}</span> {SITE_NAME} is unofficial Fan
-      Content permitted under the{' '}
-      <a href="https://company.wizards.com/en/legal/fancontentpolicy" rel="noopener">
-        Fan Content Policy.
-      </a>{' '}
-      Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of
-      the Coast. ©Wizards of the Coast LLC.
+  <div class="inner container">
+    <div class="top">
+      <p class="data">{t('footer.data', { date: updated })}</p>
+      <nav aria-label={t('nav.info')}>
+        {links.map((link) => (
+          <a href={link.href}>{link.label}</a>
+        ))}
+      </nav>
+    </div>
+    <div class="legal">
+      <p>
+        {SITE_NAME} is unofficial Fan Content permitted under the{' '}
+        <a href="https://company.wizards.com/en/legal/fancontentpolicy" rel="noopener">
+          Fan Content Policy.
+        </a>{' '}
+        Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of
+        the Coast. ©Wizards of the Coast LLC.
+      </p>
       {artists.length > 0 && (
-        <span class="credits">
-          {' '}
-          {t('footer.art')} {artists.join(', ')}.
-        </span>
+        <details class="credits">
+          <summary>{t('footer.art', { count: String(artists.length) })}</summary>
+          <p>{artists.join(', ')}.</p>
+        </details>
       )}
-    </p>
+    </div>
   </div>
 </footer>
 
@@ -57,37 +61,65 @@ const links = [
     background: rgb(6 8 12 / 0.6);
   }
 
-  /* One running text over the whole width of the window, like the footer's background: the
-     data source, the Fan Content notice and the artists of the background, with the links
-     at the top right. So every line is full and the footer stays low. */
+  /* Two quiet lines, as wide as the panels above (the background runs over the whole window):
+     the data source with the links, then the Fan Content notice Wizards asks for, word for
+     word. The artists of the background (Scryfall asks to name them where their art crops are
+     shown) are one click away. */
   .inner {
-    padding: 10px var(--gutter) 12px;
-    font-size: 11px;
+    display: grid;
+    gap: 4px;
+    padding-block: 12px 14px;
+    font-size: 10.5px;
     line-height: 1.6;
-    color: var(--text-faint);
+    color: color-mix(in srgb, var(--text-faint) 60%, var(--bg));
   }
 
   p {
     margin: 0;
   }
 
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 24px;
+  }
+
   .data {
-    color: var(--text-dim);
+    color: color-mix(in srgb, var(--text-dim) 30%, var(--text-faint));
   }
 
   nav {
-    float: right;
     display: flex;
     gap: 14px;
-    margin-left: 24px;
+  }
+
+  .legal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 16px;
+  }
+
+  .credits[open] {
+    flex-basis: 100%;
+  }
+
+  summary {
+    color: color-mix(in srgb, var(--text-dim) 30%, var(--text-faint));
+    cursor: pointer;
+  }
+
+  summary:hover {
+    color: var(--accent);
   }
 
   a {
-    color: var(--text-dim);
+    color: color-mix(in srgb, var(--text-dim) 30%, var(--text-faint));
     text-decoration: none;
   }
 
-  p a {
+  .legal a {
     text-decoration: underline;
     text-underline-offset: 2px;
   }

@@ -178,9 +178,8 @@ export const de = {
   'about.privacy':
     'Die Seite setzt keine Cookies ein. Besuche zählt sie mit GoatCounter, ohne Cookies und ohne deine IP-Adresse zu speichern. Kartenbilder werden direkt von Scryfall geladen; dabei erhält Scryfall deine IP-Adresse.',
 
-  'footer.art': 'Artworks im Hintergrund von',
-  'footer.data':
-    'Karten- und Produktdaten von Scryfall und MTGJSON, Spielanteile aus öffentlichen Turnierlisten. Stand: {date}.',
+  'footer.art': 'Künstler der Hintergrundbilder ({count})',
+  'footer.data': 'Daten von Scryfall, MTGJSON und Turnierlisten, Stand {date}.',
 
   'notFound.title': 'Seite nicht gefunden',
   'notFound.text': 'Diese Seite gibt es nicht (mehr). Vielleicht ist das Set inzwischen rotiert?',
