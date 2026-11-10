@@ -35,6 +35,15 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
     --tile-min: 120px; /* a pack at full height plus a little room */
   }
 
+  /* The banner above leans from its top left corner, so the middle of its shape lies half
+     its slant left of the page's middle (24px for the 207px banner at -13deg). The years
+     stand under that middle instead. Narrow screens have an upright banner. */
+  @media (width > 900px) {
+    .timeline {
+      translate: calc(207px * tan(var(--lean)) / 2) 0;
+    }
+  }
+
   .year {
     margin-top: 34px;
   }
