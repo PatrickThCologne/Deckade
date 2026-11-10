@@ -329,6 +329,17 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
       display: grid;
       grid-template-columns: repeat(2, auto);
       row-gap: 14px;
+      align-items: start;
+    }
+
+    /* Figures of a row on one line, even when one label breaks into two lines; the gem
+       stays at the height of the figures */
+    .stats:has(> li:nth-child(4)) li {
+      align-items: flex-start;
+    }
+
+    .stats:has(> li:nth-child(4)) li::before {
+      margin-top: calc(26px * 1.1 / 2 - 3px);
     }
 
     /* Each figure in the middle of its column */
