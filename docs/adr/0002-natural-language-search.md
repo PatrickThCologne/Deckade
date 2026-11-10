@@ -35,7 +35,8 @@ mana value, a price and an order ("cheap", "popular").
 
 - No server, no cost, no new dependency; the request never leaves the browser, so the privacy
   notice does not change.
-- The card list (about 1.7 MB unpacked) loads with the first search, not with the page.
+- The card list loads with the first search, not with the page: 4.5 MB for 29,451 cards, about
+  1.7 MB compressed (measured 2026-11-10). The keyword field adds about 0.1 MB (2 %).
 - Only what the rules know is understood. "Kartenziehen", "Removal" or "like Lightning Bolt"
   are shown as not used. Rules text is not in the card list, so it is not searched.
 - Later phases, if wanted: more rules (card draw, removal, tribes) from the rules text at build
