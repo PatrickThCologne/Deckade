@@ -41,4 +41,4 @@ included, as long as the logos are not changed.
   slightly softer on high-density screens.
 - Turning the renders changes the image geometry slightly. Whether that counts as changing
   the logos in the sense of the Fan Content Policy is open; without it the 2024+ packs lean.
-- Still open: images for the older sets (see TODO.md).
+- Still open: images for the older sets.
