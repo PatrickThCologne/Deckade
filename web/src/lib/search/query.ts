@@ -1,12 +1,14 @@
 /**
  * The search tab reads a request in plain German or English ("günstige rote Kreaturen mit
- * Eile") as filters over the card list: colours, card types, keyword abilities, mana value,
- * a price limit and a sort order. It runs in the browser without a model, so it needs no
- * server and the request never leaves the page (docs/adr/0002-natural-language-search.md).
- * The rules follow the C# parser in api/ (RuleBasedQueryParser), which has the same tests.
+ * Eile") as filters over the card list: colours, card types, keyword abilities, synergies
+ * ("Synergie mit Artefakten"), mana value, a price limit and a sort order. It runs in the
+ * browser without a model, so it needs no server and the request never leaves the page
+ * (docs/adr/0002-natural-language-search.md). The rules follow the C# parser in api/
+ * (RuleBasedQueryParser), which has the same tests; synergies exist here only.
  */
 import { type CardType, matchesWords, normalizeForSearch, type SortKey } from '../cards/sort';
 import { KEYWORDS, type Keyword } from './keywords';
+import { SYNERGIES, type Synergy } from './synergies';
 
 export interface SearchQuery {
   /** Colours in WUBRG order the cards must have. */
@@ -17,6 +19,8 @@ export interface SearchQuery {
   readonly types: readonly CardType[];
   /** All of these keywords. */
   readonly keywords: readonly Keyword[];
+  /** All of these synergies. */
+  readonly synergies: readonly Synergy[];
   readonly minMana: number | null;
   readonly maxMana: number | null;
   /** Euro, the price of the cheapest printing. */
@@ -31,6 +35,7 @@ export interface SearchableCard {
   readonly colors: string;
   readonly types: readonly CardType[];
   readonly keywords: readonly Keyword[];
+  readonly synergies: readonly Synergy[];
   readonly cmc: number;
   readonly isLand: boolean;
   readonly price: number | null;
@@ -99,6 +104,34 @@ const KEYWORD_WORDS: Readonly<Record<Keyword, RegExp>> = {
   prowess: word('bravour|prowess'),
 };
 
+/** What a synergy is called after "Synergie mit": German card words and English ones. */
+const SYNERGY_NAMES: Readonly<Record<Synergy, string>> = {
+  artifacts: 'artefakt\\p{L}*|artifacts?',
+  enchantments: 'verzauberung\\p{L}*|enchantments?|aura\\p{L}*',
+  counters: '\\+1/\\+1(?:[\\s-]?(?:marke\\p{L}*|counters?))?|marke\\p{L}*|counter\\p{L}*',
+  blight: '-1/-1(?:[\\s-]?(?:marke\\p{L}*|counters?))?|faulnis|blight\\p{L}*',
+  flying: 'flieg\\p{L}*|flug\\p{L}*|flying|flyers?|fliers?',
+  tokens: 'spielstein\\p{L}*|token\\p{L}*',
+  graveyard: 'friedhof\\p{L}*|graveyards?|mill\\p{L}*|mahl\\p{L}*',
+  lifegain:
+    'lebens?gewinn\\p{L}*|lebenspunkt\\p{L}*|leben|life\\s?gain\\p{L}*|gaining\\s+life|life',
+  sacrifice: 'opfer\\p{L}*|sacrific\\p{L}*|sac',
+  spells: 'spontanzauber\\p{L}*|hexerei\\p{L}*|zauberspruch\\p{L}*|spells?|instants?|sorcer\\p{L}*',
+  lands: 'land\\p{L}*',
+};
+const SYNERGY_WORDS = Object.fromEntries(
+  SYNERGIES.map((synergy) => [synergy, word(SYNERGY_NAMES[synergy])]),
+) as Readonly<Record<Synergy, RegExp>>;
+const SYNERGY_NAME = `(?:(?:den|dem|der|die|the)\\s+)?(?:${Object.values(SYNERGY_NAMES).join('|')})`;
+const SYNERGY_LIST = `${SYNERGY_NAME}(?:(?:\\s*[,&/]\\s*|\\s+(?:und|and|oder|or|sowie)\\s+)${SYNERGY_NAME})*`;
+// "Synergie mit Countern und Fliegern", "synergy with tokens", "cards that care about artifacts".
+// The theme words only count behind such a phrase, so "Artefakte" alone stays a card type.
+const SYNERGY_AFTER = word(
+  `(?:synerg\\p{L}*\\s+(?:mit|with|for|fur|zu|von)|(?:that\\s+)?cares?\\s+about)\\s+${SYNERGY_LIST}`,
+);
+// "Artefakt-Synergie", "Fliegersynergien", "token synergy"
+const SYNERGY_BEFORE = word(`${SYNERGY_LIST}[\\s-]*synerg\\p{L}*`);
+
 // "unter 2 €", "bis 1,50 Euro", "under 3 eur". Dollar prices stay unread: prices are in euro.
 const MAX_PRICE =
   /(?:unter|bis|max\.?|maximal|hochstens|under|below|up\s+to|<|≤)\s*(\d+(?:[.,]\d{1,2})?)\s*(?:€|eur(?:o|os)?(?![\p{L}]))/gu;
@@ -141,6 +174,12 @@ export function parseQuery(request: string): SearchQuery {
     return matches;
   };
 
+  // First, so "Synergie mit Artefakten" asks for no artifacts and "mit Fliegern" for no flyers
+  const synergyText = [...take(SYNERGY_AFTER), ...take(SYNERGY_BEFORE)]
+    .map((match) => match[0])
+    .join(' ');
+  const synergies = SYNERGIES.filter((synergy) => synergyText.search(SYNERGY_WORDS[synergy]) >= 0);
+
   const priceMatch = take(MAX_PRICE)[0];
   const maxPrice = priceMatch ? Number(priceMatch[1]!.replace(',', '.')) : null;
 
@@ -179,7 +218,18 @@ export function parseQuery(request: string): SearchQuery {
     .split(/[^\p{L}\d]+/u)
     .filter((token) => token.length > 1 && !FILLER.has(token));
 
-  return { colors, exactColors, types, keywords, minMana, maxMana, maxPrice, sort, unknown };
+  return {
+    colors,
+    exactColors,
+    types,
+    keywords,
+    synergies,
+    minMana,
+    maxMana,
+    maxPrice,
+    sort,
+    unknown,
+  };
 }
 
 /** Whether the request named any filter or order at all. */
@@ -189,6 +239,7 @@ export function understood(query: SearchQuery): boolean {
     query.exactColors ||
     query.types.length > 0 ||
     query.keywords.length > 0 ||
+    query.synergies.length > 0 ||
     query.minMana !== null ||
     query.maxMana !== null ||
     query.maxPrice !== null ||
@@ -213,6 +264,7 @@ export function queryMatcher(query: SearchQuery): (card: SearchableCard) => bool
       : colors.every((color) => card.colors.includes(color))) &&
     (query.types.length === 0 || card.types.some((type) => query.types.includes(type))) &&
     query.keywords.every((keyword) => card.keywords.includes(keyword)) &&
+    query.synergies.every((synergy) => card.synergies.includes(synergy)) &&
     (!manaLimit ||
       (!card.isLand &&
         card.cmc >= (query.minMana ?? 0) &&

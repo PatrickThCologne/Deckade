@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { normalizeForSearch } from '../src/lib/cards/sort';
 import { cardKeywords } from '../src/lib/search/keywords';
+import { cardSynergies } from '../src/lib/search/synergies';
 import {
   nameRank,
   parseQuery,
@@ -126,11 +127,48 @@ describe('parseQuery: keywords and order', () => {
   });
 });
 
+describe('parseQuery: synergies', () => {
+  it('reads a synergy behind the other filters', () => {
+    expect(parseQuery('günstige rote Kreatur mit Eile, Synergie mit Artefakten')).toMatchObject({
+      colors: 'R',
+      types: ['creature'],
+      keywords: ['haste'],
+      synergies: ['artifacts'],
+      sort: 'value-asc',
+      unknown: [],
+    });
+  });
+
+  it.each([
+    ['Synergie mit Countern', ['counters']],
+    ['Synergie mit +1/+1-Marken', ['counters']],
+    ['Synergie mit Fäulnis', ['blight']],
+    ['Synergien mit Fliegern und Spielsteinen', ['flying', 'tokens']],
+    ['Artefakt-Synergie', ['artifacts']],
+    ['synergy with tokens and sacrifice', ['tokens', 'sacrifice']],
+    ['cards that care about graveyards', ['graveyard']],
+    ['Synergie mit Spontanzaubern und Hexereien', ['spells']],
+  ])('reads "%s"', (request, synergies) => {
+    expect(parseQuery(request).synergies).toEqual(synergies);
+  });
+
+  it('takes the theme as a synergy, not as a type or keyword the card must have', () => {
+    expect(parseQuery('Synergie mit Artefakten').types).toEqual([]);
+    expect(parseQuery('Synergie mit Fliegern').keywords).toEqual([]);
+  });
+
+  it('reads theme words without the phrase as before', () => {
+    expect(parseQuery('Artefakte')).toMatchObject({ types: ['artifact'], synergies: [] });
+    expect(parseQuery('Synergie mit Artefakten und Kreaturen').types).toEqual(['creature']);
+  });
+});
+
 describe('queryMatcher', () => {
   const card = (overrides: Partial<SearchableCard>): SearchableCard => ({
     colors: 'R',
     types: ['creature'],
     keywords: ['haste'],
+    synergies: [],
     cmc: 2,
     isLand: false,
     price: 0.2,
@@ -149,6 +187,11 @@ describe('queryMatcher', () => {
   it('needs every named keyword', () => {
     expect(matches('Eile')).toBe(true);
     expect(matches('Eile und Trampelschaden')).toBe(false);
+  });
+
+  it('needs every named synergy', () => {
+    expect(matches('Synergie mit Artefakten')).toBe(false);
+    expect(matches('Synergie mit Artefakten', { synergies: ['artifacts', 'tokens'] })).toBe(true);
   });
 
   it('leaves lands out of a mana value limit', () => {
@@ -184,6 +227,35 @@ describe('cardKeywords', () => {
 
   it('reads the two-word keywords', () => {
     expect(cardKeywords('First strike\nDouble strike')).toEqual(['first-strike', 'double-strike']);
+  });
+});
+
+describe('cardSynergies', () => {
+  it('reads what the rules text works with', () => {
+    expect(
+      cardSynergies('Whenever an artifact you control enters, create a Treasure token.', 'X'),
+    ).toEqual(['artifacts', 'tokens']);
+    expect(cardSynergies('Creatures you control with flying get +1/+1.', 'X')).toEqual(['flying']);
+    expect(cardSynergies('Proliferate. Draw a card.', 'X')).toEqual(['counters']);
+  });
+
+  it('takes removal and counterspells for no synergy', () => {
+    expect(cardSynergies('Destroy target artifact.', 'X')).toEqual([]);
+    expect(cardSynergies('Counter target spell.', 'X')).toEqual([]);
+    expect(cardSynergies('This deals 4 damage to target creature with flying.', 'X')).toEqual([]);
+  });
+
+  it('does not count a bare keyword line as a flying synergy', () => {
+    expect(cardSynergies('Flying\nVigilance', 'Serra Angel')).toEqual([]);
+  });
+
+  it('leaves out reminder text and the card name', () => {
+    const blight =
+      'As an additional cost to cast this spell, you may blight 1. (You may put a -1/-1 ' +
+      'counter on a creature you control.)\nDestroy target creature.';
+    expect(cardSynergies(blight, 'X')).toEqual(['blight']);
+    const name = 'Skithiryx, the Blight Dragon';
+    expect(cardSynergies(`{B}: ${name} gains haste until end of turn.`, name)).toEqual([]);
   });
 });
 

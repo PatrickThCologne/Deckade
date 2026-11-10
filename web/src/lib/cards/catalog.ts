@@ -6,6 +6,7 @@
 import type { Locale } from '../../config/site';
 import type { Card } from '../data/schema';
 import { cardKeywords, type Keyword, KEYWORDS } from '../search/keywords';
+import { cardSynergies, type Synergy, SYNERGIES } from '../search/synergies';
 import { shownCard } from './local';
 import {
   CARD_TYPES,
@@ -30,6 +31,8 @@ export interface CatalogCard extends SortableCard {
   readonly types: readonly CardType[];
   /** Keyword abilities, for the search tab (lib/search). */
   readonly keywords: readonly Keyword[];
+  /** What the rules text works with ("Synergie mit Artefakten"), for the search tab. */
+  readonly synergies: readonly Synergy[];
   readonly banned: boolean;
   /** The set of the printing shown: the newest one, on German pages the newest German one. */
   readonly setCode: string;
@@ -71,6 +74,7 @@ function catalogCard(printings: readonly Printing[], locale: Locale): CatalogCar
     type: mainType(card.typeLine),
     types: cardTypes(card.typeLine),
     keywords: cardKeywords(card.text),
+    synergies: cardSynergies(card.text, card.name),
     price: prices.length > 0 ? Math.min(...prices) : null,
     playShare: shares.length > 0 ? Math.max(...shares) : null,
     isLand: card.isLand,
@@ -107,6 +111,8 @@ type EncodedCard = [
   otherSets: string,
   /** Indexes into KEYWORDS, one base-36 digit each; usually empty. */
   keywords: string,
+  /** Indexes into SYNERGIES, the same way. */
+  synergies: string,
 ];
 
 export interface CatalogFile {
@@ -161,6 +167,7 @@ export function encodeCatalog(
       shortScryfall(card.scryfallUrl),
       card.printedIn.filter((code) => code !== card.setCode).join(' '),
       card.keywords.map((keyword) => KEYWORDS.indexOf(keyword).toString(36)).join(''),
+      card.synergies.map((synergy) => SYNERGIES.indexOf(synergy).toString(36)).join(''),
     ]),
   };
 }
@@ -182,6 +189,7 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
       url,
       otherSets,
       keywords = '',
+      synergies = '',
     ]) => {
       const [main, ...all] = [...types].map((index) => CARD_TYPES[Number(index)]);
       return {
@@ -193,6 +201,7 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
         type: isCardType(main) ? main : 'other',
         types: all.filter(isCardType),
         keywords: [...keywords].flatMap((digit) => KEYWORDS[parseInt(digit, 36)] ?? []),
+        synergies: [...synergies].flatMap((digit) => SYNERGIES[parseInt(digit, 36)] ?? []),
         price,
         playShare,
         isLand: (flags & 1) !== 0,

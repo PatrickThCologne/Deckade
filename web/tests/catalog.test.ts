@@ -122,6 +122,17 @@ describe('catalog file', () => {
     expect(decoded[1]).toMatchObject({ isLand: true, imageNormal: null, type: 'land' });
   });
 
+  it('keeps the synergies read from the English rules text', () => {
+    const catalog = buildCatalog(
+      [printing('m20', '2019-07-12', { text: 'Sacrifice another creature: Create a Food token.' })],
+      'en',
+    );
+    const file = JSON.parse(JSON.stringify(encodeCatalog(catalog, {})));
+
+    expect(catalog[0]?.synergies).toEqual(['artifacts', 'tokens', 'sacrifice']);
+    expect(decodeCatalog(file)[0]?.synergies).toEqual(['artifacts', 'tokens', 'sacrifice']);
+  });
+
   it('keeps every set that printed a card', () => {
     const catalog = buildCatalog(
       [printing('lea', '1993-08-05'), printing('m20', '2019-07-12', { de: german })],
