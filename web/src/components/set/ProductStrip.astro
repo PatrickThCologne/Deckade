@@ -78,7 +78,7 @@ const upcoming = set.standard?.status === 'upcoming';
     list-style: none;
   }
 
-  /* Cut corner top right: the place of the open/close button */
+  /* Cut corner top right, like the other slanted shapes */
   .product {
     --cut: 18px;
     position: relative;
@@ -93,11 +93,15 @@ const upcoming = set.standard?.status === 'upcoming';
     background: linear-gradient(160deg, var(--surface-hover), var(--surface-raised) 70%);
   }
 
+  /* Name on one line over the whole width, so every price in the strip sits at the same
+     height; the open/close button stands next to the price. Too long a name ends in "…",
+     the summary's title shows it whole. */
   summary {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 12px 34px 12px 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 8px;
+    align-items: center;
+    padding: 12px 10px 12px 14px;
     list-style: none;
     cursor: pointer;
   }
@@ -107,22 +111,25 @@ const upcoming = set.standard?.status === 'upcoming';
   }
 
   .name {
+    grid-column: 1 / -1;
+    min-width: 0;
+    overflow: hidden;
     font-size: 13px;
     line-height: 1.25;
     color: var(--text-dim);
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .price {
     font-family: var(--font-display), sans-serif;
-    font-size: 21px;
+    font-size: 18px;
     font-weight: var(--font-display-weight);
     font-variant-numeric: tabular-nums;
   }
 
   .toggle {
-    position: absolute;
-    top: 8px;
-    right: 8px;
+    position: relative;
     width: 18px;
     height: 18px;
   }
