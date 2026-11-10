@@ -15,26 +15,31 @@ import { localeFrom, localePaths } from '../../lib/routing';
 export const getStaticPaths = localePaths;
 
 /** Date of the last change to this text; update it with every change. */
-const UPDATED = '2026-11-09';
+const UPDATED = '2026-11-10';
 
 const locale = localeFrom(Astro.params.lang);
 const { t } = useTranslations(locale);
 const format = createFormatters(locale);
 const operatorKnown = Boolean(OPERATOR_NAME && OPERATOR_EMAIL);
 
+const githubPrivacy =
+  'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement';
+
 const sections = [
   {
     heading: t('privacy.hosting.heading'),
     text: t('privacy.hosting.text'),
-    link: {
-      href: 'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement',
-      label: t('privacy.hosting.link'),
-    },
+    link: { href: githubPrivacy, label: t('privacy.hosting.link') },
   },
   {
     heading: t('privacy.images.heading'),
     text: t('privacy.images.text'),
     link: { href: 'https://scryfall.com/docs/privacy', label: t('privacy.images.link') },
+  },
+  {
+    heading: t('privacy.feedback.heading'),
+    text: t('privacy.feedback.text'),
+    link: { href: githubPrivacy, label: t('privacy.hosting.link') },
   },
   { heading: t('privacy.local.heading'), text: t('privacy.local.text') },
   { heading: t('privacy.rights.heading'), text: t('privacy.rights.text') },

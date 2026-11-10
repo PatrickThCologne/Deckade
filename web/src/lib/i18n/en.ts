@@ -249,6 +249,9 @@ export const en: Record<UiKey, string> = {
   'privacy.local.heading': 'What needs no third party',
   'privacy.local.text':
     "Fonts, mana symbols and booster images are served from the same server as the site. Links to Scryfall, Cardmarket or Wizards of the Coast transfer nothing until you click them; from then on, that site's privacy policy applies.",
+  'privacy.feedback.heading': 'Feedback',
+  'privacy.feedback.text':
+    "If you send feedback by e-mail, I receive your address and your text and use both only to handle your request and reply. If you open an issue on GitHub, your text and your GitHub username are public in the site's repository; GitHub's privacy statement applies to that. The legal basis is the legitimate interest in handling notes about the site (Art. 6(1)(f) GDPR).",
   'privacy.rights.heading': 'Your rights',
   'privacy.rights.text':
     'You have the right to access, rectification, erasure and restriction of processing, and to object (Art. 15 to 18 and 21 GDPR). Contact the address above. You can also lodge a complaint with a data protection authority (Art. 77 GDPR).',
@@ -258,13 +261,15 @@ export const en: Record<UiKey, string> = {
   'nav.feedback': 'Send feedback',
   'feedback.subject': 'Feedback on {site}',
   'feedback.intro':
-    'What did you notice? Sending opens your e-mail program with your text; you send it from there.',
+    'What did you notice? Your text opens as an e-mail in your e-mail program or as an issue on GitHub; you send it from there.',
   'feedback.topic': 'What is it about?',
   'feedback.topic.bug': 'Something is wrong',
   'feedback.topic.idea': 'Idea or wish',
   'feedback.topic.other': 'Something else',
   'feedback.message': 'Your message',
   'feedback.send': 'Open as e-mail',
+  'feedback.issue': 'Open as GitHub issue',
+  'feedback.issueNote': 'An issue needs a GitHub account. Issues are public.',
   'feedback.cancel': 'Cancel',
   'feedback.fallback': 'Nothing opened? Write to',
   'meta.imprint.title': 'Imprint & contact',
@@ -276,7 +281,8 @@ export const en: Record<UiKey, string> = {
   'imprint.operator.missing': 'Name, address and email are added when the site is published.',
   'imprint.feedback.heading': 'Contact & feedback',
   'imprint.feedback.text':
-    'Found a mistake, a price looks off or you have an idea? Just send an email.',
+    'Found a mistake, a price looks off or you have an idea? Just send an email or open an issue on GitHub.',
   'imprint.feedback.write': 'Write an email',
+  'imprint.feedback.issue': 'Open an issue on GitHub',
   'privacy.updated': 'Last updated: {date}',
 };
