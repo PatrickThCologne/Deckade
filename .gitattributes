@@ -1,3 +1,6 @@
 * text=auto eol=lf
 *.webp binary
 *.png binary
+
+# Tooling for the coding assistant, not part of the website: left out of the language bar
+.claude/** linguist-vendored
