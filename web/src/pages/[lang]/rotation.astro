@@ -18,7 +18,7 @@ const waves = groupIntoWaves(standardSets().filter(isShown));
 
 <BaseLayout locale={locale} title={t('meta.home.title')} description={t('meta.home.description')}>
   <RotationHero locale={locale} />
-  <div class="container">
+  <div class="container waves">
     {waves.map((wave) => (
       <WaveSection wave={wave} locale={locale} />
     ))}
@@ -33,3 +33,14 @@ const waves = groupIntoWaves(standardSets().filter(isShown));
   initTilt();
   initSetOverlay();
 </script>
+
+<style>
+  /* The banner above leans from its top left corner, so the middle of its shape lies half
+     its slant left of the page's middle. The sets stand under that middle, as on the
+     overview. Narrow screens have an upright banner. */
+  @media (width > 900px) {
+    .waves {
+      translate: calc(var(--hero-height) * tan(var(--lean)) / 2) 0;
+    }
+  }
+</style>
