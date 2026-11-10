@@ -257,6 +257,36 @@ const setsByYear = Map.groupBy(sets ?? [], (set) => set.year);
     gap: 10px 8px;
   }
 
+  /* With the set menu (all cards page) both menus stand one above the other on the right,
+     sets first; the box keeps its two rows. */
+  @media (width > 720px) {
+    .filters:has([data-set-menu]) {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .filters:has([data-set-menu]) > .filter-row:first-child {
+      display: contents;
+    }
+
+    [data-set-menu] {
+      grid-area: 1 / 2;
+    }
+
+    .filters:has([data-set-menu]) [data-type-menu] {
+      grid-area: 2 / 2;
+    }
+
+    .filters:has([data-set-menu]) .chip-menu summary {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .filters:has([data-set-menu]) .type-grid {
+      right: 0;
+      left: auto;
+    }
+  }
+
   .group {
     display: inline-flex;
     align-items: center;
