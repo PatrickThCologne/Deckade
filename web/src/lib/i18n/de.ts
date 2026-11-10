@@ -220,6 +220,7 @@ export const de = {
   'search.label': 'Wonach suchst du?',
   'search.placeholder': 'z. B. günstige rote Kreaturen mit Eile',
   'search.submit': 'Suchen',
+  'search.sortAuto': 'Passend zur Suche',
   'search.examples': 'Zum Beispiel',
   'search.count': '{count} Karten',
   'search.none': 'Keine Karte passt. Lass eine Angabe weg oder probier ein Beispiel.',

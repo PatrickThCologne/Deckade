@@ -5,7 +5,7 @@
  */
 import { isLocale } from '../config/site';
 import { type CatalogCard, type CatalogFile, decodeCatalog } from '../lib/cards/catalog';
-import { compareCards, normalizeForSearch } from '../lib/cards/sort';
+import { compareCards, isSortKey, normalizeForSearch } from '../lib/cards/sort';
 import { createFormatters } from '../lib/format';
 import {
   nameRank,
@@ -37,11 +37,12 @@ export async function initCardSearch(): Promise<void> {
   const root = document.querySelector<HTMLElement>('[data-card-search]');
   const form = root?.querySelector<HTMLFormElement>('[data-search-form]');
   const input = form?.querySelector<HTMLInputElement>('input[name="q"]');
+  const sort = form?.querySelector<HTMLSelectElement>('[data-search-sort]');
   const status = root?.querySelector<HTMLElement>('[data-status]');
   const list = root?.querySelector<HTMLElement>('[data-results]');
   const more = root?.querySelector<HTMLButtonElement>('[data-more]');
   const src = root?.dataset.src;
-  if (!root || !form || !input || !status || !list || !more || !src) return;
+  if (!root || !form || !input || !sort || !status || !list || !more || !src) return;
 
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Labels;
   const format = createFormatters(isLocale(root.dataset.locale) ? root.dataset.locale : 'de');
@@ -129,11 +130,14 @@ export async function initCardSearch(): Promise<void> {
       status.textContent = labels.error;
       return;
     }
-    const key = query.sort ?? 'played';
+    // The chosen order, otherwise the one the request names ("günstig"), otherwise play rate
+    const chosen = isSortKey(sort.value) ? sort.value : null;
+    const key = chosen ?? query.sort ?? 'played';
     // A name search puts the card of that name first, then names that start with it
-    const rank = namesFilters(query)
-      ? () => 0
-      : (card: Result) => nameRank(card.search, query.unknown);
+    const rank =
+      chosen || namesFilters(query)
+        ? () => 0
+        : (card: Result) => nameRank(card.search, query.unknown);
     matches = all
       .filter(queryMatcher(query))
       .sort((a, b) => rank(a) - rank(b) || compareCards(a, b, key));
@@ -149,6 +153,8 @@ export async function initCardSearch(): Promise<void> {
     const url = new URL(window.location.href);
     if (request.trim()) url.searchParams.set('q', request.trim());
     else url.searchParams.delete('q');
+    if (sort.value) url.searchParams.set('sort', sort.value);
+    else url.searchParams.delete('sort');
     history.replaceState(null, '', url);
     void run(request);
   };
@@ -157,6 +163,10 @@ export async function initCardSearch(): Promise<void> {
   input.addEventListener('input', () => {
     clearTimeout(timer);
     timer = setTimeout(() => search(input.value), TYPING_DELAY_MS);
+  });
+  sort.addEventListener('change', () => {
+    clearTimeout(timer);
+    search(input.value);
   });
   form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -171,7 +181,10 @@ export async function initCardSearch(): Promise<void> {
     });
   }
 
-  const initial = new URL(window.location.href).searchParams.get('q');
+  const params = new URL(window.location.href).searchParams;
+  const initialSort = params.get('sort') ?? '';
+  if (isSortKey(initialSort)) sort.value = initialSort;
+  const initial = params.get('q');
   if (initial) {
     input.value = initial;
     await run(initial);

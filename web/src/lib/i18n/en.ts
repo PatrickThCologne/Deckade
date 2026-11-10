@@ -221,6 +221,7 @@ export const en: Record<UiKey, string> = {
   'search.label': 'What are you looking for?',
   'search.placeholder': 'e.g. cheap red creatures with haste',
   'search.submit': 'Search',
+  'search.sortAuto': 'Best match',
   'search.examples': 'For example',
   'search.count': '{count} cards',
   'search.none': 'No card matches. Leave out a detail or try an example.',
