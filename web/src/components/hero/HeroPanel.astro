@@ -24,7 +24,7 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
 
 <section class="hero container" aria-labelledby="hero-title" data-tab-light>
   <PageTabs current={tab} locale={locale} />
-  <div class="card">
+  <div class="card" data-light-frame>
     <div class="surface" aria-hidden="true">
       {radar && <div class="radar"></div>}
     </div>
@@ -98,12 +98,19 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
     transform-origin: top left;
   }
 
-  /* Lines on the edges. The top edge stays level when the surface leans (it leans from its
-     top left corner), so the light sits there exactly under the tabs. From top to bottom of
-     the list: the tab light along the top, fading both ways; the same light running on round
-     the left corner and down the edge, as far as it reaches past the corner; the gold line
-     down the left edge, fading towards the bottom. */
+  /* Lines on the edges. The tab light starts under its tab and runs along the edges both
+     ways, fading as it goes; where it reaches a corner it carries on round it. The script
+     measures the banner (--light-w, --light-h) and switches the light on (--light-on). The
+     top edge stays level when the surface leans (it leans from its top left corner), so the
+     light sits there exactly under the tabs. Layers, from top to bottom of the list: the top
+     edge; on round the top left corner, down the left edge; on round the bottom left corner,
+     along the bottom; on round the top right corner, down the right edge; and under all of
+     them the gold line down the left edge, fading towards the bottom. */
   .surface::before {
+    --light: rgb(242 193 78 / var(--light-on, 0));
+    --past-left: var(--light-x);
+    --past-bottom-left: calc(var(--light-x) + var(--light-h, 0px));
+    --past-right: calc(var(--light-w, 0px) - var(--light-x));
     content: '';
     position: absolute;
     inset: 0;
@@ -111,13 +118,17 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
     background:
       linear-gradient(
           90deg,
-          transparent calc(var(--light-x, -10000px) - var(--light-reach)),
-          var(--accent) var(--light-x, -10000px),
-          transparent calc(var(--light-x, -10000px) + var(--light-reach))
+          transparent calc(var(--light-x) - var(--light-reach)),
+          var(--light) var(--light-x),
+          transparent calc(var(--light-x) + var(--light-reach))
         )
         0 0 / 100% 2px no-repeat,
-      linear-gradient(180deg, var(--accent), transparent) 0 calc(var(--light-x, -10000px) * -1) /
-        2px var(--light-reach) no-repeat,
+      linear-gradient(180deg, var(--light), transparent) 0 calc(var(--past-left) * -1) / 2px
+        var(--light-reach) no-repeat,
+      linear-gradient(90deg, var(--light), transparent) calc(var(--past-bottom-left) * -1) 100% /
+        var(--light-reach) 2px no-repeat,
+      linear-gradient(180deg, var(--light), transparent) 100% calc(var(--past-right) * -1) / 2px
+        var(--light-reach) no-repeat,
       linear-gradient(180deg, rgb(242 193 78 / 0.4), rgb(242 193 78 / 0.08)) 0 0 / 2px 100%
         no-repeat;
     pointer-events: none;

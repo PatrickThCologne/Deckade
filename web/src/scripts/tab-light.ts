@@ -12,7 +12,8 @@ export function initTabLight(): void {
     const host = nav.closest<HTMLElement>('[data-tab-light]');
     const tabs = [...nav.querySelectorAll<HTMLElement>('.tab')];
     const home = tabs.find((tab) => tab.getAttribute('aria-current') === 'page');
-    if (!host || !home) continue;
+    const frame = host?.querySelector<HTMLElement>('[data-light-frame]');
+    if (!host || !home || !frame) continue;
     let target = home;
 
     // The tabs and the banner start at the same left edge, so a tab's offset is the light's
@@ -22,18 +23,30 @@ export function initTabLight(): void {
       host.style.setProperty('--light-x', `${x}px`);
     };
 
+    // The light carries on round the banner's corners, so it needs to know where they are
+    const measure = () => {
+      host.style.setProperty('--light-w', `${frame.offsetWidth}px`);
+      host.style.setProperty('--light-h', `${frame.offsetHeight}px`);
+    };
+
     followTabs(tabs, home, RETURN_DELAY_MS, (tab) => {
       target = tab;
       place();
     });
 
     // Under the current tab from the start, gliding only from then on
+    measure();
     place();
+    host.style.setProperty('--light-on', '1');
     void host.offsetWidth;
     host.dataset.lightGlide = '';
 
-    // The tabs change width when the display font arrives and on narrow screens
-    const resized = new ResizeObserver(place);
+    // The tabs change width when the display font arrives, the banner when the text wraps
+    const resized = new ResizeObserver(() => {
+      measure();
+      place();
+    });
     for (const tab of tabs) resized.observe(tab);
+    resized.observe(frame);
   }
 }
