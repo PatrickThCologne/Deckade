@@ -122,6 +122,13 @@ request. CI does not download live data: the website is checked against the smal
 writes. After an intended change of the data contract, run
 `UPDATE_CONTRACT=1 pytest tests/test_contract.py` and check the diff.
 
+CI also runs [Lighthouse](web/lighthouserc.json) on the built overview, cards, rotation and
+search pages. Accessibility, best practices and SEO must reach their minimum scores;
+performance below 0.8 only warns, as shared runners are not steady enough for a hard limit.
+The reports are attached to each run as the `lighthouse` artifact. Locally, after
+`npm run build` in `web/`: `npx @lhci/cli@0.15.1 autorun` (set `CHROME_PATH` if Chrome is not
+installed, e.g. to Edge).
+
 ## Deployment
 
 [`deploy.yml`](.github/workflows/deploy.yml) runs daily at 04:30 UTC and can be started by hand
