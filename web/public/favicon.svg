@@ -1,9 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The gem of the logo (components/layout/SiteHeader.astro): a frame with a filled core -->
   <rect width="32" height="32" rx="8" fill="#06080c"/>
-  <g fill="none" stroke="#f2c14e">
-    <circle cx="16" cy="16" r="11.5" stroke-opacity=".55"/>
-    <circle cx="16" cy="16" r="6.5" stroke-opacity=".35"/>
+  <g transform="rotate(45 16 16)" fill="#f2c14e">
+    <rect x="7.875" y="7.875" width="16.25" height="16.25" fill="none" stroke="#f2c14e" stroke-width="3.75"/>
+    <rect x="13.5" y="13.5" width="5" height="5"/>
   </g>
-  <path d="M16 16 L27.5 16 A11.5 11.5 0 0 0 24.1 7.9 Z" fill="#f2c14e" fill-opacity=".45"/>
-  <circle cx="22" cy="11" r="2" fill="#f2c14e"/>
 </svg>
