@@ -1,9 +1,8 @@
 ---
 /**
  * The page tabs. They stand on the top edge of the banner like folder tabs, leaning at the
- * same angle as the banner's edge (--lean). On hover two stripes sweep through the tab and
- * a bar shoots out of it to the right, along the banner's edge. There is one bar for all
- * tabs, so moving between them slides it over (scripts/tab-bar.ts).
+ * same angle as the banner's edge (--lean). On hover two stripes sweep through the tab, and
+ * the light along the banner's top edge glides over under it (scripts/tab-light.ts).
  */
 import type { Locale } from '../../config/site';
 import { useTranslations } from '../../lib/i18n';
@@ -55,23 +54,20 @@ const tabs = [
       </span>
     </a>
   ))}
-  <span class="bar" aria-hidden="true"></span>
 </nav>
 
 <script>
-  import { initTabBar } from '../../scripts/tab-bar';
+  import { initTabLight } from '../../scripts/tab-light';
 
-  initTabBar();
+  initTabLight();
 </script>
 
 <style>
   .tabs {
+    /* The tabs' offsets are measured from here (scripts/tab-light.ts) */
     position: relative;
     display: flex;
     gap: 3px;
-    /* The bar ends where the banner ends */
-    overflow: clip;
-    container-type: inline-size;
   }
 
   .tab {
@@ -158,40 +154,6 @@ const tabs = [
     }
   }
 
-  /* The bar: grows out of the hovered tab's foot to the right and fades in from a soft start */
-  .bar {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    z-index: 1;
-    width: 100cqw;
-    height: 3px;
-    background: linear-gradient(
-      90deg,
-      rgb(242 193 78 / 0),
-      var(--accent) 14px,
-      rgb(242 193 78 / 0.35) 45%,
-      transparent
-    );
-    transform-origin: left;
-    translate: var(--bar-x, 0px) 0;
-    scale: 0 1;
-    opacity: 0;
-    transition:
-      scale 0.3s ease-in,
-      opacity 0.3s ease-in;
-    pointer-events: none;
-  }
-
-  .tabs[data-bar] .bar {
-    scale: 1 1;
-    opacity: 1;
-    transition:
-      translate 0.4s var(--ease-out),
-      scale 0.55s var(--ease-out),
-      opacity 0.2s;
-  }
-
   @media (max-width: 480px) {
     .tab {
       --lean-x: 8px;
@@ -212,11 +174,6 @@ const tabs = [
     .tab:hover::after,
     .tab:focus-visible::after {
       animation: none;
-    }
-
-    .bar,
-    .tabs[data-bar] .bar {
-      transition: opacity 0.2s;
     }
   }
 </style>

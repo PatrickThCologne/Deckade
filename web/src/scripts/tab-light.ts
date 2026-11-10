@@ -1,34 +1,39 @@
 /**
- * The hover bar of the page tabs (components/layout/PageTabs.astro). All tabs share one bar:
- * moving from tab to tab slides it over instead of starting a new one each time. Leaving is
- * delayed a moment, so crossing the small gap between two tabs does not reset it.
+ * The light along the banner's top edge (components/hero/HeroPanel.astro): brightest under the
+ * current page's tab, it glides over to a tab the pointer rests on or the keyboard focuses,
+ * and back when it leaves. The script only says where; the banner's CSS draws and glides it.
  */
-const HIDE_DELAY_MS = 90;
+import { followTabs, tabFootCentre } from '../lib/tab-light';
 
-export function initTabBar(): void {
+const RETURN_DELAY_MS = 90;
+
+export function initTabLight(): void {
   for (const nav of document.querySelectorAll<HTMLElement>('[data-tabs]')) {
-    let hideTimer = 0;
+    const host = nav.closest<HTMLElement>('[data-tab-light]');
+    const tabs = [...nav.querySelectorAll<HTMLElement>('.tab')];
+    const home = tabs.find((tab) => tab.getAttribute('aria-current') === 'page');
+    if (!host || !home) continue;
+    let target = home;
 
-    const show = (tab: HTMLElement) => {
-      window.clearTimeout(hideTimer);
-      nav.style.setProperty('--bar-x', `${tab.offsetLeft}px`);
-      if (nav.dataset.bar !== undefined) return;
-      // Appear at this tab instead of sliding over from where the bar was last: apply the
-      // position while sliding is still off, then switch the bar on.
-      void nav.offsetWidth;
-      nav.dataset.bar = '';
+    // The tabs and the banner start at the same left edge, so a tab's offset is the light's
+    const place = () => {
+      const leanX = parseFloat(getComputedStyle(target).getPropertyValue('--lean-x')) || 0;
+      const x = tabFootCentre(target.offsetLeft, target.offsetWidth, leanX);
+      host.style.setProperty('--light-x', `${x}px`);
     };
 
-    const hide = () => {
-      window.clearTimeout(hideTimer);
-      hideTimer = window.setTimeout(() => delete nav.dataset.bar, HIDE_DELAY_MS);
-    };
+    followTabs(tabs, home, RETURN_DELAY_MS, (tab) => {
+      target = tab;
+      place();
+    });
 
-    for (const tab of nav.querySelectorAll<HTMLElement>('.tab')) {
-      tab.addEventListener('pointerenter', () => show(tab));
-      tab.addEventListener('pointerleave', hide);
-      tab.addEventListener('focus', () => show(tab));
-      tab.addEventListener('blur', hide);
-    }
+    // Under the current tab from the start, gliding only from then on
+    place();
+    void host.offsetWidth;
+    host.dataset.lightGlide = '';
+
+    // The tabs change width when the display font arrives and on narrow screens
+    const resized = new ResizeObserver(place);
+    for (const tab of tabs) resized.observe(tab);
   }
 }
