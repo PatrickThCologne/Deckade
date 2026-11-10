@@ -220,6 +220,7 @@ export const en: Record<UiKey, string> = {
   'search.title': 'Search',
   'search.text':
     'Describe the cards you are looking for. The search understands colours, card types, keywords, mana value, price limits and "cheap" or "popular". It runs entirely in your browser.',
+  'search.wip': 'Work in progress',
   'search.label': 'What are you looking for?',
   'search.placeholder': 'e.g. cheap red creatures with haste',
   'search.submit': 'Search',

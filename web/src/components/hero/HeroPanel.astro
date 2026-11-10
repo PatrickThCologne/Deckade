@@ -151,24 +151,26 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
 
   /* Thin gold corners whose arms fade out along the edges; shorter on narrow screens, so
      they stay corners instead of meeting. The upright arms start a pixel off the corner, so
-     the two arms do not cover the corner pixel twice. */
+     the two arms do not cover the corner pixel twice. The top left and the bottom right arm
+     along the banner run further (--arm-long), which stresses its long, leaning shape. */
   .surface::after {
     --corner: rgb(242 193 78 / 0.7);
     --arm: min(160px, 22vw);
     --arm-v: calc(var(--arm) * 0.6);
+    --arm-long: min(420px, 42vw);
     content: '';
     position: absolute;
     inset: 9px;
     z-index: 1;
     background:
-      linear-gradient(90deg, var(--corner), transparent) 0 0 / var(--arm) 1px no-repeat,
+      linear-gradient(90deg, var(--corner), transparent) 0 0 / var(--arm-long) 1px no-repeat,
       linear-gradient(180deg, var(--corner), transparent) 0 1px / 1px var(--arm-v) no-repeat,
       linear-gradient(270deg, var(--corner), transparent) 100% 0 / var(--arm) 1px no-repeat,
       linear-gradient(180deg, var(--corner), transparent) 100% 1px / 1px var(--arm-v) no-repeat,
       linear-gradient(90deg, var(--corner), transparent) 0 100% / var(--arm) 1px no-repeat,
       linear-gradient(0deg, var(--corner), transparent) 0 calc(100% - 1px) / 1px var(--arm-v)
         no-repeat,
-      linear-gradient(270deg, var(--corner), transparent) 100% 100% / var(--arm) 1px no-repeat,
+      linear-gradient(270deg, var(--corner), transparent) 100% 100% / var(--arm-long) 1px no-repeat,
       linear-gradient(0deg, var(--corner), transparent) 100% calc(100% - 1px) / 1px var(--arm-v)
         no-repeat;
     pointer-events: none;

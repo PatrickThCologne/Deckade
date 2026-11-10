@@ -51,7 +51,9 @@ const labels = {
 
 <BaseLayout locale={locale} title={t('search.title')} description={t('search.text')}>
   <HeroPanel tab="search" locale={locale} title={t('search.title')}>
-    <p>{t('search.text')}</p>
+    <p>
+      {t('search.text')} <span class="wip">{t('search.wip')}</span>
+    </p>
   </HeroPanel>
 
   <div
@@ -117,6 +119,12 @@ const labels = {
     .search {
       translate: calc(var(--hero-height) * tan(var(--lean))) 0;
     }
+  }
+
+  /* Quiet, in the tone that marks a rotation state on the overview */
+  .wip {
+    color: var(--special);
+    white-space: nowrap;
   }
 
   .ask {

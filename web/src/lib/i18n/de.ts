@@ -219,6 +219,7 @@ export const de = {
   'search.title': 'Suche',
   'search.text':
     'Beschreib, welche Karten du suchst. Die Suche versteht Farben, Kartentypen, Fähigkeiten, Manawert, Preisgrenzen und „günstig“ oder „beliebt“. Sie läuft ganz in deinem Browser.',
+  'search.wip': 'Work in Progress',
   'search.label': 'Wonach suchst du?',
   'search.placeholder': 'z. B. günstige rote Kreaturen mit Eile',
   'search.submit': 'Suchen',
