@@ -217,10 +217,16 @@ export const en: Record<UiKey, string> = {
   'overview.eyebrow': 'Set overview',
   'overview.title': 'All sets',
   'overview.stat.sets': 'sets',
-  'search.eyebrow': 'Coming soon',
   'search.title': 'Search',
   'search.text':
-    'Soon you can search for cards here in plain language, for example "cheap red creatures with haste".',
+    'Describe the cards you are looking for. The search understands colours, card types, keywords, mana value, price limits and "cheap" or "popular". It runs entirely in your browser.',
+  'search.label': 'What are you looking for?',
+  'search.placeholder': 'e.g. cheap red creatures with haste',
+  'search.submit': 'Search',
+  'search.sortAuto': 'Best match',
+  'search.examples': 'For example',
+  'search.count': '{count} cards',
+  'search.none': 'No card matches. Leave out a detail or try an example.',
   'overview.text':
     '{count} sets from {oldest} ({year}) until today. Click a pack to see all cards and prices.',
   'products.showContents': 'Show contents',

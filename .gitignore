@@ -28,3 +28,8 @@ Thumbs.db
 web/src/data/generated/
 web/public/images/packs/
 web/public/images/symbols/
+
+# .NET build output
+**/bin/
+**/obj/
+.vs/

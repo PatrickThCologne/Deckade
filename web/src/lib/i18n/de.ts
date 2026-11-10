@@ -216,10 +216,16 @@ export const de = {
   'overview.eyebrow': 'Set-Übersicht',
   'overview.title': 'Alle Sets',
   'overview.stat.sets': 'Sets',
-  'search.eyebrow': 'Bald verfügbar',
   'search.title': 'Suche',
   'search.text':
-    'Hier kannst du bald in ganz normaler Sprache nach Karten suchen, zum Beispiel „günstige rote Kreaturen mit Eile“.',
+    'Beschreib, welche Karten du suchst. Die Suche versteht Farben, Kartentypen, Fähigkeiten, Manawert, Preisgrenzen und „günstig“ oder „beliebt“. Sie läuft ganz in deinem Browser.',
+  'search.label': 'Wonach suchst du?',
+  'search.placeholder': 'z. B. günstige rote Kreaturen mit Eile',
+  'search.submit': 'Suchen',
+  'search.sortAuto': 'Passend zur Suche',
+  'search.examples': 'Zum Beispiel',
+  'search.count': '{count} Karten',
+  'search.none': 'Keine Karte passt. Lass eine Angabe weg oder probier ein Beispiel.',
   'overview.text':
     '{count} Sets von {oldest} ({year}) bis heute. Ein Klick auf ein Päckchen zeigt alle Karten und Preise.',
   'products.showContents': 'Inhalt anzeigen',

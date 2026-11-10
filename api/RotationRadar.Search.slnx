@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RotationRadar.Search.Api/RotationRadar.Search.Api.csproj" />
+    <Project Path="src/RotationRadar.Search.Indexer/RotationRadar.Search.Indexer.csproj" />
+    <Project Path="src/RotationRadar.Search.Infrastructure/RotationRadar.Search.Infrastructure.csproj" />
+    <Project Path="src/RotationRadar.Search/RotationRadar.Search.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RotationRadar.Search.Api.Tests/RotationRadar.Search.Api.Tests.csproj" />
+    <Project Path="tests/RotationRadar.Search.Tests/RotationRadar.Search.Tests.csproj" />
+  </Folder>
+</Solution>
