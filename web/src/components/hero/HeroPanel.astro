@@ -81,8 +81,9 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 28px;
     align-items: center;
-    /* More room on the right: the slanted right edge comes closer towards the bottom */
-    padding: 22px clamp(36px, 4vw, 56px) 22px clamp(20px, 3vw, 32px);
+    /* More room on the right: the slanted right edge comes closer towards the bottom, and the
+       figures keep a clear distance from it */
+    padding: 22px clamp(56px, 7vw, 100px) 22px clamp(20px, 3vw, 32px);
   }
 
   /* See-through, so the artwork behind shows. Leans like the tabs: its left edge continues

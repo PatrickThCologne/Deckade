@@ -1,7 +1,7 @@
 ---
 /** Banner of the overview: what the site covers. Everything about rotation lives on its own tab. */
 import type { Locale } from '../../config/site';
-import { cardCatalog, overviewSets, standardSets } from '../../lib/data/load';
+import { cardCatalog, overviewSets } from '../../lib/data/load';
 import { createFormatters, yearOf } from '../../lib/format';
 import { useTranslations } from '../../lib/i18n';
 import { localePath } from '../../lib/links';
@@ -19,7 +19,6 @@ const sets = overviewSets();
 const oldest = sets.at(-1);
 // Each card once, however often it was reprinted: the same number as on the all cards tab
 const cards = cardCatalog(locale).length;
-const inStandard = standardSets().filter((s) => s.standard.status === 'legal').length;
 
 const stats: HeroStat[] = [
   { value: format.integer(sets.length), label: t('overview.stat.sets'), tone: 'accent' },
@@ -29,7 +28,6 @@ const stats: HeroStat[] = [
     tone: 'special',
     href: localePath(locale, 'cards'),
   },
-  { value: format.integer(inStandard), label: t('hero.stat.legal'), tone: 'calm' },
 ];
 ---
 

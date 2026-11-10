@@ -104,6 +104,15 @@ const labels = {
     padding-block: 6px 48px;
   }
 
+  /* The banner above leans from its top left corner, so its bottom edge lies its full slant
+     further left. The search stands right under that edge, flush on both sides. Narrow
+     screens have an upright banner. */
+  @media (width > 900px) {
+    .search {
+      translate: calc(var(--hero-height) * tan(var(--lean))) 0;
+    }
+  }
+
   .ask {
     display: grid;
     gap: 10px;
