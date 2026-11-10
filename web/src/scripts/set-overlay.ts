@@ -14,6 +14,8 @@ const FLIGHT_MS = 520;
 const FADE_MS = 220;
 // Set pages are large (up to several MB): load one only when the pointer rests on its tile
 const PREFETCH_DELAY_MS = 150;
+// The overlay waits this long at most for the set page's styles before it opens anyway
+const STYLE_WAIT_MS = 1500;
 
 interface OverlayEntry {
   readonly href: string;
@@ -73,7 +75,12 @@ class SetOverlay {
           if (!response.ok) throw new Error(`${href}: HTTP ${response.status}`);
           return response.text();
         })
-        .then((html) => new DOMParser().parseFromString(html, 'text/html'));
+        .then((html) => new DOMParser().parseFromString(html, 'text/html'))
+        .then(async (doc) => {
+          // Without its styles the view would show at full size for a moment, then shrink
+          await adoptStylesheets(doc);
+          return doc;
+        });
       this.pages.set(href, page);
       page.catch(() => this.pages.delete(href));
     }
@@ -96,7 +103,6 @@ class SetOverlay {
       return;
     }
 
-    adoptStylesheets(page);
     const content = document.importNode(view, true);
     this.dialog.replaceChildren(content);
     document.documentElement.classList.add('has-overlay');
@@ -112,7 +118,11 @@ class SetOverlay {
     const packImage = content.querySelector<HTMLImageElement>('[data-pack-image]');
     if (tileImage && packImage) {
       tileImage.style.visibility = 'hidden';
+      // The packs differ in shape: measure the flight's end only once the image knows its size
+      packImage.style.visibility = 'hidden';
+      await Promise.race([packImage.decode().catch(() => undefined), wait(STYLE_WAIT_MS)]);
       await fly(tileImage, packImage, this.dialog);
+      packImage.style.visibility = '';
     }
   }
 
@@ -161,18 +171,32 @@ function tileImageFor(href: string): HTMLImageElement | null {
   return link?.querySelector('img') ?? null;
 }
 
-/** The set page brings its own (scoped) styles; load the ones this page does not have yet. */
-function adoptStylesheets(page: Document): void {
+/**
+ * The set page brings its own (scoped) styles; load the ones this page does not have yet.
+ * Resolves once they are loaded (or failed, or took too long).
+ */
+function adoptStylesheets(page: Document): Promise<void> {
+  const loading: Promise<unknown>[] = [];
   const present = new Set(
     [...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')].map((l) => l.href),
   );
   const inline = new Set([...document.querySelectorAll('style')].map((s) => s.textContent));
   for (const link of page.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')) {
-    if (!present.has(link.href)) document.head.append(document.importNode(link, true));
+    if (present.has(link.href)) continue;
+    const copy = document.importNode(link, true);
+    loading.push(
+      new Promise((resolve) => {
+        copy.addEventListener('load', resolve, { once: true });
+        copy.addEventListener('error', resolve, { once: true });
+      }),
+    );
+    document.head.append(copy);
   }
   for (const style of page.querySelectorAll('head style')) {
     if (!inline.has(style.textContent)) document.head.append(document.importNode(style, true));
   }
+  if (loading.length === 0) return Promise.resolve();
+  return Promise.race([Promise.all(loading).then(() => undefined), wait(STYLE_WAIT_MS)]);
 }
 
 /** A copy of the pack image flies from one place to the other (tile <-> overlay). */
