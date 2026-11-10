@@ -72,3 +72,11 @@ def test_translation_of_a_double_faced_card_names_both_faces() -> None:
     _, translation = parsed
     assert (translation.name, translation.text) == ("Vorn // Hinten", "A\n\nB")
     assert translation.image_normal == "f.jpg"
+
+
+def test_reads_the_euro_prices_and_skips_missing_ones() -> None:
+    printing = parse_printing(card(prices={"usd": "0.30", "eur": "0.25", "eur_foil": None}))
+    assert printing is not None
+    assert (printing.price_eur, printing.price_eur_foil) == (0.25, None)
+    bare = parse_printing(card())
+    assert bare is not None and bare.price_eur is None

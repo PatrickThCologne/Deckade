@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from rotation_radar.domain.cards import (
-    Price,
     Translation,
     build_set_cards,
     count_legality,
@@ -33,19 +32,17 @@ def test_mana_symbols() -> None:
 
 class TestMarketPrice:
     def test_cheapest_non_foil_printing(self) -> None:
-        prints = [printing("Opt", cardmarket_id=1), printing("Opt", cardmarket_id=2, number="2")]
-        prices = {1: Price(trend=0.5, trend_foil=2.0), 2: Price(trend=0.2, trend_foil=1.0)}
-        assert market_price(prints, prices) == 0.2
+        prints = [printing("Opt", eur=0.5, eur_foil=2.0), printing("Opt", number="2", eur=0.2)]
+        assert market_price(prints) == 0.2
 
     def test_foil_only_printing_counts_only_without_regular_one(self) -> None:
-        foil = printing("Opt", cardmarket_id=1, finishes=("foil",))
-        regular = printing("Opt", cardmarket_id=2, number="2")
-        prices = {1: Price(trend=None, trend_foil=0.1), 2: Price(trend=0.3, trend_foil=None)}
-        assert market_price([foil, regular], prices) == 0.3
-        assert market_price([foil], prices) == 0.1
+        foil = printing("Opt", finishes=("foil",), eur_foil=0.1)
+        regular = printing("Opt", number="2", eur=0.3)
+        assert market_price([foil, regular]) == 0.3
+        assert market_price([foil]) == 0.1
 
     def test_no_price(self) -> None:
-        assert market_price([printing("Opt")], {}) is None
+        assert market_price([printing("Opt")]) is None
 
 
 def test_representative_skips_showcase_variants() -> None:
@@ -74,15 +71,14 @@ def test_count_legality_per_format() -> None:
 
 def test_set_cards_most_played_first_without_basic_lands() -> None:
     prints = [
-        printing("Opt", cardmarket_id=1),
-        printing("Bolt", cardmarket_id=2, number="2"),
+        printing("Opt", eur=0.2),
+        printing("Bolt", number="2", eur=1.0),
         printing("Island", number="3", type_line="Basic Land — Island"),
         printing("Watery Grave", number="4", type_line="Land — Island Swamp"),
     ]
-    prices = {1: Price(trend=0.2, trend_foil=None), 2: Price(trend=1.0, trend_foil=None)}
     play = {"opt": PlayRate(share=31.5, average_copies=3.2)}
 
-    rows = build_set_cards(prints, prices, play)["aaa"]
+    rows = build_set_cards(prints, play)["aaa"]
 
     assert [row.name for row in rows] == ["Opt", "Bolt", "Watery Grave"]
     assert rows[0].play_share == 31.5
@@ -98,7 +94,7 @@ def test_set_cards_carry_the_german_printing_of_the_same_set() -> None:
         )
     }
 
-    rows = build_set_cards(prints, {}, {}, german)
+    rows = build_set_cards(prints, {}, german)
 
     assert rows["aaa"][0].de is not None and rows["aaa"][0].de.name == "Omen"
     assert rows["bbb"][0].de is None

@@ -10,9 +10,6 @@ USER_AGENT = "Deckade/0.1 (data pipeline of a Magic: The Gathering fan site)"
 
 SCRYFALL_API = "https://api.scryfall.com"
 MTGJSON_SET_LIST = "https://mtgjson.com/api/v5/SetList.json"
-CARDMARKET_PRICE_GUIDE = (
-    "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json"
-)
 WIZARDS_PRODUCT_PAGE = "https://wpn.wizards.com/en/products/{slug}"
 WIZARDS_IMAGE_HOST = "https://images.ctfassets.net/"
 # The oldest set whose product page shows a single booster (checked 2026-11-09 for every set

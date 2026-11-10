@@ -4,7 +4,7 @@ import type { UiKey } from './de';
 export const en: Record<UiKey, string> = {
   'meta.home.title': 'Standard rotation: all sets and dates',
   'meta.home.description':
-    'Which Magic sets are in Standard right now, when they rotate out, what the cards cost and how often they are played – updated daily.',
+    'Which Magic sets are in Standard right now, when they rotate out, roughly what the cards cost and how often they are played – updated daily.',
   'meta.set.title': '{name}: cards, prices and rotation',
   'meta.set.description':
     '{name} in Standard: {rotation}. {cards} with price and tournament play rate.',
@@ -102,7 +102,7 @@ export const en: Record<UiKey, string> = {
   'col.played': 'Played',
   'col.playedTitle': 'Share of Standard tournament decks of the last 30 days that contain the card',
   'col.price': 'Price',
-  'col.priceTitle': 'Cheapest printing, trend price',
+  'col.priceTitle': 'Cheapest printing, Scryfall estimate',
   'type.creature': 'Creature',
   'type.planeswalker': 'Planeswalker',
   'type.battle': 'Battle',
@@ -135,6 +135,7 @@ export const en: Record<UiKey, string> = {
   'color.G': 'Green',
 
   'link.scryfall': 'View on Scryfall',
+  'link.cardmarket': 'Prices on Cardmarket',
 
   'count.cards.one': '{count} card',
   'count.cards.other': '{count} cards',
@@ -166,7 +167,8 @@ export const en: Record<UiKey, string> = {
   'about.banlist.text':
     'The banned cards on the “Standard Rotation” tab come from Scryfall. Wizards’ official list is authoritative.',
   'about.sources.heading': 'Data sources',
-  'about.sources.scryfall': 'Sets, release dates, legality, mana costs and card images.',
+  'about.sources.scryfall':
+    'Sets, release dates, legality, mana costs, card images and card prices. The prices are daily estimates by Scryfall in euros, without guarantee; shown is the cheapest printing.',
   'about.sources.mtgjson': 'Bundles and booster boxes with their contents.',
   'about.sources.wizards': 'Official product images of the boosters of recent sets.',
   'about.sources.decks':
@@ -222,7 +224,6 @@ export const en: Record<UiKey, string> = {
   'overview.text':
     '{count} sets from {oldest} ({year}) until today. Click a pack to see all cards and prices.',
   'products.showContents': 'Show contents',
-  'products.priceDate': 'Trend price of {date}',
   'nav.privacy': 'Privacy',
   'meta.privacy.title': 'Privacy',
   'meta.privacy.description': 'Which data a visit to this site produces and who processes it.',
@@ -241,7 +242,7 @@ export const en: Record<UiKey, string> = {
   'privacy.images.link': 'Privacy at Scryfall',
   'privacy.local.heading': 'What needs no third party',
   'privacy.local.text':
-    "Fonts, mana symbols and booster images are served from the same server as the site. Links to Scryfall or Wizards of the Coast transfer nothing until you click them; from then on, that site's privacy policy applies.",
+    "Fonts, mana symbols and booster images are served from the same server as the site. Links to Scryfall, Cardmarket or Wizards of the Coast transfer nothing until you click them; from then on, that site's privacy policy applies.",
   'privacy.rights.heading': 'Your rights',
   'privacy.rights.text':
     'You have the right to access, rectification, erasure and restriction of processing, and to object (Art. 15 to 18 and 21 GDPR). Contact the address above. You can also lodge a complaint with a data protection authority (Art. 77 GDPR).',

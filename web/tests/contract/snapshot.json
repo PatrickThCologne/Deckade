@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "generatedAt": "2026-11-09T04:30:00+00:00",
   "rotation": {
     "day": "2027-01-22",
@@ -14,7 +14,6 @@
     }
   },
   "sources": {
-    "cardmarketPriceDate": "2026-11-08",
     "playRateFrom": "2026-10-10",
     "playRateTo": "2026-11-08",
     "playRateDecks": 2586,

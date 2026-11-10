@@ -120,7 +120,6 @@ def contract_snapshot() -> tuple[Snapshot, dict[str, list[CardRow]]]:
             special_rule_sources={"fdn": "https://magic.wizards.com/en/news/announcements"},
         ),
         sources=SourceInfo(
-            cardmarket_price_date=date(2026, 11, 8),
             play_rate_from=date(2026, 10, 10),
             play_rate_to=date(2026, 11, 8),
             play_rate_decks=2586,

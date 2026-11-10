@@ -12,7 +12,7 @@ import math
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 
-from rotation_radar.domain.cards import Price, Printing
+from rotation_radar.domain.cards import Printing
 from rotation_radar.domain.sets import MtgSet
 
 FEATURED_RARITIES = frozenset({"rare", "mythic"})
@@ -69,7 +69,6 @@ def with_hues(
 def featured_art(
     sets: Sequence[MtgSet],
     printings: Sequence[Printing],
-    prices: Mapping[int, Price],
     per_set: int = 1,
 ) -> tuple[FeaturedArt, ...]:
     """Up to ``per_set`` artworks per set, in the order of ``sets``, most valuable first."""
@@ -84,8 +83,7 @@ def featured_art(
             by_set.setdefault(printing.set_code, []).append(printing)
 
     def value(printing: Printing) -> float:
-        price = prices.get(printing.cardmarket_id) if printing.cardmarket_id else None
-        return (price.trend or 0.0) if price else 0.0
+        return printing.price_eur or 0.0
 
     chosen = []
     for mtg_set in sets:

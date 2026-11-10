@@ -98,6 +98,7 @@ def parse_printing(raw: dict[str, Any]) -> Printing | None:
     images = raw.get("image_uris") or front.get("image_uris") or {}
     mana_cost = raw.get("mana_cost")
     legalities = raw.get("legalities") or {}
+    prices = raw.get("prices") or {}
     return Printing(
         scryfall_id=raw["id"],
         oracle_id=oracle_id,
@@ -119,7 +120,17 @@ def parse_printing(raw: dict[str, Any]) -> Printing | None:
         art_crop=images.get("art_crop"),
         artist=raw.get("artist") or front.get("artist"),
         oracle_text=_text(raw, faces, "oracle_text"),
+        price_eur=_euro(prices.get("eur")),
+        price_eur_foil=_euro(prices.get("eur_foil")),
     )
+
+
+def _euro(value: Any) -> float | None:
+    """Scryfall writes prices as strings ("0.25"), or null where it has none."""
+    try:
+        return float(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
 
 
 def parse_translation(raw: dict[str, Any]) -> tuple[Printing, Translation] | None:

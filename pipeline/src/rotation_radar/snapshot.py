@@ -21,7 +21,7 @@ from rotation_radar.domain.products import PackCount
 from rotation_radar.domain.rotation import RotationEstimate, SetRotation
 from rotation_radar.domain.sets import SetStatus
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 RULE_SOURCE = "https://magic.wizards.com/en/formats/standard"
 
 
@@ -87,7 +87,6 @@ class RuleSummary:
 
 @dataclass(frozen=True)
 class SourceInfo:
-    cardmarket_price_date: date | None
     play_rate_from: date | None
     play_rate_to: date | None
     play_rate_decks: int

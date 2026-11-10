@@ -1,7 +1,7 @@
 """Builds the snapshot: fetch -> apply the rules -> enrich -> write.
 
-1. Sources: Scryfall sets, every printing from the Scryfall bulk file, the Cardmarket
-   price guide and recent Standard decklists.
+1. Sources: Scryfall sets, every printing from the Scryfall bulk file (with Scryfall's daily
+   euro price estimates) and recent Standard decklists.
 2. Rules: Standard status and rotation; which sets are legal in Pioneer, Modern and
    Commander (from the card legalities in the bulk file).
 3. Enrichment for every set that is legal anywhere: card rows, products, pack images
@@ -26,7 +26,6 @@ from rotation_radar.domain.art import featured_art, with_hues
 from rotation_radar.domain.cards import (
     COLOR_ORDER,
     CardRow,
-    Price,
     Printing,
     build_set_cards,
     count_legality,
@@ -64,7 +63,6 @@ from rotation_radar.snapshot import (
     StandardInfo,
     write_snapshot,
 )
-from rotation_radar.sources.cardmarket import fetch_price_guide
 from rotation_radar.sources.decklists import DecklistArchive
 from rotation_radar.sources.http import HttpClient
 from rotation_radar.sources.mtgjson import fetch_sealed_products
@@ -132,13 +130,12 @@ def build(
         catalog = _catalog(all_sets, standard, legal_by_format, rules.hidden_sets)
         catalog_codes = {s.code for s in catalog}
 
-        prices, price_date = fetch_price_guide(http)
         rates, play_summary = _play_rates(http, paths, options)
         log.info("German printings from the Scryfall bulk file with all languages")
         german = bulk.translations(catalog_codes, "de")
         log.info("%d cards with a German printing", len(german))
         cards_by_set = build_set_cards(
-            [p for p in printings if p.set_code in catalog_codes], prices, rates, german
+            [p for p in printings if p.set_code in catalog_codes], rates, german
         )
 
         log.info("Banned lists, products and pack images")
@@ -153,7 +150,7 @@ def build(
         packs = PackImageStore(http, paths.image_dir)
         pack_images = {s.code: _pack_image(s, packs, wizards_http) for s in catalog}
         packs.remove_unused(path for path in pack_images.values() if path)
-        art = featured_art(_recent_main_sets(standard, today), printings, prices, FEATURED_PER_SET)
+        art = featured_art(_recent_main_sets(standard, today), printings, FEATURED_PER_SET)
         hues = art_hues(http, (a.image_url for a in art), paths.cache_dir / "art-hues.json")
         store_symbols(
             scryfall_http,
@@ -171,7 +168,7 @@ def build(
             source_url=RULE_SOURCE,
             special_rule_sources={code: r.source for code, r in rules.special_rules.items()},
         ),
-        sources=_source_info(price_date, play_summary),
+        sources=_source_info(play_summary),
         sets=tuple(
             _set_entry(
                 s,
@@ -179,7 +176,6 @@ def build(
                 standard,
                 cards_by_set.get(s.code, ()),
                 sealed.get(s.code, ()),
-                prices,
                 pack_images.get(s.code),
             )
             for s in catalog
@@ -262,9 +258,8 @@ def _play_rates(
     return rates, summary
 
 
-def _source_info(price_date: date | None, play: PlaySummary) -> SourceInfo:
+def _source_info(play: PlaySummary) -> SourceInfo:
     return SourceInfo(
-        cardmarket_price_date=price_date,
         play_rate_from=play.first_day,
         play_rate_to=play.last_day,
         play_rate_decks=play.decks,
@@ -319,7 +314,6 @@ def _set_entry(
     standard: StandardResult,
     cards: Sequence[CardRow],
     sealed: Sequence[SealedProduct],
-    prices: Mapping[int, Price],
     pack_image: str | None,
 ) -> SetEntry:
     status = standard.statuses.get(mtg_set.code)
@@ -339,22 +333,21 @@ def _set_entry(
             if in_standard and status is not None
             else None
         ),
-        products=tuple(
-            _product_entry(p, prices) for p in sealed if p.category in PRODUCT_CATEGORIES
-        ),
+        products=tuple(_product_entry(p) for p in sealed if p.category in PRODUCT_CATEGORIES),
     )
 
 
-def _product_entry(sealed: SealedProduct, prices: Mapping[int, Price]) -> ProductEntry:
-    price = prices.get(sealed.cardmarket_id) if sealed.cardmarket_id else None
+def _product_entry(sealed: SealedProduct) -> ProductEntry:
+    # No price: the only source, Cardmarket, needs written consent to show its prices
+    # (README, "Before going public"). The website links to a search there instead.
     product = Product(
         name=sealed.name,
         category=ProductCategory(sealed.category),
         subtype=sealed.subtype,
         contents=parse_contents(sealed.contents),
         cardmarket_id=sealed.cardmarket_id,
-        price=price.trend if price else None,
-        average_sale=price.average_sale if price else None,
+        price=None,
+        average_sale=None,
     )
     return ProductEntry(
         name=product.name,

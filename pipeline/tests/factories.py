@@ -38,6 +38,8 @@ def printing(
     legalities: dict[str, str] | None = None,
     type_line: str = "Creature — Human",
     variant: bool = False,
+    eur: float | None = None,
+    eur_foil: float | None = None,
 ) -> Printing:
     return Printing(
         scryfall_id=f"{set_code}-{number}",
@@ -57,4 +59,6 @@ def printing(
         image_normal=None,
         scryfall_url=f"https://scryfall.com/card/{set_code}/{number}",
         is_variant=variant,
+        price_eur=eur,
+        price_eur_foil=eur_foil,
     )

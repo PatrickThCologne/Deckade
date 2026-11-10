@@ -97,7 +97,7 @@ const FeaturedArtSchema = z.object({
 });
 
 export const SnapshotSchema = z.object({
-  schemaVersion: z.literal(5),
+  schemaVersion: z.literal(6),
   generatedAt: z.string(),
   rotation: RotationEstimateSchema,
   rules: z.object({
@@ -106,7 +106,6 @@ export const SnapshotSchema = z.object({
     specialRuleSources: z.record(z.string(), z.string()),
   }),
   sources: z.object({
-    cardmarketPriceDate: isoDate.nullable(),
     playRateFrom: isoDate.nullable(),
     playRateTo: isoDate.nullable(),
     playRateDecks: z.number().int().nonnegative(),

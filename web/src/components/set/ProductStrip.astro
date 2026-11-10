@@ -1,13 +1,13 @@
 ---
 /**
- * Bundles and booster boxes side by side: name and price at a glance. The button in
- * the corner opens what is inside and the price per booster.
+ * Bundles and booster boxes side by side. The button in the corner opens what is inside and
+ * a link to the product's prices on Cardmarket, whose prices may not be shown here (README).
  */
 import type { Locale } from '../../config/site';
-import { snapshot } from '../../lib/data/load';
 import type { MtgSet } from '../../lib/data/schema';
 import { createFormatters } from '../../lib/format';
 import { useTranslations } from '../../lib/i18n';
+import { cardmarketSearch } from '../../lib/links';
 import { productLabel, sortProducts } from '../../lib/products';
 
 interface Props {
@@ -21,7 +21,6 @@ const format = createFormatters(locale);
 const products = sortProducts(set.products).toSorted((a, b) =>
   a.category.localeCompare(b.category),
 );
-const priceDate = snapshot.sources.cardmarketPriceDate;
 const upcoming = set.standard?.status === 'upcoming';
 ---
 
@@ -33,7 +32,7 @@ const upcoming = set.standard?.status === 'upcoming';
           <details class="product">
             <summary title={product.name}>
               <span class="name">{productLabel(product, set.name)}</span>
-              <span class="price">{format.price(product.price)}</span>
+              {product.price != null && <span class="price">{format.price(product.price)}</span>}
               <span class="toggle" aria-hidden="true"></span>
               <span class="visually-hidden">{t('products.showContents')}</span>
             </summary>
@@ -49,12 +48,12 @@ const upcoming = set.standard?.status === 'upcoming';
               {product.pricePerPack != null && (
                 <p>{t('products.perPackShort', { price: format.price(product.pricePerPack) })}</p>
               )}
-              {priceDate && (
-                <p class="dim">
-                  {upcoming ? `${t('facts.preorder')} · ` : ''}
-                  {t('products.priceDate', { date: format.date(priceDate) })}
-                </p>
-              )}
+              <p class="dim">
+                {upcoming ? `${t('facts.preorder')} · ` : ''}
+                <a href={cardmarketSearch(locale, product.name)} target="_blank" rel="noopener">
+                  {t('link.cardmarket')} ↗
+                </a>
+              </p>
             </div>
           </details>
         </li>

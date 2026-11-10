@@ -15,13 +15,6 @@ LEGAL_IN_FORMAT = frozenset({"legal", "banned", "restricted"})
 
 
 @dataclass(frozen=True)
-class Price:
-    trend: float | None
-    trend_foil: float | None
-    average_sale: float | None = None
-
-
-@dataclass(frozen=True)
 class Printing:
     """One printing of a card, as delivered by Scryfall."""
 
@@ -45,6 +38,9 @@ class Printing:
     art_crop: str | None = None
     artist: str | None = None
     oracle_text: str = ""  # rules text, faces separated by a blank line
+    # Scryfall's daily price estimates in euro; None where it has none
+    price_eur: float | None = None
+    price_eur_foil: float | None = None
 
     def legality(self, game_format: str) -> str:
         return self.legalities.get(game_format, "not_legal")
@@ -115,20 +111,17 @@ def count_legality(
     }
 
 
-def market_price(printings: Iterable[Printing], prices: Mapping[int, Price]) -> float | None:
-    """What it costs to play the card: the cheapest Cardmarket trend over its non-foil
-    printings. Cards that only exist in foil fall back to their foil trend."""
+def market_price(printings: Iterable[Printing]) -> float | None:
+    """What it costs to play the card: the cheapest Scryfall euro estimate over its non-foil
+    printings. Cards that only exist in foil fall back to their foil estimate."""
     regular: list[float] = []
     foil_only: list[float] = []
     for printing in printings:
-        price = prices.get(printing.cardmarket_id) if printing.cardmarket_id else None
-        if price is None:
-            continue
         if printing.is_foil_only:
-            if price.trend_foil:
-                foil_only.append(price.trend_foil)
-        elif price.trend:
-            regular.append(price.trend)
+            if printing.price_eur_foil:
+                foil_only.append(printing.price_eur_foil)
+        elif printing.price_eur:
+            regular.append(printing.price_eur)
     return min(regular or foil_only, default=None)
 
 
@@ -139,7 +132,6 @@ def representative(printings: Sequence[Printing]) -> Printing:
 
 def build_set_cards(
     printings: Sequence[Printing],
-    prices: Mapping[int, Price],
     play: Mapping[str, PlayRate],
     german: Mapping[tuple[str, str], Translation] | None = None,
 ) -> dict[str, list[CardRow]]:
@@ -153,7 +145,7 @@ def build_set_cards(
         by_card[printing.oracle_id].append(printing)
         by_set_card[(printing.set_code, printing.oracle_id)].append(printing)
 
-    price_of = {oracle_id: market_price(group, prices) for oracle_id, group in by_card.items()}
+    price_of = {oracle_id: market_price(group) for oracle_id, group in by_card.items()}
     rows: dict[str, list[CardRow]] = defaultdict(list)
     for (set_code, oracle_id), group in by_set_card.items():
         card = representative(group)

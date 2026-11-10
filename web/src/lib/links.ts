@@ -6,6 +6,12 @@ export function withBase(path: string, base: string = import.meta.env.BASE_URL):
   return prefix + path.replace(/^\/+/, '');
 }
 
+/** Cardmarket's search for a product; its prices may only be shown there (README). */
+export function cardmarketSearch(locale: Locale, query: string): string {
+  const search = encodeURIComponent(query.split(' // ')[0] ?? query);
+  return `https://www.cardmarket.com/${locale}/Magic/Products/Search?searchString=${search}`;
+}
+
 export function localePath(locale: Locale, path = ''): string {
   const inner = path.replace(/^\/+|\/+$/g, '');
   return withBase(inner ? `${locale}/${inner}/` : `${locale}/`);
