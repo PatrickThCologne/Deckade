@@ -77,11 +77,13 @@ const description = set.standard
         <button class="close" type="button" data-leave aria-label={t('overlay.close')}>
           ✕
         </button>
-        <p class="eyebrow">
-          {set.code.toUpperCase()} · {format.monthYear(set.releasedAt)}
-        </p>
-        <h1 id="set-title">{set.name}</h1>
-        <SetFacts set={set} cardCount={cards.length} locale={locale} />
+        <header class="head">
+          <p class="eyebrow">
+            {set.code.toUpperCase()} · {format.monthYear(set.releasedAt)}
+          </p>
+          <h1 id="set-title">{set.name}</h1>
+          <SetFacts set={set} cardCount={cards.length} locale={locale} />
+        </header>
         <ProductStrip set={set} locale={locale} />
         <CardTable cards={cards} locale={locale} />
       </article>
@@ -298,18 +300,38 @@ const description = set.standard
       gap: 12px;
     }
 
-    .pack {
-      grid-area: auto;
-      width: 150px;
-      justify-self: center;
-      border-right: 1px solid var(--line);
-      border-radius: var(--radius-lg);
+    /* The pack stands small beside the title and figures, on the panel itself */
+    .layout .pack {
+      grid-area: 1 / 1;
+      z-index: 2;
+      align-self: start;
+      justify-self: start;
+      width: 84px;
+      margin: 18px 0 0 14px;
+      padding: 0;
+      border: 0;
+      background: none;
+      box-shadow: none;
     }
 
     .main {
-      grid-area: auto;
+      grid-area: 1 / 1;
       border-left: 1px solid var(--line);
       border-radius: var(--radius-lg);
+    }
+
+    .layout:has(.pack img) .head {
+      padding-left: 100px;
+    }
+
+    /* The list starts below the pack; a set symbol is shorter */
+    .layout:has([data-pack-image]) .head {
+      min-height: 152px;
+    }
+
+    .layout .pack .icon {
+      width: 72px;
+      margin: 4px auto;
     }
 
     .layout::before {
