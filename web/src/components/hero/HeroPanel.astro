@@ -142,7 +142,7 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
     --arm-v: calc(var(--arm) * 0.6);
     content: '';
     position: absolute;
-    inset: 6px 6px 6px 14px;
+    inset: 6px;
     z-index: 1;
     background:
       linear-gradient(90deg, var(--corner), transparent) 0 0 / var(--arm) 1px no-repeat,
@@ -312,11 +312,6 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
 
     .surface {
       border-radius: 0 var(--radius-lg) var(--radius-lg);
-    }
-
-    /* The left edge stands upright here, so the corners keep the same distance all round */
-    .surface::after {
-      inset: 6px;
     }
 
     .radar {
