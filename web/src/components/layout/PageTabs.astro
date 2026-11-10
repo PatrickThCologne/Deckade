@@ -48,12 +48,7 @@ const tabs = [
 
 <nav class="tabs" aria-label={t('tabs.label')} data-tabs>
   {tabs.map((tab) => (
-    <a
-      class="tab"
-      href={tab.href}
-      aria-current={tab.id === current ? 'page' : undefined}
-      data-wall-tab
-    >
+    <a class="tab" href={tab.href} aria-current={tab.id === current ? 'page' : undefined}>
       <span>
         <span class="long">{tab.label}</span>
         <span class="short">{tab.short}</span>

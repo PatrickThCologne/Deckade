@@ -26,11 +26,11 @@ const alternates = LOCALES.map((alternate) => ({
   href: absolute(switchLocale(Astro.url.pathname, alternate)),
 }));
 const defaultAlternate = absolute(switchLocale(Astro.url.pathname, DEFAULT_LOCALE));
-// Prerender another tab's page once the pointer rests on its tab, so it opens without waiting
-// (lib/prerender.ts). Browsers without speculation rules ignore this.
+// Prerender another tab's page once the pointer rests on its tab, so it opens without waiting.
+// Browsers without speculation rules ignore this.
 const speculationRules = JSON.stringify({
   prerender: [
-    { where: { selector_matches: 'a[data-wall-tab]:not([aria-current])' }, eagerness: 'moderate' },
+    { where: { selector_matches: '[data-tabs] a:not([aria-current])' }, eagerness: 'moderate' },
   ],
 });
 ---
