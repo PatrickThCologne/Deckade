@@ -242,6 +242,9 @@ export const de = {
   'privacy.local.heading': 'Was ohne Dritte auskommt',
   'privacy.local.text':
     'Schriften, Mana-Symbole und Booster-Bilder liegen auf demselben Server wie die Seite. Links zu Scryfall oder Wizards of the Coast übertragen erst etwas, wenn du sie anklickst; ab dann gilt der Datenschutz der jeweiligen Seite.',
+  'privacy.feedback.heading': 'Feedback',
+  'privacy.feedback.text':
+    'Schickst du Feedback als E-Mail, erhalte ich deine Adresse und deinen Text und nutze beides nur, um dein Anliegen zu bearbeiten und dir zu antworten. Öffnest du ein Issue auf GitHub, stehen dein Text und dein GitHub-Benutzername öffentlich im Repository der Seite; dafür gilt die Datenschutzerklärung von GitHub. Rechtsgrundlage ist das berechtigte Interesse, Hinweise zur Seite zu bearbeiten (Art. 6 Abs. 1 lit. f DSGVO).',
   'privacy.rights.heading': 'Deine Rechte',
   'privacy.rights.text':
     'Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung sowie auf Widerspruch (Art. 15 bis 18 und 21 DSGVO). Wende dich dafür an die oben genannte Adresse. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren (Art. 77 DSGVO).',
@@ -251,13 +254,15 @@ export const de = {
   'nav.feedback': 'Feedback geben',
   'feedback.subject': 'Feedback zu {site}',
   'feedback.intro':
-    'Was ist dir aufgefallen? Beim Absenden öffnet sich dein E-Mail-Programm mit deinem Text, abschicken kannst du ihn dort.',
+    'Was ist dir aufgefallen? Dein Text öffnet sich als E-Mail in deinem E-Mail-Programm oder als Issue auf GitHub, abschicken kannst du ihn dort.',
   'feedback.topic': 'Worum geht es?',
   'feedback.topic.bug': 'Fehler',
   'feedback.topic.idea': 'Idee oder Wunsch',
   'feedback.topic.other': 'Sonstiges',
   'feedback.message': 'Deine Nachricht',
   'feedback.send': 'Als E-Mail öffnen',
+  'feedback.issue': 'Als GitHub-Issue öffnen',
+  'feedback.issueNote': 'Für ein Issue brauchst du ein GitHub-Konto. Issues sind öffentlich.',
   'feedback.cancel': 'Abbrechen',
   'feedback.fallback': 'Es öffnet sich nichts? Schreib direkt an',
   'meta.imprint.title': 'Impressum & Kontakt',
@@ -270,8 +275,9 @@ export const de = {
     'Name, Anschrift und E-Mail-Adresse werden beim Veröffentlichen eingetragen.',
   'imprint.feedback.heading': 'Kontakt & Feedback',
   'imprint.feedback.text':
-    'Fehler entdeckt, ein Preis passt nicht oder du hast eine Idee? Schreib einfach eine E-Mail.',
+    'Fehler entdeckt, ein Preis passt nicht oder du hast eine Idee? Schreib einfach eine E-Mail oder öffne ein Issue auf GitHub.',
   'imprint.feedback.write': 'E-Mail schreiben',
+  'imprint.feedback.issue': 'Issue auf GitHub öffnen',
   'privacy.updated': 'Stand: {date}',
 } as const;
 

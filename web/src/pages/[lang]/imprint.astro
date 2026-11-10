@@ -6,7 +6,7 @@
  */
 import { OPERATOR_ADDRESS, OPERATOR_EMAIL, OPERATOR_NAME } from 'astro:env/server';
 
-import { SITE_NAME } from '../../config/site';
+import { SITE_NAME, SOURCE_REPO } from '../../config/site';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { useTranslations } from '../../lib/i18n';
 import { mailto } from '../../lib/links';
@@ -56,13 +56,16 @@ const feedbackLink = OPERATOR_EMAIL
     <section class="panel block" id="feedback">
       <h2>{t('imprint.feedback.heading')}</h2>
       <p>{t('imprint.feedback.text')}</p>
-      {feedbackLink ? (
-        <a class="text-link" href={feedbackLink}>
-          {t('imprint.feedback.write')} →
+      <p class="links">
+        {feedbackLink && (
+          <a class="text-link" href={feedbackLink}>
+            {t('imprint.feedback.write')} →
+          </a>
+        )}
+        <a class="text-link" href={`${SOURCE_REPO}/issues/new`} target="_blank" rel="noopener">
+          {t('imprint.feedback.issue')} →
         </a>
-      ) : (
-        <p class="missing">{t('imprint.operator.missing')}</p>
-      )}
+      </p>
     </section>
   </article>
 </BaseLayout>
@@ -101,6 +104,12 @@ const feedbackLink = OPERATOR_EMAIL
     max-width: 72ch;
     color: var(--text-dim);
     line-height: 1.6;
+  }
+
+  .block .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 24px;
   }
 
   .block .missing {

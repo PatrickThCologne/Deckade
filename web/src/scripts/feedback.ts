@@ -1,8 +1,9 @@
 /**
- * Opens the feedback dialog from the info menu and turns the form into an e-mail
- * (lib/feedback.ts). Without JavaScript the menu entry stays a plain mailto link.
+ * Opens the feedback dialog from the info menu and turns the form into an e-mail or a new
+ * GitHub issue, whichever button sent it (lib/feedback.ts). Without JavaScript the menu entry
+ * stays a plain link.
  */
-import { feedbackMail } from '../lib/feedback';
+import { feedbackIssue, feedbackMail } from '../lib/feedback';
 
 export function initFeedback(): void {
   const dialog = document.querySelector<HTMLDialogElement>('[data-feedback-dialog]');
@@ -27,12 +28,21 @@ export function initFeedback(): void {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const fields = new FormData(form);
-    window.location.href = feedbackMail(form.dataset.address ?? '', form.dataset.subject ?? '', {
+    const feedback = {
       topic: String(fields.get('topic') ?? ''),
       message: String(fields.get('message') ?? ''),
       page: window.location.href,
-    });
-    // The text stays in the form for anyone whose mail program does not open
-    dialog.querySelector('[data-feedback-sent]')?.removeAttribute('hidden');
+    };
+    // The text stays in the form either way, for anyone whose mail program or tab does not open
+    if ((event.submitter as HTMLButtonElement | null)?.value === 'mail') {
+      window.location.href = feedbackMail(
+        form.dataset.address ?? '',
+        form.dataset.subject ?? '',
+        feedback,
+      );
+      dialog.querySelector('[data-feedback-sent]')?.removeAttribute('hidden');
+    } else {
+      window.open(feedbackIssue(form.dataset.repo ?? '', feedback), '_blank', 'noopener');
+    }
   });
 }

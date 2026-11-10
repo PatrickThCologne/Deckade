@@ -4,6 +4,9 @@
 export const SITE_NAME_PARTS = ['Deck', 'ade'] as const;
 export const SITE_NAME = SITE_NAME_PARTS.join('');
 
+/** The public repository: source code and the issue tracker the feedback form can open. */
+export const SOURCE_REPO = 'https://github.com/PatrickThCologne/Deckade';
+
 export const LOCALES = ['de', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = 'de';

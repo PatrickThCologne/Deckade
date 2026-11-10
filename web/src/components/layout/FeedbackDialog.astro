@@ -1,15 +1,17 @@
 ---
 /**
  * Feedback form, opened from the info menu (scripts/feedback.ts). A static site cannot send
- * e-mail, so the form opens the visitor's mail program with the text filled in.
+ * anything, so the form opens a new GitHub issue or, when the site has an operator address,
+ * the visitor's mail program, with the text filled in.
  */
-import { type Locale, SITE_NAME } from '../../config/site';
+import { type Locale, SITE_NAME, SOURCE_REPO } from '../../config/site';
 import { useTranslations } from '../../lib/i18n';
 import { mailto } from '../../lib/links';
 
 interface Props {
   locale: Locale;
-  address: string;
+  /** The operator's e-mail address; without one the form only opens GitHub issues */
+  address?: string | undefined;
 }
 
 const { locale, address } = Astro.props;
@@ -19,7 +21,7 @@ const topics = [t('feedback.topic.bug'), t('feedback.topic.idea'), t('feedback.t
 ---
 
 <dialog class="feedback" data-feedback-dialog aria-labelledby="feedback-title">
-  <form data-feedback-form data-address={address} data-subject={subject}>
+  <form data-feedback-form data-address={address} data-subject={subject} data-repo={SOURCE_REPO}>
     <button class="close" type="button" data-feedback-close aria-label={t('overlay.close')}>
       ✕
     </button>
@@ -37,17 +39,25 @@ const topics = [t('feedback.topic.bug'), t('feedback.topic.idea'), t('feedback.t
       <span class="label">{t('feedback.message')}</span>
       <textarea name="message" rows="6" maxlength="1500" required></textarea>
     </label>
-    <p class="sent" data-feedback-sent hidden>
-      {t('feedback.fallback')} <a href={mailto(address, subject)}>{address}</a>
-    </p>
+    {address && (
+      <p class="sent" data-feedback-sent hidden>
+        {t('feedback.fallback')} <a href={mailto(address, subject)}>{address}</a>
+      </p>
+    )}
     <div class="actions">
       <button type="button" class="secondary" data-feedback-close>
         {t('feedback.cancel')}
       </button>
-      <button type="submit" class="primary">
-        {t('feedback.send')}
+      <button type="submit" class:list={[address ? 'secondary' : 'primary']} value="issue">
+        {t('feedback.issue')}
       </button>
+      {address && (
+        <button type="submit" class="primary" value="mail">
+          {t('feedback.send')}
+        </button>
+      )}
     </div>
+    <p class="note">{t('feedback.issueNote')}</p>
   </form>
 </dialog>
 
@@ -86,10 +96,18 @@ const topics = [t('feedback.topic.bug'), t('feedback.topic.idea'), t('feedback.t
   }
 
   .intro,
-  .sent {
+  .sent,
+  .note {
     margin: 0;
     font-size: 13.5px;
     color: var(--text-dim);
+  }
+
+  .note {
+    margin-top: -6px;
+    font-size: 12px;
+    text-align: end;
+    color: var(--text-faint);
   }
 
   .sent[hidden] {
@@ -135,6 +153,7 @@ const topics = [t('feedback.topic.bug'), t('feedback.topic.idea'), t('feedback.t
 
   .actions {
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
     gap: 10px;
   }
