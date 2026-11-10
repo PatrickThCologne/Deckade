@@ -10,6 +10,8 @@ __pycache__/
 # Node (see also web/.gitignore)
 node_modules/
 web/dist/
+web/.lighthouseci/
+web/lighthouse/
 web/.astro/
 
 # Editors, OS, local tools

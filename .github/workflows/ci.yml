@@ -48,3 +48,13 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run build
+      # Lighthouse checks the built pages (lighthouserc.json): accessibility, best practices and
+      # SEO fail the job below their minimum; performance only warns, as shared runners vary.
+      # The reports are kept as the run's "lighthouse" artifact.
+      - run: npx --yes @lhci/cli@0.15.1 autorun
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: lighthouse
+          path: web/lighthouse
+          if-no-files-found: ignore
