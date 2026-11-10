@@ -6,7 +6,9 @@
 import type { Locale } from '../../config/site';
 import type { Card } from '../data/schema';
 import { cardKeywords, type Keyword, KEYWORDS } from '../search/keywords';
+import { cardAnswers } from '../search/answers';
 import { cardSynergies, type Synergy, SYNERGIES } from '../search/synergies';
+import { cardTribes, creatureTypes } from '../search/tribes';
 import { shownCard } from './local';
 import {
   CARD_TYPES,
@@ -33,6 +35,10 @@ export interface CatalogCard extends SortableCard {
   readonly keywords: readonly Keyword[];
   /** What the rules text works with ("Synergie mit Artefakten"), for the search tab. */
   readonly synergies: readonly Synergy[];
+  /** What the rules text fights ("Konter gegen Flieger"), over the same themes. */
+  readonly answers: readonly Synergy[];
+  /** Creature types the rules text works with, lower case ("elemental"). */
+  readonly tribes: readonly string[];
   readonly banned: boolean;
   /** The set of the printing shown: the newest one, on German pages the newest German one. */
   readonly setCode: string;
@@ -53,10 +59,18 @@ export function buildCatalog(printings: readonly Printing[], locale: Locale): Ca
     if (list) list.push(printing);
     else byCard.set(printing.card.oracleId, [printing]);
   }
-  return [...byCard.values()].map((list) => catalogCard(list, locale));
+  // Every creature type of any card, so the rules text is read against real types only
+  const known = new Set(
+    printings.flatMap((p) => creatureTypes(p.card.typeLine).map((type) => type.toLowerCase())),
+  );
+  return [...byCard.values()].map((list) => catalogCard(list, locale, known));
 }
 
-function catalogCard(printings: readonly Printing[], locale: Locale): CatalogCard {
+function catalogCard(
+  printings: readonly Printing[],
+  locale: Locale,
+  known: ReadonlySet<string>,
+): CatalogCard {
   const newestFirst = printings.toSorted((a, b) => b.releasedAt.localeCompare(a.releasedAt));
   // Older sets often exist in English only; German pages still prefer a German printing.
   const printing =
@@ -75,6 +89,8 @@ function catalogCard(printings: readonly Printing[], locale: Locale): CatalogCar
     types: cardTypes(card.typeLine),
     keywords: cardKeywords(card.text),
     synergies: cardSynergies(card.text, card.name),
+    answers: cardAnswers(card.text, card.name),
+    tribes: cardTribes(card.text, card.name, known),
     price: prices.length > 0 ? Math.min(...prices) : null,
     playShare: shares.length > 0 ? Math.max(...shares) : null,
     isLand: card.isLand,
@@ -113,6 +129,10 @@ type EncodedCard = [
   keywords: string,
   /** Indexes into SYNERGIES, the same way. */
   synergies: string,
+  /** What the card fights: indexes into SYNERGIES as well. */
+  answers: string,
+  /** Creature types the card works with, separated by spaces; usually empty. */
+  tribes: string,
 ];
 
 export interface CatalogFile {
@@ -168,6 +188,8 @@ export function encodeCatalog(
       card.printedIn.filter((code) => code !== card.setCode).join(' '),
       card.keywords.map((keyword) => KEYWORDS.indexOf(keyword).toString(36)).join(''),
       card.synergies.map((synergy) => SYNERGIES.indexOf(synergy).toString(36)).join(''),
+      card.answers.map((theme) => SYNERGIES.indexOf(theme).toString(36)).join(''),
+      card.tribes.join(' '),
     ]),
   };
 }
@@ -190,6 +212,8 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
       otherSets,
       keywords = '',
       synergies = '',
+      answers = '',
+      tribes = '',
     ]) => {
       const [main, ...all] = [...types].map((index) => CARD_TYPES[Number(index)]);
       return {
@@ -202,6 +226,8 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
         types: all.filter(isCardType),
         keywords: [...keywords].flatMap((digit) => KEYWORDS[parseInt(digit, 36)] ?? []),
         synergies: [...synergies].flatMap((digit) => SYNERGIES[parseInt(digit, 36)] ?? []),
+        answers: [...answers].flatMap((digit) => SYNERGIES[parseInt(digit, 36)] ?? []),
+        tribes: tribes ? tribes.split(' ') : [],
         price,
         playShare,
         isLand: (flags & 1) !== 0,

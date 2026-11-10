@@ -32,6 +32,16 @@ mana value, a price and an order ("cheap", "popular").
   behind „Synergie mit …“, „…-Synergie“, „synergy with …“ or „that care about …“, so
   „Artefakte“ alone stays a card type. Removal such as „destroy target artifact“ is no
   synergy. The C# parser does not know synergies.
+- Answers are the opposite of synergies, over the same themes (`lib/search/answers.ts`): what
+  a card fights, such as „destroy target creature with flying“, „remove all -1/-1 counters“
+  (blight puts -1/-1 counters on your own creatures) or „counter target spell“. They count
+  behind „Konter gegen …“, „gegen …“, „entfernt …“, „answer to …“ or „removes …“. A match
+  stays inside one sentence.
+- Creature types (`lib/search/tribes.ts`): what the rules text works with („Elementals you
+  control“, „another Elf“, „Goblin spells“), checked against the creature types in the type
+  lines of all cards. They count behind „synergiert mit …“ or „synergy with …“; German
+  requests know about 35 common types by their German card words, English ones any type.
+  „Zauber“ and „spell“ mean an instant or a sorcery. The C# parser knows neither.
 - Words the rules do not know are left out rather than finding nothing. A request without any
   filter is a name search, with the exact name first. A first version listed what was
   understood, one label per filter; it was taken out again to keep the page plain.
@@ -45,6 +55,9 @@ mana value, a price and an order ("cheap", "popular").
 - The card list loads with the first search, not with the page: 4.5 MB for 29,451 cards, about
   1.7 MB compressed (measured 2026-11-10). The keyword field adds about 0.1 MB (2 %), the
   synergy field as much again: 4.6 MB, 1.8 MB with gzip (measured 2026-11-10).
+- Answers and creature types add about 4 % to the card list: 4.8 MB, 1.9 MB with gzip
+  (German list, measured 2026-11-10). 1,621 cards have an answer, 3,533 a creature type. They
+  are as rough as the synergies: unusual wordings are missed.
 - Synergies are a rough reading of the rules text: 12,999 of the 29,451 cards have at least
   one. Some cards are found that only fight a theme, and some that use it in their own words
   are missed.

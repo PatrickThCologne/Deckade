@@ -169,6 +169,8 @@ describe('queryMatcher', () => {
     types: ['creature'],
     keywords: ['haste'],
     synergies: [],
+    answers: [],
+    tribes: [],
     cmc: 2,
     isLand: false,
     price: 0.2,

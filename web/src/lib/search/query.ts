@@ -1,14 +1,17 @@
 /**
  * The search tab reads a request in plain German or English ("günstige rote Kreaturen mit
  * Eile") as filters over the card list: colours, card types, keyword abilities, synergies
- * ("Synergie mit Artefakten"), mana value, a price limit and a sort order. It runs in the
+ * ("Synergie mit Artefakten", "synergiert mit Elementarwesen"), answers ("Konter gegen
+ * Flieger", "entfernt Fäulnis"), mana value, a price limit and a sort order. It runs in the
  * browser without a model, so it needs no server and the request never leaves the page
  * (docs/adr/0002-natural-language-search.md). The rules follow the C# parser in api/
- * (RuleBasedQueryParser), which has the same tests; synergies exist here only.
+ * (RuleBasedQueryParser), which has the same tests; synergies, answers and creature types
+ * exist here only.
  */
 import { type CardType, matchesWords, normalizeForSearch, type SortKey } from '../cards/sort';
 import { KEYWORDS, type Keyword } from './keywords';
 import { SYNERGIES, type Synergy } from './synergies';
+import { tribeCandidates } from './tribes';
 
 export interface SearchQuery {
   /** Colours in WUBRG order the cards must have. */
@@ -21,6 +24,10 @@ export interface SearchQuery {
   readonly keywords: readonly Keyword[];
   /** All of these synergies. */
   readonly synergies: readonly Synergy[];
+  /** All of these answers: what the cards fight. */
+  readonly answers: readonly Synergy[];
+  /** Per request word, the creature types it may name; the cards must work with one. */
+  readonly tribes: readonly (readonly string[])[];
   readonly minMana: number | null;
   readonly maxMana: number | null;
   /** Euro, the price of the cheapest printing. */
@@ -36,6 +43,8 @@ export interface SearchableCard {
   readonly types: readonly CardType[];
   readonly keywords: readonly Keyword[];
   readonly synergies: readonly Synergy[];
+  readonly answers: readonly Synergy[];
+  readonly tribes: readonly string[];
   readonly cmc: number;
   readonly isLand: boolean;
   readonly price: number | null;
@@ -131,6 +140,21 @@ const SYNERGY_AFTER = word(
 );
 // "Artefakt-Synergie", "Fliegersynergien", "token synergy"
 const SYNERGY_BEFORE = word(`${SYNERGY_LIST}[\\s-]*synerg\\p{L}*`);
+// "Konter gegen Flieger", "gegen Artefakte", "entfernt Fäulnis", "answer to flyers", "removes blight"
+const ANSWER_VERB = 'entfern\\p{L}*|zerstor\\p{L}*|vernicht\\p{L}*|beseitig\\p{L}*';
+const ANSWER_AFTER = word(
+  `(?:(?:konter\\p{L}*|antwort\\p{L}*|counters?|answers?|hate|removal)\\s+)?(?:gegen|against|to|for)\\s+${SYNERGY_LIST}|(?:${ANSWER_VERB}|removes?|destroys?|kills?|exiles?)\\s+${SYNERGY_LIST}`,
+);
+// German word order: "die Fäulnis entfernt", "der Flieger zerstört"
+const ANSWER_BEFORE = word(`${SYNERGY_LIST}\\s+(?:${ANSWER_VERB}|kontert?)`);
+// "synergiert mit Elementarwesen", "Synergie mit Elfen", "synergizes with Goblins" and "der mit
+// Elementarkreaturen synergiert". After the themes, so "Synergie mit Artefakten" stays a theme.
+const TRIBE_AFTER = word(
+  `(?:synerg\\p{L}*\\s+(?:mit|with|for|fur|zu|von)|(?:that\\s+)?cares?\\s+about)\\s+(?:(?:den|dem|der|die|the)\\s+)?(?<tribe>\\p{L}+)`,
+);
+const TRIBE_BEFORE = word(`(?:mit|with)\\s+(?<tribe>\\p{L}+)\\s+synerg\\p{L}*`);
+// "Zauber", "spell": an instant or a sorcery
+const SPELL = word('zauber(?:spruch|spruche)?|spells?');
 
 // "unter 2 €", "bis 1,50 Euro", "under 3 eur". Dollar prices stay unread: prices are in euro.
 const MAX_PRICE =
@@ -179,6 +203,13 @@ export function parseQuery(request: string): SearchQuery {
     .map((match) => match[0])
     .join(' ');
   const synergies = SYNERGIES.filter((synergy) => synergyText.search(SYNERGY_WORDS[synergy]) >= 0);
+  const answerText = [...take(ANSWER_AFTER), ...take(ANSWER_BEFORE)]
+    .map((match) => match[0])
+    .join(' ');
+  const answers = SYNERGIES.filter((theme) => answerText.search(SYNERGY_WORDS[theme]) >= 0);
+  const tribes = [...take(TRIBE_AFTER), ...take(TRIBE_BEFORE)]
+    .map((match) => tribeCandidates(match.groups?.tribe ?? ''))
+    .filter((candidates) => candidates.length > 0);
 
   const priceMatch = take(MAX_PRICE)[0];
   const maxPrice = priceMatch ? Number(priceMatch[1]!.replace(',', '.')) : null;
@@ -212,6 +243,9 @@ export function parseQuery(request: string): SearchQuery {
   }
 
   const types = TYPE_WORDS.filter(([, pattern]) => take(pattern).length > 0).map(([type]) => type);
+  if (take(SPELL).length > 0) {
+    for (const type of ['instant', 'sorcery'] as const) if (!types.includes(type)) types.push(type);
+  }
   const keywords = KEYWORDS.filter((keyword) => take(KEYWORD_WORDS[keyword]).length > 0);
   const sort = SORT_WORDS.find(([, pattern]) => take(pattern).length > 0)?.[0] ?? null;
   const unknown = rest
@@ -224,6 +258,8 @@ export function parseQuery(request: string): SearchQuery {
     types,
     keywords,
     synergies,
+    answers,
+    tribes,
     minMana,
     maxMana,
     maxPrice,
@@ -240,6 +276,8 @@ export function understood(query: SearchQuery): boolean {
     query.types.length > 0 ||
     query.keywords.length > 0 ||
     query.synergies.length > 0 ||
+    query.answers.length > 0 ||
+    query.tribes.length > 0 ||
     query.minMana !== null ||
     query.maxMana !== null ||
     query.maxPrice !== null ||
@@ -265,6 +303,8 @@ export function queryMatcher(query: SearchQuery): (card: SearchableCard) => bool
     (query.types.length === 0 || card.types.some((type) => query.types.includes(type))) &&
     query.keywords.every((keyword) => card.keywords.includes(keyword)) &&
     query.synergies.every((synergy) => card.synergies.includes(synergy)) &&
+    query.answers.every((theme) => card.answers.includes(theme)) &&
+    query.tribes.every((candidates) => candidates.some((tribe) => card.tribes.includes(tribe))) &&
     (!manaLimit ||
       (!card.isLand &&
         card.cmc >= (query.minMana ?? 0) &&
