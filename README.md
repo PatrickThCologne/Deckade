@@ -18,6 +18,9 @@ but public data:
   rules text, filters for colour, mana value and type, and a large card preview.
 - **Standard rotation** – the Standard sets grouped by when they leave, the next rotation as
   the headline. Estimates are labelled as estimates.
+- **Search** – a request in plain German or English („günstige rote Kreaturen mit Eile“) becomes
+  filters for colour, type, keyword, mana value, price and order. It runs in the browser and
+  shows how the request was understood ([ADR 0002](docs/adr/0002-natural-language-search.md)).
 - **German and English** – every page in both languages; German pages show German card names
   and images wherever a German printing exists.
 - **Static and fast** – plain HTML without a client framework and self-hosted fonts; JavaScript
@@ -152,8 +155,8 @@ Checked on 2026-11-05, 2026-11-06, 2026-11-09 and 2026-11-10 against the sources
 
 ## Roadmap
 
-- Semantic card search in plain language (C#/.NET API, PostgreSQL with pgvector and a local
-  language model; work in progress on the branch `feat/semantic-search`).
+- Semantic search beyond the rules: similar cards from embeddings computed in the pipeline;
+  a server with a local language model (the C#/.NET start in `api/`) only if that is not enough.
 - User accounts with a personal collection and decks.
 - Card scanning in the browser (camera via `getUserMedia`, recognition by name or image).
 - Price history and play-rate trends around a rotation.
