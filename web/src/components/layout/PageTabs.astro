@@ -1,8 +1,8 @@
 ---
 /**
  * The page tabs. They stand on the top edge of the banner like folder tabs, leaning at the
- * same angle as the banner's edge (--lean). On hover two stripes sweep through the tab, and
- * the light along the banner's top edge glides over under it (scripts/tab-light.ts).
+ * same angle as the banner's edge (--lean). On hover the light along the banner's top edge
+ * glides over under the tab (scripts/tab-light.ts).
  */
 import type { Locale } from '../../config/site';
 import { useTranslations } from '../../lib/i18n';
@@ -88,39 +88,15 @@ const tabs = [
     transition: color 0.15s;
   }
 
-  /* Shape and stripe: parallelograms standing on the banner's edge */
-  .tab::before,
-  .tab::after {
+  /* The shape: a parallelogram standing on the banner's edge */
+  .tab::before {
     content: '';
     position: absolute;
     inset: 0 var(--lean-x) 0 0;
     transform: skewX(var(--lean));
     transform-origin: bottom left;
-  }
-
-  .tab::before {
     background: var(--tab-bg);
     transition: background 0.2s;
-  }
-
-  /* Two solid stripes, a narrow one trailing a wide one, parallel to the slanted edges. On
-     hover they sweep through once behind the label: gold on the dark tabs, white on the gold
-     one. At rest they wait just outside the tab. */
-  .tab::after {
-    --stripe: var(--accent);
-    background: linear-gradient(
-        90deg,
-        var(--stripe) 0 5px,
-        transparent 5px 11px,
-        var(--stripe) 11px 25px,
-        transparent 25px
-      ) -30px
-      0 / 26px 100% no-repeat;
-    pointer-events: none;
-  }
-
-  .tab[aria-current='page']::after {
-    --stripe: #fff;
   }
 
   .tab > span {
@@ -138,20 +114,9 @@ const tabs = [
     color: var(--text);
   }
 
-  .tab:hover::after,
-  .tab:focus-visible::after {
-    animation: sweep 0.6s cubic-bezier(0.45, 0, 0.25, 1);
-  }
-
   .tab[aria-current='page'] {
     --tab-bg: var(--accent);
     color: #04110c;
-  }
-
-  @keyframes sweep {
-    to {
-      background-position: calc(100% + 30px) 0;
-    }
   }
 
   @media (max-width: 480px) {
@@ -167,13 +132,6 @@ const tabs = [
 
     .short {
       display: inline;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .tab:hover::after,
-    .tab:focus-visible::after {
-      animation: none;
     }
   }
 </style>
