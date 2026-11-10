@@ -565,7 +565,8 @@ const setsByYear = Map.groupBy(sets ?? [], (set) => set.year);
     border: 1.5px solid var(--line-strong);
     border-radius: 50%;
     background: var(--surface-solid);
-    color: var(--text-dim);
+    /* Between dim and full white: readable at rest, still clearly below a pressed value */
+    color: color-mix(in srgb, var(--text) 70%, var(--text-dim));
     font-family: var(--font-display), sans-serif;
     font-size: 14px;
     font-weight: var(--font-display-weight);
@@ -607,8 +608,8 @@ const setsByYear = Map.groupBy(sets ?? [], (set) => set.year);
     border-radius: 50%;
     background: var(--surface-solid);
     cursor: pointer;
-    opacity: 0.55;
-    filter: grayscale(0.6);
+    opacity: 0.75;
+    filter: grayscale(0.3);
     transition:
       opacity 0.15s,
       filter 0.15s,
