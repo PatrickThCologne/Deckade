@@ -74,6 +74,11 @@ describe('buildCatalog', () => {
     });
   });
 
+  it('knows every set that printed the card, the shown one first', () => {
+    expect(buildCatalog(printings, 'en')[0]?.printedIn).toEqual(['fdn', 'm20', 'lea']);
+    expect(buildCatalog(printings, 'de')[0]?.printedIn).toEqual(['m20', 'fdn', 'lea']);
+  });
+
   it('knows every type of the card and its main type', () => {
     const [artifactCreature] = buildCatalog(
       [printing('bro', '2022-11-18', { typeLine: 'Artifact Creature — Golem' })],
@@ -114,5 +119,15 @@ describe('catalog file', () => {
     expect(decoded[0]?.scryfallUrl).toBe('https://scryfall.com/card/m20/39/de');
     expect(decoded[0]).toMatchObject({ banned: true, isLand: false });
     expect(decoded[1]).toMatchObject({ isLand: true, imageNormal: null, type: 'land' });
+  });
+
+  it('keeps every set that printed a card', () => {
+    const catalog = buildCatalog(
+      [printing('lea', '1993-08-05'), printing('m20', '2019-07-12', { de: german })],
+      'de',
+    );
+    const file = JSON.parse(JSON.stringify(encodeCatalog(catalog, {})));
+
+    expect(decodeCatalog(file)[0]?.printedIn).toEqual(['m20', 'lea']);
   });
 });

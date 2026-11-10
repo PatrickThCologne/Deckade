@@ -19,7 +19,7 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
   {years.map((group) => (
     <section class="year" aria-labelledby={`year-${group.year}`}>
       <h2 id={`year-${group.year}`}>{group.year}</h2>
-      <div class="grid">
+      <div class="grid" data-fan-row>
         {group.sets.map((set) => (
           <SetTile tile={setTile(set, locale)} locale={locale} />
         ))}
@@ -35,10 +35,20 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
     --tile-min: 120px; /* a pack at full height plus a little room */
   }
 
+  /* The banner above leans from its top left corner, so the middle of its shape lies half
+     its slant left of the page's middle (28px for the 240px banner at -13deg). The years
+     stand under that middle instead. Narrow screens have an upright banner. */
+  @media (width > 900px) {
+    .timeline {
+      translate: calc(var(--hero-height) * tan(var(--lean)) / 2) 0;
+    }
+  }
+
   .year {
     margin-top: 34px;
   }
 
+  /* The year in the middle, a line fading out to each side */
   h2 {
     display: flex;
     align-items: center;
@@ -48,19 +58,28 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
     color: var(--text-dim);
   }
 
+  h2::before,
   h2::after {
     content: '';
     flex: 1;
     height: 1px;
+    background: linear-gradient(90deg, transparent, var(--line-strong));
+  }
+
+  h2::after {
     background: linear-gradient(90deg, var(--line-strong), transparent);
   }
 
   /*
    * Each year is one row. The columns share the width when the fullest year fits,
    * otherwise they keep their minimum and the row scrolls sideways instead of wrapping.
+   * Shorter years sit in the middle; "safe" keeps a row that scrolls at its start, and
+   * browsers without it keep the packs on the left.
    */
   .grid {
     display: grid;
+    justify-content: start;
+    justify-content: safe center;
     grid-auto-flow: column;
     grid-auto-columns: max(
       var(--tile-min),
@@ -85,6 +104,42 @@ const perRow = Math.max(1, ...years.map((group) => group.sets.length));
     .timeline {
       --tile-art-height: 150px;
       --tile-min: 128px; /* about 2.6 packs wide: the cut-off one shows the row goes on */
+    }
+
+    /* The fan (scripts/coverflow.ts places and turns the packs): across the whole phone,
+       each pack snaps to the middle, the first and last one too. The packs overlap, so one
+       step from pack to pack is narrower than a pack. */
+    .grid[data-fan] {
+      --fan-tile: 118px;
+      --fan-step: 72px;
+      position: relative;
+      display: flex;
+      gap: 0;
+      margin-inline: calc(var(--gutter) * -1);
+      /* 50% is half the row without the gutters it reaches into */
+      padding: 16px calc(50% + var(--gutter) - var(--fan-step) / 2) 6px;
+      perspective: 700px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+
+    .grid[data-fan] > :global(*) {
+      --tile-art-height: 190px;
+      flex: 0 0 var(--fan-tile);
+      min-width: 0; /* the wider name below must not widen the pack */
+      margin-inline: calc((var(--fan-step) - var(--fan-tile)) / 2);
+      scroll-snap-align: center;
+      will-change: transform;
+    }
+
+    /* Only the pack in the middle says what it is, wider than the pack itself */
+    .grid[data-fan] :global(:is(.name, .sub)) {
+      width: min(240px, 70vw);
+      transition: opacity 0.2s;
+    }
+
+    .grid[data-fan] > :global(:not([data-front])) :global(:is(.name, .sub)) {
+      opacity: 0;
     }
   }
 </style>

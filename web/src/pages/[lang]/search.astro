@@ -10,8 +10,8 @@ const locale = localeFrom(Astro.params.lang);
 const { t } = useTranslations(locale);
 ---
 
-<BaseLayout locale={locale} title={t('deck.title')} description={t('deck.text')}>
-  <HeroPanel tab="deck" locale={locale} eyebrow={t('deck.eyebrow')} title={t('deck.title')}>
-    <p>{t('deck.text')}</p>
+<BaseLayout locale={locale} title={t('search.title')} description={t('search.text')}>
+  <HeroPanel tab="search" locale={locale} eyebrow={t('search.eyebrow')} title={t('search.title')}>
+    <p>{t('search.text')}</p>
   </HeroPanel>
 </BaseLayout>

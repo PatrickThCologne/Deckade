@@ -24,6 +24,17 @@ const { t } = useTranslations(locale);
 const format = createFormatters(locale);
 const catalog = cardCatalog(locale);
 const sets = overviewSets();
+// Cards per set for the set menu: every set that printed a card counts it.
+const cardsPerSet = new Map<string, number>();
+for (const card of catalog) {
+  for (const code of card.printedIn) cardsPerSet.set(code, (cardsPerSet.get(code) ?? 0) + 1);
+}
+const setOptions = sets.map((set) => ({
+  code: set.code,
+  name: set.name,
+  year: set.releasedAt.slice(0, 4),
+  count: cardsPerSet.get(set.code) ?? 0,
+}));
 const typeCounts = CARD_TYPES.filter((type) => type !== 'other').map(
   (type) => [type, catalog.filter((card) => card.types.includes(type)).length] as const,
 );
@@ -36,11 +47,11 @@ const labels = {
   more: t('cards.more'),
 };
 const stats: HeroStat[] = [
-  { value: format.integer(catalog.length), label: t('allCards.stat.cards'), tone: 'accent' },
+  { value: format.integer(catalog.length), label: t('allCards.stat.cards'), tone: 'special' },
   {
     value: format.integer(sets.length),
     label: t('overview.stat.sets'),
-    tone: 'special',
+    tone: 'accent',
     href: localePath(locale),
   },
 ];
@@ -82,6 +93,7 @@ const stats: HeroStat[] = [
         typeCounts={typeCounts}
         manaValues={MANA_VALUES}
         searchLabel={t('cards.searchName')}
+        sets={setOptions.filter((set) => set.count > 0)}
       />
       <div class="table-wrap">
         <table>
@@ -120,7 +132,6 @@ const stats: HeroStat[] = [
         <img data-preview-image alt="" width="488" height="680" decoding="async" hidden />
         <figcaption data-preview-caption></figcaption>
       </figure>
-      <p class="hint">{t('cards.preview')}</p>
     </aside>
   </div>
 </BaseLayout>
@@ -202,13 +213,6 @@ const stats: HeroStat[] = [
     text-align: center;
     font-size: 12.5px;
     color: var(--text-dim);
-  }
-
-  .hint {
-    margin: 10px 4px 0;
-    font-size: 12px;
-    color: var(--text-faint);
-    text-align: center;
   }
 
   @media (max-width: 1120px) {

@@ -1,5 +1,5 @@
 ---
-import { type Locale, SITE_NAME_PARTS } from '../../config/site';
+import { type Locale, SITE_NAME, SITE_NAME_PARTS } from '../../config/site';
 import { localePath } from '../../lib/links';
 import InfoMenu from './InfoMenu.astro';
 import LanguageSwitcher from './LanguageSwitcher.astro';
@@ -9,14 +9,16 @@ interface Props {
 }
 
 const { locale } = Astro.props;
+const [deck, gold] = SITE_NAME_PARTS;
 ---
 
 <header class="site-header">
   <div class="container bar">
-    <a class="brand" href={localePath(locale)}>
+    <a class="brand" href={localePath(locale)} aria-label={SITE_NAME}>
       <span class="name">
-        {SITE_NAME_PARTS[0]}
-        <span class="accent">{SITE_NAME_PARTS[1]}</span>
+        {deck}
+        <span class="gem" aria-hidden="true"></span>
+        <span class="accent">{gold}</span>
       </span>
     </a>
     <div class="menus">
@@ -59,12 +61,30 @@ const { locale } = Astro.props;
 
   .name {
     font-family: var(--font-display), sans-serif;
-    font-weight: 700;
-    font-size: 17px;
-    letter-spacing: -0.01em;
+    font-weight: var(--font-display-weight);
+    font-size: 22px;
+    letter-spacing: 0.01em;
   }
 
   .accent {
     color: var(--accent);
+  }
+
+  /* A small gold gem between the two halves: a frame with a filled core */
+  .gem {
+    position: relative;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin: 0 5px 3px;
+    border: 1.5px solid var(--accent);
+    transform: rotate(45deg);
+  }
+
+  .gem::after {
+    content: '';
+    position: absolute;
+    inset: 1.5px;
+    background: var(--accent);
   }
 </style>

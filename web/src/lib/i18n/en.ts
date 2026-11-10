@@ -4,13 +4,13 @@ import type { UiKey } from './de';
 export const en: Record<UiKey, string> = {
   'meta.home.title': 'Standard rotation: all sets and dates',
   'meta.home.description':
-    'Which Magic sets are in Standard right now, when they rotate out, what the cards cost and how often they are played – updated daily.',
+    'Which Magic sets are in Standard right now, when they rotate out, roughly what the cards cost and how often they are played – updated daily.',
   'meta.set.title': '{name}: cards, prices and rotation',
   'meta.set.description':
-    '{name} in Standard: {rotation}. {cards} with Cardmarket price and tournament play rate.',
+    '{name} in Standard: {rotation}. {cards} with price and tournament play rate.',
   'meta.about.title': 'How we determine rotation',
   'meta.about.description':
-    'How {site} knows when a set leaves Standard, how certain each statement is and where the data comes from.',
+    'How {site} knows when a set leaves Standard, and where the data comes from.',
 
   'nav.skip': 'Skip to content',
   'nav.method': 'Methodology',
@@ -30,7 +30,7 @@ export const en: Record<UiKey, string> = {
   'hero.stat.legal': 'in Standard right now',
   'hero.stat.decks': 'tournament decks analysed',
   'hero.stat.banned': 'banned',
-  'hero.method': 'How certain is this?',
+  'hero.method': 'How we work this out',
 
   'when.early': 'early {year}',
   'when.on': 'on {date}',
@@ -43,7 +43,6 @@ export const en: Record<UiKey, string> = {
   'wave.laterUnknown': 'Rotates out later',
   'wave.special': 'Special rule: stays until at least {year}',
   'wave.badge.official': 'official',
-  'wave.badge.earliest': 'earliest possible under the current rule',
   'wave.badge.special': 'per Wizards',
   'wave.maybe': 'possibly',
   'wave.upcoming': 'releases {date}',
@@ -82,11 +81,13 @@ export const en: Record<UiKey, string> = {
   'cards.allTypes': 'All types',
   'cards.manaFilter': 'Filter by mana value',
   'cards.typesSelected': '{count} types',
+  'cards.setFilter': 'Filter by set',
+  'cards.allSets': 'All sets',
+  'cards.setsSelected': '{count} sets',
   'cards.manaValue': 'Mana value {value}',
   'cards.sort': 'Sort',
   'cards.empty': 'No card matches this filter.',
   'cards.banned': 'banned',
-  'cards.preview': 'Hover over a card to see it large.',
   'cards.shown': '{shown} of {total}',
   'sort.played': 'most played',
   'sort.value-desc': 'Market value: high to low',
@@ -101,7 +102,7 @@ export const en: Record<UiKey, string> = {
   'col.played': 'Played',
   'col.playedTitle': 'Share of Standard tournament decks of the last 30 days that contain the card',
   'col.price': 'Price',
-  'col.priceTitle': 'Cheapest printing, Cardmarket trend price',
+  'col.priceTitle': 'Cheapest printing, Scryfall estimate',
   'type.creature': 'Creature',
   'type.planeswalker': 'Planeswalker',
   'type.battle': 'Battle',
@@ -133,8 +134,8 @@ export const en: Record<UiKey, string> = {
   'color.R': 'Red',
   'color.G': 'Green',
 
-  'link.cardmarket': 'Search on Cardmarket',
   'link.scryfall': 'View on Scryfall',
+  'link.cardmarket': 'Prices on Cardmarket',
 
   'count.cards.one': '{count} card',
   'count.cards.other': '{count} cards',
@@ -152,27 +153,24 @@ export const en: Record<UiKey, string> = {
   'about.rule.text':
     'According to Wizards of the Coast, once per year, after the Prerelease of the year’s first premier set, the six oldest sets rotate out of Standard. New sets are legal from their release.',
   'about.rule.link': 'Wizards’ Standard page',
-  'about.certainty.heading': 'How certain is each statement?',
+  'about.certainty.heading': 'Date and exceptions',
   'about.certainty.next.label': 'Next rotation',
   'about.certainty.next':
     'Which six sets rotate out next follows directly from the rule and the release dates.',
   'about.certainty.date.label': 'Date',
   'about.certainty.date':
-    'Wizards usually announces the exact day shortly before. Until then we estimate it (Prerelease about one week before release) and show “early 2027” instead of a day.',
-  'about.certainty.later.label': 'Later sets',
-  'about.certainty.later':
-    'For all later sets we only name the earliest possible date (“stays until at least …”). Projecting exactly when they rotate would not be backed by anything.',
+    'Wizards usually announces the exact day shortly before. Until then we estimate it (Prerelease about one week before release) and show “early 2027” instead of a day. Once the day is set, it is marked “official”.',
   'about.certainty.special.label': 'Special rules',
   'about.certainty.special':
     'According to Mark Rosewater, Foundations stays legal until at least 2029. This is not on Wizards’ Standard page; it was reported by Wargamer and others.',
-  'about.formats.heading': 'Pioneer, Modern and Commander',
-  'about.formats.text':
-    'These formats do not rotate. Which sets are legal in them is not written down by hand: a set counts when at least 80% of its cards are allowed in the format according to Scryfall (banned cards included). The banned lists come from Scryfall as well; Wizards’ official list is authoritative.',
+  'about.banlist.heading': 'Banned list',
+  'about.banlist.text':
+    'The banned cards on the “Standard Rotation” tab come from Scryfall. Wizards’ official list is authoritative.',
   'about.sources.heading': 'Data sources',
-  'about.sources.scryfall': 'Sets, release dates, legality, mana costs and card images.',
-  'about.sources.cardmarket':
-    'Daily price guide. Shown is the trend price of the cheapest printing, in euros.',
+  'about.sources.scryfall':
+    'Sets, release dates, legality, mana costs, card images and card prices. The prices are daily estimates by Scryfall in euros, without guarantee; shown is the cheapest printing.',
   'about.sources.mtgjson': 'Bundles and booster boxes with their contents.',
+  'about.sources.wizards': 'Official product images of the boosters of recent sets.',
   'about.sources.decks':
     'Public tournament decklists from MTGO and Melee. “Played” is the share of these decks of the last 30 days that contain a card (main deck or sideboard). Arena games are not included.',
   'about.updated': 'The data is refreshed daily. Last update: {date}.',
@@ -183,7 +181,7 @@ export const en: Record<UiKey, string> = {
 
   'footer.art': 'Background artwork by',
   'footer.data':
-    'Data from Scryfall, Cardmarket, MTGJSON and public tournament lists. As of {date}.',
+    'Card and product data from Scryfall and MTGJSON, play rates from public tournament lists. As of {date}.',
 
   'notFound.title': 'Page not found',
   'notFound.text': 'This page does not exist (anymore). Maybe the set has rotated out?',
@@ -192,7 +190,7 @@ export const en: Record<UiKey, string> = {
   'meta.overview.title': 'All Magic sets at a glance',
   'meta.overview.description':
     'Every Magic set since 1993 at a glance – marked where they are legal in Standard, Pioneer and Modern, with card prices and booster box prices.',
-  'meta.set.descriptionFormats': '{name}: legal in {formats}. {cards} with Cardmarket price.',
+  'meta.set.descriptionFormats': '{name}: legal in {formats}. {cards} with price.',
   'tabs.label': 'Sections',
   'tabs.overview': 'All sets',
   'tabs.cards': 'All cards',
@@ -200,7 +198,7 @@ export const en: Record<UiKey, string> = {
   'tabs.cards.short': 'Cards',
   'meta.cards.title': 'All Magic cards',
   'meta.cards.description':
-    '{count} cards from {sets} sets, filterable by name, colour, mana value and type, with Cardmarket prices.',
+    '{count} cards from {sets} sets, filterable by name, colour, mana value and type, with prices.',
   'allCards.eyebrow': 'Card overview',
   'allCards.title': 'All cards',
   'allCards.text':
@@ -214,20 +212,18 @@ export const en: Record<UiKey, string> = {
   'col.set': 'Set',
   'tabs.rotation': 'Standard rotation',
   'tabs.rotation.short': 'Rotation',
-  'tabs.deck': 'Import deck',
-  'tabs.deck.short': 'Deck',
+  'tabs.search': 'Search',
+  'tabs.search.short': 'Search',
   'overview.eyebrow': 'Set overview',
   'overview.title': 'All sets',
   'overview.stat.sets': 'sets',
-  'overview.stat.cards': 'cards in all sets',
-  'deck.eyebrow': 'Coming soon',
-  'deck.title': 'Import deck',
-  'deck.text':
-    'Soon you can paste a decklist here and see which cards rotate out when and what the deck is worth.',
+  'search.eyebrow': 'Coming soon',
+  'search.title': 'Search',
+  'search.text':
+    'Soon you can search for cards here in plain language, for example "cheap red creatures with haste".',
   'overview.text':
     '{count} sets from {oldest} ({year}) until today. Click a pack to see all cards and prices.',
   'products.showContents': 'Show contents',
-  'products.priceDate': 'Cardmarket trend of {date}',
   'nav.privacy': 'Privacy',
   'meta.privacy.title': 'Privacy',
   'meta.privacy.description': 'Which data a visit to this site produces and who processes it.',
@@ -246,7 +242,7 @@ export const en: Record<UiKey, string> = {
   'privacy.images.link': 'Privacy at Scryfall',
   'privacy.local.heading': 'What needs no third party',
   'privacy.local.text':
-    "Fonts, mana symbols and booster images are served from the same server as the site. Links to Cardmarket, Scryfall or Wizards of the Coast transfer nothing until you click them; from then on, that site's privacy policy applies.",
+    "Fonts, mana symbols and booster images are served from the same server as the site. Links to Scryfall, Cardmarket or Wizards of the Coast transfer nothing until you click them; from then on, that site's privacy policy applies.",
   'privacy.rights.heading': 'Your rights',
   'privacy.rights.text':
     'You have the right to access, rectification, erasure and restriction of processing, and to object (Art. 15 to 18 and 21 GDPR). Contact the address above. You can also lodge a complaint with a data protection authority (Art. 77 GDPR).',
@@ -255,6 +251,16 @@ export const en: Record<UiKey, string> = {
   'nav.imprintContact': 'Imprint & contact',
   'nav.feedback': 'Send feedback',
   'feedback.subject': 'Feedback on {site}',
+  'feedback.intro':
+    'What did you notice? Sending opens your e-mail program with your text; you send it from there.',
+  'feedback.topic': 'What is it about?',
+  'feedback.topic.bug': 'Something is wrong',
+  'feedback.topic.idea': 'Idea or wish',
+  'feedback.topic.other': 'Something else',
+  'feedback.message': 'Your message',
+  'feedback.send': 'Open as e-mail',
+  'feedback.cancel': 'Cancel',
+  'feedback.fallback': 'Nothing opened? Write to',
   'meta.imprint.title': 'Imprint & contact',
   'meta.imprint.description': 'Who runs {site} and how to send feedback.',
   'imprint.heading': 'Imprint & contact',

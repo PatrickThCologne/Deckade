@@ -16,7 +16,6 @@ const { rules, sources } = snapshot;
 const certainty = [
   { label: t('about.certainty.next.label'), text: t('about.certainty.next'), tone: 'hot' },
   { label: t('about.certainty.date.label'), text: t('about.certainty.date'), tone: 'hot' },
-  { label: t('about.certainty.later.label'), text: t('about.certainty.later'), tone: 'calm' },
   {
     label: t('about.certainty.special.label'),
     text: t('about.certainty.special'),
@@ -26,8 +25,12 @@ const certainty = [
 
 const dataSources = [
   { name: 'Scryfall', href: 'https://scryfall.com', text: t('about.sources.scryfall') },
-  { name: 'Cardmarket', href: 'https://www.cardmarket.com', text: t('about.sources.cardmarket') },
   { name: 'MTGJSON', href: 'https://mtgjson.com', text: t('about.sources.mtgjson') },
+  {
+    name: 'Wizards Play Network',
+    href: 'https://wpn.wizards.com/en/products',
+    text: t('about.sources.wizards'),
+  },
   {
     name: 'MTGODecklistCache',
     href: 'https://github.com/Jiliac/MTGODecklistCache',
@@ -67,8 +70,8 @@ const dataSources = [
     </section>
 
     <section class="block">
-      <h2>{t('about.formats.heading')}</h2>
-      <p>{t('about.formats.text')}</p>
+      <h2>{t('about.banlist.heading')}</h2>
+      <p>{t('about.banlist.text')}</p>
     </section>
 
     <section class="block">

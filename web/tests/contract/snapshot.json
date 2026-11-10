@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 6,
+  "generatedAt": "2026-11-09T04:30:00+00:00",
+  "rotation": {
+    "day": "2027-01-22",
+    "certainty": "estimated",
+    "triggerSet": "zzz"
+  },
+  "rules": {
+    "rotatingSetCount": 4,
+    "sourceUrl": "https://magic.wizards.com/en/formats/standard",
+    "specialRuleSources": {
+      "fdn": "https://magic.wizards.com/en/news/announcements"
+    }
+  },
+  "sources": {
+    "playRateFrom": "2026-10-10",
+    "playRateTo": "2026-11-08",
+    "playRateDecks": 2586,
+    "playRateTournaments": 55
+  },
+  "sets": [
+    {
+      "code": "zzz",
+      "name": "Announced Set",
+      "releasedAt": "2027-02-05",
+      "setType": "expansion",
+      "parentCode": null,
+      "cardCount": 0,
+      "iconUrl": null,
+      "packImage": null,
+      "formats": [],
+      "standard": {
+        "status": "upcoming",
+        "rotation": {
+          "wave": null,
+          "earliest": null,
+          "certain": true,
+          "legalUntilAtLeast": 2029
+        }
+      },
+      "products": []
+    },
+    {
+      "code": "dsk",
+      "name": "Duskmourn: House of Horror",
+      "releasedAt": "2024-09-27",
+      "setType": "expansion",
+      "parentCode": null,
+      "cardCount": 2,
+      "iconUrl": "https://svgs.scryfall.io/sets/dsk.svg",
+      "packImage": "images/packs/dsk-duskmourn-house-of-horror.webp",
+      "formats": [
+        "standard",
+        "pioneer",
+        "modern",
+        "commander"
+      ],
+      "standard": {
+        "status": "legal",
+        "rotation": {
+          "wave": 0,
+          "earliest": "2027-01-01",
+          "certain": false,
+          "legalUntilAtLeast": null
+        }
+      },
+      "products": [
+        {
+          "name": "Duskmourn Play Booster Box",
+          "category": "booster_box",
+          "subtype": "play",
+          "contents": [
+            {
+              "count": 30,
+              "kind": "play"
+            }
+          ],
+          "price": 129.9,
+          "averageSale": 124.5,
+          "pricePerPack": 4.33
+        },
+        {
+          "name": "Duskmourn Bundle",
+          "category": "bundle",
+          "subtype": null,
+          "contents": [
+            {
+              "count": 9,
+              "kind": "play"
+            },
+            {
+              "count": 1,
+              "kind": "collector"
+            }
+          ],
+          "price": null,
+          "averageSale": null,
+          "pricePerPack": null
+        }
+      ]
+    },
+    {
+      "code": "tsb",
+      "name": "Time Spiral Timeshifted",
+      "releasedAt": "2006-10-06",
+      "setType": "masterpiece",
+      "parentCode": "tsp",
+      "cardCount": 0,
+      "iconUrl": "https://svgs.scryfall.io/sets/tsb.svg",
+      "packImage": null,
+      "formats": [
+        "modern",
+        "commander"
+      ],
+      "standard": null,
+      "products": []
+    }
+  ],
+  "formats": [
+    {
+      "id": "standard",
+      "name": "Standard",
+      "rotates": true,
+      "infoUrl": "https://magic.wizards.com/en/formats/standard",
+      "banlistUrl": "https://magic.wizards.com/en/banned-restricted-list",
+      "banned": [
+        {
+          "name": "Banned Card",
+          "colors": "UB",
+          "manaCost": "{U}{B}",
+          "imageNormal": "https://cards.scryfall.io/normal/front/a/b/ab.jpg",
+          "scryfallUrl": "https://scryfall.com/card/dsk/1"
+        }
+      ]
+    },
+    {
+      "id": "pioneer",
+      "name": "Pioneer",
+      "rotates": false,
+      "infoUrl": "https://magic.wizards.com/en/formats/pioneer",
+      "banlistUrl": "https://magic.wizards.com/en/banned-restricted-list",
+      "banned": []
+    }
+  ],
+  "featuredArt": [
+    {
+      "cardName": "Valgavoth, Terror Eater",
+      "setCode": "dsk",
+      "setName": "Duskmourn: House of Horror",
+      "artist": "Someone",
+      "imageUrl": "https://cards.scryfall.io/art_crop/front/c/d/cd.jpg",
+      "hue": 17
+    },
+    {
+      "cardName": "Grey Ghost",
+      "setCode": "dsk",
+      "setName": "Duskmourn: House of Horror",
+      "artist": "Someone Else",
+      "imageUrl": "https://cards.scryfall.io/art_crop/front/g/h/gh.jpg",
+      "hue": null
+    }
+  ]
+}

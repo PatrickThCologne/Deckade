@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -29,9 +29,6 @@ class PackKind(StrEnum):
 
 # A typeless booster that appears fewer times than this is a bonus, not the main content.
 MAIN_CONTENT_MIN_COUNT = 6
-
-# Booster pack whose image represents a set, in order of preference.
-PACK_ART_PREFERENCE = ("play", "set", "draft", "collector", "default")
 
 
 @dataclass(frozen=True)
@@ -93,13 +90,3 @@ def parse_contents(items: Iterable[SealedItem]) -> tuple[PackCount, ...]:
     """Pack counts with the main content first and extras (toppers, bonus packs) last."""
     counts = [PackCount(item.count, classify_pack(item.name, item.count)) for item in items]
     return tuple(sorted(counts, key=lambda c: c.kind.is_extra))
-
-
-def choose_pack_art(products: Sequence[SealedProduct]) -> SealedProduct | None:
-    """The booster pack that represents a set: the one you would buy in a store."""
-    packs = [
-        p
-        for p in products
-        if p.category == "booster_pack" and p.tcgplayer_id and p.subtype in PACK_ART_PREFERENCE
-    ]
-    return min(packs, key=lambda p: PACK_ART_PREFERENCE.index(p.subtype or ""), default=None)

@@ -92,10 +92,12 @@ const FeaturedArtSchema = z.object({
   setName: z.string(),
   artist: z.string(),
   imageUrl: z.url(),
+  /** Main colour in degrees (0 red, 120 green, 240 blue); null for grey artwork */
+  hue: z.number().int().min(0).max(359).nullable(),
 });
 
 export const SnapshotSchema = z.object({
-  schemaVersion: z.literal(4),
+  schemaVersion: z.literal(6),
   generatedAt: z.string(),
   rotation: RotationEstimateSchema,
   rules: z.object({
@@ -104,7 +106,6 @@ export const SnapshotSchema = z.object({
     specialRuleSources: z.record(z.string(), z.string()),
   }),
   sources: z.object({
-    cardmarketPriceDate: isoDate.nullable(),
     playRateFrom: isoDate.nullable(),
     playRateTo: isoDate.nullable(),
     playRateDecks: z.number().int().nonnegative(),

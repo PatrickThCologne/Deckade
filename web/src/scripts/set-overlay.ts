@@ -7,10 +7,13 @@
  * forward opens it again, and a reload or a shared link shows the standalone page.
  * Without JavaScript the tiles are plain links.
  */
+import { onHoverIntent } from '../lib/hover-intent';
 import { LEAVE_EVENT, initSetView } from './set-view';
 
 const FLIGHT_MS = 520;
 const FADE_MS = 220;
+// Set pages are large (up to several MB): load one only when the pointer rests on its tile
+const PREFETCH_DELAY_MS = 150;
 
 interface OverlayEntry {
   readonly href: string;
@@ -27,8 +30,9 @@ export function initSetOverlay(): void {
   const overlay = new SetOverlay();
 
   for (const link of links) {
+    // load() keeps each page, so a second prefetch costs nothing
     const prefetch = () => void overlay.load(link.href).catch(() => undefined);
-    link.addEventListener('pointerenter', prefetch, { once: true });
+    onHoverIntent(link, PREFETCH_DELAY_MS, prefetch);
     link.addEventListener('focus', prefetch, { once: true });
     link.addEventListener('click', (event) => {
       const modified = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;

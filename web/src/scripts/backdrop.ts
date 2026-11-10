@@ -53,13 +53,15 @@ export function initBackdrop(): void {
     if (!wall) return;
     wall.style.transform = `translate3d(0, ${-shown * sink}px, 0)`;
     for (const { element, speed, phase, loop } of rows) {
-      element.style.transform = `translate3d(${driftOffset(shown, speed, phase, loop)}px, 0, 0)`;
+      const offset = driftOffset(shown, speed, phase, loop);
+      element.style.transform = `translate3d(${offset}px, 0, 0)`;
     }
   };
 
   const tick = (now: number) => {
     const target = window.scrollY;
-    shown = wall ? approach(shown, target, last ? now - last : 16, GLIDE_MS) : target;
+    const elapsed = last ? now - last : 16;
+    shown = wall ? approach(shown, target, elapsed, GLIDE_MS) : target;
     last = now;
     render();
     frame = shown === target ? 0 : requestAnimationFrame(tick);

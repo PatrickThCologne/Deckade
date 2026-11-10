@@ -8,8 +8,6 @@ from rotation_radar.domain.products import (
     Product,
     ProductCategory,
     SealedItem,
-    SealedProduct,
-    choose_pack_art,
     classify_pack,
     parse_contents,
 )
@@ -65,17 +63,3 @@ class TestPricePerPack:
 
     def test_unknown_price(self) -> None:
         assert product(None, PackCount(30, PackKind.PLAY)).price_per_pack is None
-
-
-def test_pack_art_prefers_the_play_booster() -> None:
-    def pack(subtype: str) -> SealedProduct:
-        return SealedProduct(f"{subtype} pack", "booster_pack", subtype, None, "123")
-
-    products = [pack("collector"), pack("play"), pack("draft")]
-    chosen = choose_pack_art(products)
-    assert chosen is not None
-    assert chosen.subtype == "play"
-
-
-def test_pack_art_needs_an_image_id() -> None:
-    assert choose_pack_art([SealedProduct("pack", "booster_pack", "play", None, None)]) is None

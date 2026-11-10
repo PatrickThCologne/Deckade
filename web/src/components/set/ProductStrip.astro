@@ -1,10 +1,9 @@
 ---
 /**
- * Bundles and booster boxes side by side: name and price at a glance. The button in
- * the corner opens what is inside, the price per booster and the Cardmarket link.
+ * Bundles and booster boxes side by side. The button in the corner opens what is inside and
+ * a link to the product's prices on Cardmarket, whose prices may not be shown here (README).
  */
 import type { Locale } from '../../config/site';
-import { snapshot } from '../../lib/data/load';
 import type { MtgSet } from '../../lib/data/schema';
 import { createFormatters } from '../../lib/format';
 import { useTranslations } from '../../lib/i18n';
@@ -22,7 +21,6 @@ const format = createFormatters(locale);
 const products = sortProducts(set.products).toSorted((a, b) =>
   a.category.localeCompare(b.category),
 );
-const priceDate = snapshot.sources.cardmarketPriceDate;
 const upcoming = set.standard?.status === 'upcoming';
 ---
 
@@ -34,7 +32,7 @@ const upcoming = set.standard?.status === 'upcoming';
           <details class="product">
             <summary title={product.name}>
               <span class="name">{productLabel(product, set.name)}</span>
-              <span class="price">{format.price(product.price)}</span>
+              {product.price != null && <span class="price">{format.price(product.price)}</span>}
               <span class="toggle" aria-hidden="true"></span>
               <span class="visually-hidden">{t('products.showContents')}</span>
             </summary>
@@ -50,15 +48,12 @@ const upcoming = set.standard?.status === 'upcoming';
               {product.pricePerPack != null && (
                 <p>{t('products.perPackShort', { price: format.price(product.pricePerPack) })}</p>
               )}
-              {priceDate && (
-                <p class="dim">
-                  {upcoming ? `${t('facts.preorder')} · ` : ''}
-                  {t('products.priceDate', { date: format.date(priceDate) })}
-                </p>
-              )}
-              <a href={cardmarketSearch(locale, product.name)} target="_blank" rel="noopener">
-                {t('link.cardmarket')} ↗
-              </a>
+              <p class="dim">
+                {upcoming ? `${t('facts.preorder')} · ` : ''}
+                <a href={cardmarketSearch(locale, product.name)} target="_blank" rel="noopener">
+                  {t('link.cardmarket')} ↗
+                </a>
+              </p>
             </div>
           </details>
         </li>
@@ -82,7 +77,7 @@ const upcoming = set.standard?.status === 'upcoming';
     list-style: none;
   }
 
-  /* Cut corner top right: the place of the open/close button */
+  /* Cut corner top right, like the other slanted shapes */
   .product {
     --cut: 18px;
     position: relative;
@@ -97,11 +92,15 @@ const upcoming = set.standard?.status === 'upcoming';
     background: linear-gradient(160deg, var(--surface-hover), var(--surface-raised) 70%);
   }
 
+  /* Name on one line over the whole width, so every price in the strip sits at the same
+     height; the open/close button stands next to the price. Too long a name ends in "…",
+     the summary's title shows it whole. */
   summary {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 12px 34px 12px 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 8px;
+    align-items: center;
+    padding: 12px 10px 12px 14px;
     list-style: none;
     cursor: pointer;
   }
@@ -111,22 +110,25 @@ const upcoming = set.standard?.status === 'upcoming';
   }
 
   .name {
+    grid-column: 1 / -1;
+    min-width: 0;
+    overflow: hidden;
     font-size: 13px;
     line-height: 1.25;
     color: var(--text-dim);
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .price {
     font-family: var(--font-display), sans-serif;
-    font-size: 21px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: var(--font-display-weight);
     font-variant-numeric: tabular-nums;
   }
 
   .toggle {
-    position: absolute;
-    top: 8px;
-    right: 8px;
+    position: relative;
     width: 18px;
     height: 18px;
   }
@@ -180,11 +182,6 @@ const upcoming = set.standard?.status === 'upcoming';
 
   .details p {
     margin: 0;
-  }
-
-  .details a {
-    color: var(--accent);
-    text-decoration: none;
   }
 
   @keyframes open {

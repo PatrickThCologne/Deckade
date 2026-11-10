@@ -2,4 +2,6 @@ dist/
 .astro/
 node_modules/
 src/data/generated/
+# written by the pipeline (pipeline/tests/test_contract.py), byte for byte
+tests/contract/
 public/

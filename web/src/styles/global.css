@@ -37,10 +37,17 @@
 
   --ease-out: cubic-bezier(0.22, 0.9, 0.24, 1);
 
+  /* The display font (Marcellus) has one weight; asking for more makes the browser fake bold */
+  --font-display-weight: 400;
+
   /* One angle for the page tabs and the banner below them, so their slanted edges form one
      line. The banner's lower left corner reaches into the page margin, hence less lean
      where that margin is narrow; on small screens the banner is straight. */
   --lean: -13deg;
+
+  /* Every tab's banner is this high on wide screens (components/hero/HeroPanel.astro), so the
+     page below starts at the same place on every tab */
+  --hero-height: 240px;
 }
 
 @media (901px <= width <= 1264px) {
@@ -54,6 +61,41 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/*
+ * Moving to another page cross-fades instead of flashing white or black. The art wall is
+ * captured on its own (Backdrop.astro) and kept below the page while it happens; the page
+ * on top is captured as `page`. The root is not captured: its snapshot is always opaque and
+ * would hide the wall, so the screen went black.
+ */
+@view-transition {
+  navigation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+:root {
+  view-transition-name: none;
+}
+
+body {
+  view-transition-name: page;
+}
+
+::view-transition-group(backdrop) {
+  z-index: -1;
+}
+
+/* Short, so a tab change feels immediate */
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 0.15s;
 }
 
 html {
@@ -81,8 +123,8 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display), var(--font-sans), sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: var(--font-display-weight);
+  letter-spacing: 0.01em;
   line-height: 1.15;
   margin: 0;
 }
@@ -122,7 +164,7 @@ img {
 .eyebrow {
   font-family: var(--font-display), sans-serif;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: var(--font-display-weight);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
@@ -153,7 +195,7 @@ img {
   clip-path: polygon(var(--slant) 0, 100% 0, calc(100% - var(--slant)) 100%, 0 100%);
   font-family: var(--font-display), sans-serif;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: var(--font-display-weight);
   white-space: nowrap;
 }
 
@@ -204,8 +246,9 @@ html.has-overlay {
 }
 
 .set-overlay {
-  --sticky-top: 0px;
-  --sticky-top-panels: 16px;
+  /* Sticky offsets count from inside the padding: -28px keeps the filter bar at the top edge,
+     so no rows show above it. */
+  --sticky-top: -28px;
   position: fixed;
   inset: 0;
   width: 100%;

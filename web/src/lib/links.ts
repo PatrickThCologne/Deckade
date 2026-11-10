@@ -6,6 +6,12 @@ export function withBase(path: string, base: string = import.meta.env.BASE_URL):
   return prefix + path.replace(/^\/+/, '');
 }
 
+/** Cardmarket's search for a product; its prices may only be shown there (README). */
+export function cardmarketSearch(locale: Locale, query: string): string {
+  const search = encodeURIComponent(query.split(' // ')[0] ?? query);
+  return `https://www.cardmarket.com/${locale}/Magic/Products/Search?searchString=${search}`;
+}
+
 export function localePath(locale: Locale, path = ''): string {
   const inner = path.replace(/^\/+|\/+$/g, '');
   return withBase(inner ? `${locale}/${inner}/` : `${locale}/`);
@@ -32,12 +38,10 @@ export function switchLocale(
   return prefix + `${target}/` + inner;
 }
 
-/** E-mail link with a prefilled subject. */
-export function mailto(address: string, subject: string): string {
-  return `mailto:${address}?subject=${encodeURIComponent(subject)}`;
-}
-
-export function cardmarketSearch(locale: Locale, query: string): string {
-  const search = encodeURIComponent(query.split(' // ')[0] ?? query);
-  return `https://www.cardmarket.com/${locale}/Magic/Products/Search?searchString=${search}`;
+/** E-mail link with a prefilled subject and, if given, a prefilled text. */
+export function mailto(address: string, subject: string, body?: string): string {
+  const fields = [`subject=${encodeURIComponent(subject)}`];
+  // RFC 6068: line breaks in the text are written as CRLF
+  if (body) fields.push(`body=${encodeURIComponent(body.replace(/\r?\n/g, '\r\n'))}`);
+  return `mailto:${address}?${fields.join('&')}`;
 }
