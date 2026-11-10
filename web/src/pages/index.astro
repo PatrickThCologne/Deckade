@@ -1,7 +1,38 @@
 ---
-import { DEFAULT_LOCALE } from '../config/site';
+import { DEFAULT_LOCALE, SITE_NAME } from '../config/site';
 import { localePath } from '../lib/links';
 
 // The site lives under /de/ and /en/; the root only forwards to the default language.
-return Astro.redirect(localePath(DEFAULT_LOCALE));
+// Static hosting has no server redirect, so this page does it at once and stays dark and
+// empty meanwhile (Astro's own redirect page waits two seconds on a white page).
+const target = localePath(DEFAULT_LOCALE);
+const canonical = new URL(target, Astro.site).href;
 ---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{SITE_NAME}</title>
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#06080c" />
+    <link rel="canonical" href={canonical} />
+    <meta http-equiv="refresh" content={`0;url=${target}`} />
+    <script is:inline define:vars={{ target }}>
+      location.replace(target);
+    </script>
+    <style>
+      html {
+        color-scheme: dark;
+        background: #08090c;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <a href={target} style="color: #f2c14e">
+        {SITE_NAME}
+      </a>
+    </noscript>
+  </body>
+</html>
