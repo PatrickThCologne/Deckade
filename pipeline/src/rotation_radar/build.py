@@ -339,7 +339,7 @@ def _set_entry(
 
 def _product_entry(sealed: SealedProduct) -> ProductEntry:
     # No price: the only source, Cardmarket, needs written consent to show its prices
-    # (README, "Before going public"). The website links to a search there instead.
+    # (docs/adr/0003-scryfall-prices.md). The website links to a search there instead.
     product = Product(
         name=sealed.name,
         category=ProductCategory(sealed.category),
