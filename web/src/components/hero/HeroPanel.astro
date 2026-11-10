@@ -109,10 +109,13 @@ const { tab, locale, eyebrow, title, stats = [], radar = false } = Astro.props;
     min-width: 0;
   }
 
+  .eyebrow {
+    font-size: 15px;
+  }
+
   h1 {
     margin: 6px 0 8px;
-    font-size: clamp(32px, 4.6vw, 54px);
-    letter-spacing: -0.01em;
+    font-size: clamp(30px, 4.1vw, 48px);
   }
 
   .copy :global(p:not(.eyebrow)) {

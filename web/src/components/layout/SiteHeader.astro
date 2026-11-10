@@ -9,9 +9,7 @@ interface Props {
 }
 
 const { locale } = Astro.props;
-// The logo writes the gold part with a capital letter: "DeckAde". Everywhere else it is "Deckade".
-const [deck, ade] = SITE_NAME_PARTS;
-const gold = ade.charAt(0).toUpperCase() + ade.slice(1);
+const [deck, gold] = SITE_NAME_PARTS;
 ---
 
 <header class="site-header">
@@ -63,7 +61,7 @@ const gold = ade.charAt(0).toUpperCase() + ade.slice(1);
   .name {
     font-family: var(--font-display), sans-serif;
     font-weight: var(--font-display-weight);
-    font-size: 17px;
+    font-size: 22px;
     letter-spacing: 0.01em;
   }
 
