@@ -3,7 +3,8 @@
  * The page tabs. They stand on the top edge of the banner like folder tabs, leaning at the
  * same angle as the banner's edge (--lean). On hover the light along the banner's top edge
  * glides over under the tab (scripts/tab-light.ts), and a thin gold line runs up the tab's
- * left edge, round the corner and settles along its top.
+ * left edge and round the corner along its top; from tab to tab it crawls over like a snake
+ * (scripts/tab-trace.ts).
  */
 import type { Locale } from '../../config/site';
 import { useTranslations } from '../../lib/i18n';
@@ -55,12 +56,15 @@ const tabs = [
       </span>
     </a>
   ))}
+  <canvas class="trace" data-tab-trace aria-hidden="true"></canvas>
 </nav>
 
 <script>
   import { initTabLight } from '../../scripts/tab-light';
+  import { initTabTrace } from '../../scripts/tab-trace';
 
   initTabLight();
+  initTabTrace();
 </script>
 
 <style>
@@ -68,7 +72,6 @@ const tabs = [
     /* The tabs' offsets are measured from here (scripts/tab-light.ts) */
     position: relative;
     display: flex;
-    gap: 3px;
   }
 
   .tab {
@@ -78,7 +81,7 @@ const tabs = [
     position: relative;
     isolation: isolate;
     flex: none;
-    padding: 9px calc(var(--lean-x) + 16px) 8px;
+    padding: 9px calc(var(--lean-x) + 22px) 8px;
     color: var(--text-dim);
     text-decoration: none;
     font-family: var(--font-display), sans-serif;
@@ -87,6 +90,12 @@ const tabs = [
     letter-spacing: 0.02em;
     white-space: nowrap;
     transition: color 0.15s;
+  }
+
+  /* Side by side: each shape starts where the one before ends at its foot, a hairline apart,
+     so the leaning edges run parallel */
+  .tab + .tab {
+    margin-left: calc(1px - var(--lean-x));
   }
 
   /* The shape: a parallelogram standing on the banner's edge */
@@ -115,57 +124,22 @@ const tabs = [
     color: var(--text);
   }
 
-  /* The gold line on hover, a little inside the tab's edge and leaning with it. Two layers: the
-     upright part grows from the tab's foot up the left side, then the top part runs from the
-     corner to about the middle. Both fade out away from the corner, the upright one by half
-     the tab's height, like the light under the tabs. The upright part ends a pixel below the
-     corner, so the two do not cover the corner pixel twice. They stay while the pointer rests
-     and fade out when it leaves. */
-  .tab:not([aria-current])::after {
+  /* The gold line on hover, drawn by the script on this canvas over all tabs: it comes up the
+     left edge of the first tab the pointer reaches and crawls on from tab to tab. It shows at
+     once and fades out when the pointer leaves the tabs. */
+  .trace {
     --trace: rgb(242 193 78 / 0.75);
-    --trace-length: 55%;
-    content: '';
     position: absolute;
-    inset: 5px calc(var(--lean-x) + 7px) 0 7px;
-    transform: skewX(var(--lean));
-    transform-origin: bottom left;
-    background:
-      linear-gradient(var(--trace) 15%, transparent 60%) 0 100% / 1px calc(100% - 1px) no-repeat,
-      linear-gradient(90deg, var(--trace) 35%, transparent) 0 0 / var(--trace-length) 1px no-repeat;
+    top: 0;
+    left: 0;
     opacity: 0;
     transition: opacity 0.25s;
     pointer-events: none;
   }
 
-  .tab:not([aria-current]):is(:hover, :focus-visible)::after {
+  .trace[data-on] {
     opacity: 1;
     transition: none;
-    animation: tab-trace 0.5s cubic-bezier(0.4, 0, 1, 1) both;
-  }
-
-  @keyframes tab-trace {
-    0% {
-      background-size:
-        1px 0,
-        0 1px;
-    }
-    40% {
-      background-size:
-        1px calc(100% - 1px),
-        0 1px;
-      animation-timing-function: cubic-bezier(0.22, 0.9, 0.24, 1);
-    }
-    100% {
-      background-size:
-        1px calc(100% - 1px),
-        var(--trace-length) 1px;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .tab:not([aria-current]):is(:hover, :focus-visible)::after {
-      animation: none;
-    }
   }
 
   .tab[aria-current='page'] {
