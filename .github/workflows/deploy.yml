@@ -36,12 +36,12 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Cache downloads and pack images
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             pipeline/.cache
@@ -53,7 +53,7 @@ jobs:
         run: python -m rotation_radar build --root .
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -72,8 +72,8 @@ jobs:
           OPERATOR_NAME: ${{ vars.OPERATOR_NAME }}
           OPERATOR_ADDRESS: ${{ vars.OPERATOR_ADDRESS }}
           OPERATOR_EMAIL: ${{ vars.OPERATOR_EMAIL }}
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: web/dist
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
