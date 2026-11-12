@@ -23,7 +23,8 @@ Look for, in this order:
 3. The data contract between pipeline and website (`snapshot.py`, `schema.ts`,
    `web/tests/contract`): changed on both sides, version bumped when breaking?
 4. Legal and privacy rules of this project: Scryfall images stay unchanged and credited,
-   no tracking, cookies or browser storage (see the privacy page and the README).
+   no cookies or browser storage; visits are counted with GoatCounter, which uses neither,
+   and there is no other tracking (see docs/adr/0004-visitor-counting.md and the privacy page).
 5. Simpler ways to do the same, only if clearly better.
 
 Report each finding with file and line, what goes wrong in a concrete case, and how sure
