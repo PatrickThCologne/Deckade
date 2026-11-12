@@ -66,3 +66,9 @@ mana value, a price and an order ("cheap", "popular").
 - Later phases, if wanted: more rules (card draw, removal, tribes) from the rules text at build
   time, like the synergies; similar cards from embeddings computed in the pipeline with a local model and shipped
   as a short list of neighbours per card; a server with a model only if that is not enough.
+
+## Update 2026-11-12
+
+The C# code was moved out of `main` into the git tag `archive/api-phase2`: it was never
+deployed, and its server and indexer were only stubs. `web/src/lib/search/query.ts` is now the only parser; the
+references above to `api/` and `RuleBasedQueryParser.cs` describe the state of 2026-11-10.

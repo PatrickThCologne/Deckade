@@ -10,8 +10,8 @@ import {
   understood,
 } from '../src/lib/search/query';
 
-// The cases of api/tests/RotationRadar.Search.Tests/RuleBasedQueryParserTests.cs come first,
-// so the two parsers read the same requests the same way.
+// The first cases come from the earlier C# parser (tag archive/api-phase2), so this one still
+// reads those requests the same way.
 
 describe('parseQuery: colours', () => {
   it.each([

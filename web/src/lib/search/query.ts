@@ -4,9 +4,9 @@
  * ("Synergie mit Artefakten", "synergiert mit Elementarwesen"), answers ("Konter gegen
  * Flieger", "entfernt Fäulnis"), mana value, a price limit and a sort order. It runs in the
  * browser without a model, so it needs no server and the request never leaves the page
- * (docs/adr/0002-natural-language-search.md). The rules follow the C# parser in api/
- * (RuleBasedQueryParser), which has the same tests; synergies, answers and creature types
- * exist here only.
+ * (docs/adr/0002-natural-language-search.md). This is the only parser; an earlier C# version
+ * with the basic rules is kept in the git tag archive/api-phase2. Synergies, answers and
+ * creature types were only ever added here.
  */
 import { type CardType, matchesWords, normalizeForSearch, type SortKey } from '../cards/sort';
 import { KEYWORDS, type Keyword } from './keywords';
