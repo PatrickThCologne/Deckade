@@ -7,6 +7,16 @@ on:
   # The deployment runs these checks first and stops if one fails (deploy.yml)
   workflow_call:
 
+permissions:
+  contents: read
+
+# A newer push to a pull request cancels its older run; runs on main all finish, so each commit
+# there keeps its result. When deploy.yml calls this workflow, github.workflow is the caller's
+# name, so the deployment's checks are in a group of their own.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   pipeline:
     name: Pipeline (Python)
@@ -20,8 +30,11 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-          cache-dependency-path: pipeline/pyproject.toml
-      - run: pip install -e ".[dev]"
+          cache-dependency-path: |
+            pipeline/pyproject.toml
+            pipeline/requirements-pinned.txt
+      # The tested versions of all packages (requirements-pinned.txt), not the newest ones
+      - run: pip install -c requirements-pinned.txt -e ".[dev]"
       - run: ruff check src tests
       - run: ruff format --check src tests
       - run: mypy
@@ -35,14 +48,18 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      # The small contract snapshot written by the pipeline's tests (tests/contract) stands in
-      # for live data: fast and reproducible. Live data is only fetched by the deployment.
-      - run: mkdir -p src/data && cp -r tests/contract src/data/generated
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
           cache-dependency-path: web/package-lock.json
+      # The small contract snapshot written by the pipeline's tests (tests/contract) stands in
+      # for live data: fast and reproducible. Live data is only fetched by the deployment.
+      - run: npm run fixture
+      # The rules that keep the coding agents in .claude/agents to their part of the work
+      - name: Agent guard rules
+        run: node --test .claude/hooks/agent-guard-rules.test.mjs
+        working-directory: .
       - run: npm ci
       - run: npm run lint
       - run: npm run check

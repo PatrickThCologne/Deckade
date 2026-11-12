@@ -14,6 +14,7 @@
     "test": "vitest run",
     "format": "prettier --write .",
     "lint": "prettier --check .",
+    "fixture": "node -e \"require('node:fs').cpSync('tests/contract','src/data/generated',{recursive:true})\"",
     "astro": "astro"
   },
   "dependencies": {

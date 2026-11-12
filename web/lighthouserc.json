@@ -3,6 +3,10 @@
     "collect": {
       "staticDistDir": "./dist",
       "url": [
+        "http://localhost/en/",
+        "http://localhost/en/cards/",
+        "http://localhost/en/rotation/",
+        "http://localhost/en/search/",
         "http://localhost/de/",
         "http://localhost/de/cards/",
         "http://localhost/de/rotation/",

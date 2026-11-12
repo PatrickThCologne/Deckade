@@ -48,7 +48,7 @@ jobs:
             web/public/images
           key: pipeline-${{ github.run_id }}
           restore-keys: pipeline-
-      - run: pip install -e ./pipeline
+      - run: pip install -c pipeline/requirements-pinned.txt -e ./pipeline
       - name: Build data snapshot
         run: python -m rotation_radar build --root .
         env:

@@ -97,7 +97,7 @@ Requirements: Python 3.12+, Node.js 22.23+ (Astro 7).
 cd pipeline
 python -m venv .venv
 .venv/Scripts/activate          # Windows; on macOS/Linux: source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -c requirements-pinned.txt -e ".[dev]"  # the tested versions, as in CI
 python -m rotation_radar build  # writes web/src/data/generated and web/public/images
 
 # Website
@@ -106,7 +106,9 @@ npm ci
 npm run dev                     # http://localhost:4321
 ```
 
-The website needs a snapshot: run the pipeline once before `npm run dev`. The first run
+The website needs a snapshot: run the pipeline once before `npm run dev`, or use the small
+test snapshot with `npm run fixture && npm run dev` in `web/` (this replaces the snapshot the
+pipeline wrote). The first pipeline run
 downloads about 480 MB of Scryfall bulk data and the pack images and takes several minutes;
 both are cached in `pipeline/.cache` and `web/public/images`, so later runs take about two.
 Generated data is not committed: the deployment builds it fresh every day.
@@ -128,8 +130,9 @@ writes. After an intended change of the data contract, run
 `UPDATE_CONTRACT=1 pytest tests/test_contract.py` and check the diff.
 
 CI also runs [Lighthouse](web/lighthouserc.json) on the built overview, cards, rotation and
-search pages. Accessibility, best practices and SEO must reach their minimum scores;
-performance below 0.8 only warns, as shared runners are not steady enough for a hard limit.
+search pages in both languages. Accessibility, best practices and SEO must reach their minimum
+scores; performance below 0.8 only warns, as shared runners are not steady enough for a hard
+limit.
 The reports are attached to each run as the `lighthouse` artifact. Locally, after
 `npm run build` in `web/`: `npx @lhci/cli@0.15.1 autorun` (set `CHROME_PATH` if Chrome is not
 installed, e.g. to Edge).
@@ -150,7 +153,8 @@ Deployment and the legal checks are in the [maintainer notes](docs/maintainer-no
 ## Roadmap
 
 - Semantic search beyond the rules: similar cards from embeddings computed in the pipeline;
-  a server with a local language model (the C#/.NET start in `api/`) only if that is not enough.
+  a server with a local language model only if that is not enough (an early C# start is kept in
+  the git tag `archive/api-phase2`).
 - User accounts with a personal collection and decks.
 - Card scanning in the browser (camera via `getUserMedia`, recognition by name or image).
 - Price history and play-rate trends around a rotation.
