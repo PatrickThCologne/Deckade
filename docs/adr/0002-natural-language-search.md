@@ -72,3 +72,16 @@ mana value, a price and an order ("cheap", "popular").
 The C# code was moved out of `main` into the git tag `archive/api-phase2`: it was never
 deployed, and its server and indexer were only stubs. `web/src/lib/search/query.ts` is now the only parser; the
 references above to `api/` and `RuleBasedQueryParser.cs` describe the state of 2026-11-10.
+
+The search now also reads sets, by their English names only: by name in any word order, or by
+code, but codes only in capitals, so "one", "war" and "all" stay words. Set names are also
+words of card names, so the rules are narrow: another ending counts only as an ending (from 4
+letters, at most 2 letters more, so "Aether" is not "Aetherdrift"); a name of one word counts
+only on its own or after "aus", "von", "from", "in", "set" or "edition" ("Dark Ritual" is no
+set); without a set named in full, an exact word of 5 letters or more before the colon names
+the set ("Duskmourn"), unless it is a creature type the parser knows. A request that is exactly
+a card name always wins and is searched as a name ("Control Magic"). All six card roles (ramp,
+removal, counterspell, wipe, draw, burn) are read from the English rules text at build time,
+like the synergies, and can be searched ("Removal", "Konterzauber", "Boardwipe"); archetypes
+(aggro, control, midrange) are fixed rules over roles and mana value. Both are heuristics over
+the rules text, not deck data.

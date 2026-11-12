@@ -97,6 +97,8 @@ describe('search for answers and creature types', () => {
     synergies: [],
     answers: [],
     tribes: [],
+    roles: [],
+    printedIn: [],
     cmc: 2,
     isLand: false,
     price: 1,

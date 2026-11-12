@@ -110,6 +110,7 @@ export const GERMAN_TRIBES: readonly (readonly [string, string])[] = [
   ['schlange', 'snake'],
   ['spinne', 'spider'],
   ['werwolf', 'werewolf'],
+  ['avatar', 'avatar'],
 ];
 
 /**

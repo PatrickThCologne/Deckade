@@ -7,6 +7,7 @@ import type { Locale } from '../../config/site';
 import type { Card } from '../data/schema';
 import { cardKeywords, type Keyword, KEYWORDS } from '../search/keywords';
 import { cardAnswers } from '../search/answers';
+import { cardRoles, type Role, ROLES } from '../search/roles';
 import { cardSynergies, type Synergy, SYNERGIES } from '../search/synergies';
 import { cardTribes, creatureTypes } from '../search/tribes';
 import { shownCard } from './local';
@@ -39,6 +40,8 @@ export interface CatalogCard extends SortableCard {
   readonly answers: readonly Synergy[];
   /** Creature types the rules text works with, lower case ("elemental"). */
   readonly tribes: readonly string[];
+  /** What the card does for its deck ("ramp", "removal"), read from the rules text. */
+  readonly roles: readonly Role[];
   readonly banned: boolean;
   /** The set of the printing shown: the newest one, on German pages the newest German one. */
   readonly setCode: string;
@@ -91,6 +94,7 @@ function catalogCard(
     synergies: cardSynergies(card.text, card.name),
     answers: cardAnswers(card.text, card.name),
     tribes: cardTribes(card.text, card.name, known),
+    roles: cardRoles(card.text, card.name, card.isLand, card.typeLine),
     price: prices.length > 0 ? Math.min(...prices) : null,
     playShare: shares.length > 0 ? Math.max(...shares) : null,
     isLand: card.isLand,
@@ -133,6 +137,8 @@ type EncodedCard = [
   answers: string,
   /** Creature types the card works with, separated by spaces; usually empty. */
   tribes: string,
+  /** Indexes into ROLES, one base-36 digit each; last, so older files still read. */
+  roles: string,
 ];
 
 export interface CatalogFile {
@@ -190,6 +196,7 @@ export function encodeCatalog(
       card.synergies.map((synergy) => SYNERGIES.indexOf(synergy).toString(36)).join(''),
       card.answers.map((theme) => SYNERGIES.indexOf(theme).toString(36)).join(''),
       card.tribes.join(' '),
+      card.roles.map((role) => ROLES.indexOf(role).toString(36)).join(''),
     ]),
   };
 }
@@ -214,6 +221,7 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
       synergies = '',
       answers = '',
       tribes = '',
+      roles = '',
     ]) => {
       const [main, ...all] = [...types].map((index) => CARD_TYPES[Number(index)]);
       return {
@@ -228,6 +236,7 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
         synergies: [...synergies].flatMap((digit) => SYNERGIES[parseInt(digit, 36)] ?? []),
         answers: [...answers].flatMap((digit) => SYNERGIES[parseInt(digit, 36)] ?? []),
         tribes: tribes ? tribes.split(' ') : [],
+        roles: [...roles].flatMap((digit) => ROLES[parseInt(digit, 36)] ?? []),
         price,
         playShare,
         isLand: (flags & 1) !== 0,

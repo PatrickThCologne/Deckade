@@ -1,19 +1,32 @@
 /**
  * The search tab reads a request in plain German or English ("günstige rote Kreaturen mit
- * Eile") as filters over the card list: colours, card types, keyword abilities, synergies
- * ("Synergie mit Artefakten", "synergiert mit Elementarwesen"), answers ("Konter gegen
- * Flieger", "entfernt Fäulnis"), mana value, a price limit and a sort order. It runs in the
- * browser without a model, so it needs no server and the request never leaves the page
- * (docs/adr/0002-natural-language-search.md). This is the only parser; an earlier C# version
- * with the basic rules is kept in the git tag archive/api-phase2. Synergies, answers and
- * creature types were only ever added here.
+ * Eile") as filters over the card list: sets ("aus Reality Fracture", "FRA"), colours, card
+ * types, keyword abilities, synergies ("Synergie mit Artefakten", "synergiert mit
+ * Elementarwesen"), answers ("Konter gegen Flieger", "entfernt Fäulnis"), roles ("zum
+ * Rampen"), archetypes ("Aggro", "Control", "Midrange"), mana value, a price limit and a sort
+ * order. It runs in the browser without a model, so it needs no server and the request never
+ * leaves the page (docs/adr/0002-natural-language-search.md). This is the only parser; an
+ * earlier C# version with the basic rules is kept in the git tag archive/api-phase2. Sets,
+ * synergies, answers, creature types, roles and archetypes were only ever added here.
  */
 import { type CardType, matchesWords, normalizeForSearch, type SortKey } from '../cards/sort';
 import { KEYWORDS, type Keyword } from './keywords';
+import type { Role } from './roles';
 import { SYNERGIES, type Synergy } from './synergies';
-import { tribeCandidates } from './tribes';
+import { GERMAN_TRIBES, singular, tribeCandidates } from './tribes';
+
+/** Deck styles as fixed rules over roles and mana value (ARCHETYPE_RULES below). */
+export type Archetype = 'aggro' | 'control' | 'midrange';
+
+/** A set the request may name; on the site, the sets of the card list file. */
+export interface SearchSet {
+  readonly code: string;
+  readonly name: string;
+}
 
 export interface SearchQuery {
+  /** Set codes; the cards must be printed in one of them. */
+  readonly sets: readonly string[];
   /** Colours in WUBRG order the cards must have. */
   readonly colors: string;
   /** The cards have exactly `colors` and no other ("mono-grün", "Selesnya", "farblos"). */
@@ -28,6 +41,9 @@ export interface SearchQuery {
   readonly answers: readonly Synergy[];
   /** Per request word, the creature types it may name; the cards must work with one. */
   readonly tribes: readonly (readonly string[])[];
+  /** All of these roles. */
+  readonly roles: readonly Role[];
+  readonly archetype: Archetype | null;
   readonly minMana: number | null;
   readonly maxMana: number | null;
   /** Euro, the price of the cheapest printing. */
@@ -45,6 +61,9 @@ export interface SearchableCard {
   readonly synergies: readonly Synergy[];
   readonly answers: readonly Synergy[];
   readonly tribes: readonly string[];
+  readonly roles: readonly Role[];
+  /** Codes of every set that printed the card. */
+  readonly printedIn: readonly string[];
   readonly cmc: number;
   readonly isLand: boolean;
   readonly price: number | null;
@@ -156,13 +175,129 @@ const TRIBE_BEFORE = word(`(?:mit|with)\\s+(?<tribe>\\p{L}+)\\s+synerg\\p{L}*`);
 // "Zauber", "spell": an instant or a sorcery
 const SPELL = word('zauber(?:spruch|spruche)?|spells?');
 
+// A set code counts only in capitals ("Kreaturen aus FRA", "DSK-Karten"): codes such as "one",
+// "war" and "all" are also words. It is read in the request as typed, before lower case.
+const SET_CODE = /(?<![\p{L}\d])[A-Z\d]*[A-Z][A-Z\d]*(?![\p{L}\d])/gu;
+// Words a set name needs not repeat: "War of the Spark" is named by "War Spark" as well
+const SET_NAME_FILLER = new Set(['the', 'of', 'and']);
+const nameWords = (text: string) => normalizeForSearch(text).match(/[\p{L}\d]+/gu) ?? [];
+// "Fractured Reality" names "Reality Fracture": one word may start with the other, but only
+// as another ending, from 4 letters on and at most 2 letters longer. So "all" does not name
+// "Alliances", "vows" not "Crimson Vow", and "Aether", "cold" and "listige" not "Aetherdrift",
+// "Coldsnap" and "The List".
+const sameWord = (a: string, b: string) =>
+  a === b ||
+  (Math.min(a.length, b.length) >= 4 &&
+    Math.abs(a.length - b.length) <= 2 &&
+    (a.startsWith(b) || b.startsWith(a)));
+// A set name of one word is often a word of card names too ("Dark Ritual", "Uneasy Alliance"),
+// so it names the set only on its own or right after one of these words ("aus Zendikar")
+const SET_CUES = new Set(['aus', 'von', 'from', 'in', 'set', 'edition']);
+// A single word before the colon names a set on its own ("Duskmourn", "Kamigawa") from 5 letters
+// on. Longer ones ("March of the Machine", "Commander Legends") are words of too many card names.
+// A creature type the parser knows ("Avatar of Woe") only counts right after a cue word.
+const BEFORE_COLON_MIN = 5;
+const KNOWN_TRIBES = new Set(GERMAN_TRIBES.map(([, english]) => english));
+
+interface SetNames {
+  readonly code: string;
+  /** Every word of the name, normalized. */
+  readonly words: readonly string[];
+  /** The words a request must have: numbers, and words of 3 letters or more but no filler. */
+  readonly needed: readonly string[];
+  /** The word before the colon, if the name has one and it is one word ("Duskmourn: …"). */
+  readonly beforeColon: readonly string[];
+}
+
+const oneWord = (words: readonly string[]) => (words.length === 1 ? words : []);
+
+// The site parses every request against the same list of sets, so its words are read once
+const setNamesCache = new WeakMap<readonly SearchSet[], readonly SetNames[]>();
+function setNames(sets: readonly SearchSet[]): readonly SetNames[] {
+  let names = setNamesCache.get(sets);
+  if (!names) {
+    names = sets.map((set) => {
+      const words = nameWords(set.name);
+      const colon = set.name.indexOf(':');
+      return {
+        code: set.code,
+        words,
+        needed: words.filter(
+          (name) => (name.length >= 3 || /^\d+$/.test(name)) && !SET_NAME_FILLER.has(name),
+        ),
+        beforeColon: colon < 0 ? [] : oneWord(nameWords(set.name.slice(0, colon))),
+      };
+    });
+    setNamesCache.set(sets, names);
+  }
+  return names;
+}
+
+/**
+ * Which request word stands for each needed word of a set name, or null if one is missing.
+ * Each request word stands for one name word only, so "3" in "Modern Horizons 3 … bis 3 Mana"
+ * is left for the mana value. A name word prefers the request word written exactly so over
+ * another ending, and a request word after the previous name word's over an earlier one.
+ */
+function nameTokens(needed: readonly string[], tokens: readonly string[]): number[] | null {
+  const used: number[] = [];
+  for (const name of needed) {
+    const last = used.at(-1) ?? -1;
+    const free = (index: number) => !used.includes(index);
+    const find = (fits: (token: string) => boolean) => {
+      const after = tokens.findIndex((token, index) => index > last && free(index) && fits(token));
+      return after >= 0 ? after : tokens.findIndex((token, index) => free(index) && fits(token));
+    };
+    let index = find((token) => token === name);
+    if (index < 0) index = find((token) => sameWord(token, name));
+    if (index < 0) return null;
+    used.push(index);
+  }
+  return used;
+}
+
+// "Karten zum Rampen", "Ramp", "mana dorks", "Manabeschleunigung", "Removal", "Konterzauber",
+// "Boardwipe", "Kartenziehen", "Direktschaden". Read after the answers, so "removal gegen
+// Flieger" stays an answer; "Kreaturen-Removal" is removal aimed at creatures, not creatures.
+const ROLE_WORDS: readonly (readonly [Role, RegExp])[] = [
+  [
+    'ramp',
+    word('(?:zum\\s+)?rampen|ramp(?:e|s|ing)?|mana[\\s-]?dorks?|mana[\\s-]?beschleunig\\p{L}*'),
+  ],
+  ['removal', word('(?:kreatur(?:en)?[\\s-]?|creature[\\s-]?)?removal|entfernung')],
+  ['counterspell', word('counterspells?|konterzauber\\p{L}*|gegenzauber\\p{L}*')],
+  ['wipe', word('board[\\s-]?wipes?|brettfeger\\p{L}*|massenvernichtung\\p{L}*|wraths?')],
+  ['draw', word('karten[\\s-]?ziehen|card[\\s-]?draw|kartenvorteil\\p{L}*|draw')],
+  ['burn', word('burn|direktschaden\\p{L}*|direct[\\s-]damage')],
+];
+// Not inside a phrase about taking a creature: "die Kontrolle übernehmen", "gain control of"
+const ARCHETYPE_WORDS: readonly (readonly [Archetype, RegExp])[] = [
+  ['aggro', word(`aggro|aggressiv${ending}`)],
+  [
+    'control',
+    word(
+      '(?<!(?:gain|tak|steal)\\p{L}*\\s+)control(?!\\s+(?:of|over)(?![\\p{L}]))|(?<!(?:ubern|erhalt|erlang|gewinn)\\p{L}*\\s+(?:die\\s+)?)kontroll(?:e)?(?!\\s+uber)',
+    ),
+  ],
+  ['midrange', word('mid[\\s-]?range')],
+];
+
 // "unter 2 €", "bis 1,50 Euro", "under 3 eur". Dollar prices stay unread: prices are in euro.
 const MAX_PRICE =
   /(?:unter|bis|max\.?|maximal|hochstens|under|below|up\s+to|<|≤)\s*(\d+(?:[.,]\d{1,2})?)\s*(?:€|eur(?:o|os)?(?![\p{L}]))/gu;
-// "Low-Mana", "wenig Mana", "günstig zu spielen", "cheap to cast"
+// "Low-Mana", "wenig Mana", "günstig zu spielen", "cheap to cast", "Early Game", "Frühspiel"
 const LOW_MANA = word(
-  'low?[\\s-]?mana|wenig\\p{L}*\\s+mana|gunstig\\p{L}*\\s+(?:zu\\s+)?(?:spielen|casten)|cheap\\s+to\\s+cast',
+  'low?[\\s-]?mana|wenig\\p{L}*\\s+mana|gunstig\\p{L}*\\s+(?:zu\\s+)?(?:spielen|casten)|cheap\\s+to\\s+cast|early[\\s-]?game|fruhspiel\\p{L}*',
 );
+// "Late Game", "Spätspiel", "Finisher", "Bomben", "hohe Manakosten", "high mana value", "viel
+// Mana": cards of mana value 5 or more
+const LATE_GAME = word(
+  'late[\\s-]?game|spatspiel\\p{L}*|finisher(?:s)?|bomb(?:e|en|s)?|hoh\\p{L}*\\s+mana[\\s-]?(?:kost|wert)\\p{L}*|high\\s+mana(?:[\\s-]?(?:value|costs?))?|viel\\p{L}*\\s+mana',
+);
+// "ab 4 Mana", "mindestens 4 Mana", "4+ Mana", "4 mana or more"; "mehr als 4 Mana" and "über 4
+// Mana" mean 5 or more. Not inside a longer word or number: "x100+ mana" says nothing.
+const AT_LEAST_MANA =
+  /(?<![\p{L}\d])(?:(?:(?:ab|mindestens|min\.?|at\s+least|≥|>=)\s*(?<n>\d{1,2})\s*mana)|(?:(?<above>mehr\s+als|uber|more\s+than|over|above|>)\s*(?<n2>\d{1,2})\s*mana)|(?:(?<n3>\d{1,2})(?:\+\s*mana|\s*mana\s+(?:oder\s+mehr|or\s+more))))/gu;
 // "bis 3 Mana", "höchstens 3 Mana", "unter 3 Mana", "3 mana or less"
 const AT_MOST_MANA =
   /(?:(?:bis|max\.?|maximal|hochstens|at\s+most|up\s+to|≤|<=)\s*(?<n>\d{1,2})\s*mana)|(?:(?<below>unter|weniger\s+als|below|under|less\s+than|<)\s*(?<n2>\d{1,2})\s*mana)|(?:(?<n3>\d{1,2})\s*mana\s+(?:oder\s+weniger|or\s+less))/gu;
@@ -172,33 +307,116 @@ const EXACT_MANA = word('(?<n>\\d{1,2})\\s*mana');
 const SORT_WORDS: readonly (readonly [SortKey, RegExp])[] = [
   ['value-asc', word('gunstig\\p{L}*|billig\\p{L}*|preiswert\\p{L}*|cheap\\p{L}*|budget')],
   ['value-desc', word('teuer\\p{L}*|teur\\p{L}*|wertvoll\\p{L}*|expensive|valuable')],
-  ['played', word('beliebt\\p{L}*|meistgespielt\\p{L}*|popular|most\\s+played')],
+  // "stark", "mächtig" and "die reinknallen" have no field of their own: the most played first.
+  // Only these forms, so "Stärke" (power, see STRENGTH_NOUN) and "Starkstrom" are no order.
+  [
+    'played',
+    word(
+      'beliebt\\p{L}*|meistgespielt\\p{L}*|popular|most\\s+played|stark(?:e|en)?|starksten?|strong|powerful|machtige?|reinknallen',
+    ),
+  ],
 ];
+// "Stärke" is a creature's power, "starke" means strong, and without accents both read
+// "starke". So the noun is spelled "staerke" in the request as typed, which no filter reads, and
+// is a name word "starke" again among the unknown words ("Stärke des Willens").
+const STRENGTH_NOUN = /(?<![\p{L}\d])(st)ä(rke|rken)(?![\p{L}\d])/giu;
 
 /** Words that carry no filter: "zeig mir alle Karten mit …" */
 const FILLER = new Set(
   (
     'a alle all an and are auf aus bitte cards card das dem den der des die ein eine einem einen ' +
     'einer find for fur gib haben has have i ich im in is karte karten me mich mir mit nach ' +
-    'oder of or show some suche such the to welche which with zeig zeige und von zu'
+    'oder of or show some suche such the to welche which with zeig zeige und von zu deck decks'
   ).split(' '),
 );
 
-/** Reads `request` and blanks out what it understood, so the rest can be checked. */
-export function parseQuery(request: string): SearchQuery {
-  let rest = normalizeForSearch(request);
+/**
+ * Reads `request` and blanks out what it understood, so the rest can be checked. `sets` are
+ * the sets the request may name; without them no set is read.
+ */
+export function parseQuery(request: string, sets: readonly SearchSet[] = []): SearchQuery {
+  const byCode = new Map(sets.map((set) => [set.code.toLowerCase(), set.code]));
+  const setCodes: string[] = [];
+  let rest = normalizeForSearch(
+    request
+      .normalize('NFC')
+      .replace(STRENGTH_NOUN, '$1ae$2')
+      .replace(SET_CODE, (code) => {
+        const known = byCode.get(code.toLowerCase());
+        if (known === undefined) return code;
+        setCodes.push(known);
+        return ' '.repeat(code.length);
+      }),
+  );
+  const blank = (index: number, length: number) => {
+    rest = rest.slice(0, index) + ' '.repeat(length) + rest.slice(index + length);
+  };
   const take = (pattern: RegExp): RegExpExecArray[] => {
     const matches = [...rest.matchAll(pattern)];
-    for (const match of matches) {
-      rest =
-        rest.slice(0, match.index) +
-        ' '.repeat(match[0].length) +
-        rest.slice(match.index + match[0].length);
-    }
+    for (const match of matches) blank(match.index, match[0].length);
     return matches;
   };
 
-  // First, so "Synergie mit Artefakten" asks for no artifacts and "mit Fliegern" for no flyers
+  // Sets first, so "Battle for Zendikar" asks for no battles. A set is named when every word of
+  // its name is in the request, in any order, a name of one word only on its own or after one of
+  // SET_CUES. Of those, the ones with the most words count, so "Innistrad: Crimson Vow" is not
+  // Innistrad as well. Numbers count as name words however short, so "Modern Horizons 3" is not
+  // Modern Horizons. Among sets with as many words, those written exactly so win: "Tarkir
+  // Dragonstorm" is not "Dragons of Tarkir".
+  const requestWords = [...rest.matchAll(/[\p{L}\d]+/gu)];
+  const tokens = requestWords.map(([token]) => token);
+  const names = setNames(sets);
+  const fullyNamed = names.flatMap((set) => {
+    const used = set.needed.length > 0 ? nameTokens(set.needed, tokens) : null;
+    if (used === null) return [];
+    if (used.length === 1) {
+      const index = used[0]!;
+      // "cards from The Dark": the other words of the name may stand in between
+      let before = index - 1;
+      while (before >= 0 && set.words.includes(tokens[before]!)) before--;
+      const alone = tokens.every(
+        (token, other) => other === index || token.length < 2 || FILLER.has(token),
+      );
+      if (!alone && !SET_CUES.has(tokens[before] ?? '')) return [];
+    }
+    const exact = used.filter((index, i) => tokens[index] === set.needed[i]).length;
+    return [{ set, used, exact }];
+  });
+  const most = Math.max(0, ...fullyNamed.map(({ used }) => used.length));
+  const longest = fullyNamed.filter(({ used }) => used.length === most);
+  const mostExact = Math.max(0, ...longest.map(({ exact }) => exact));
+  const namedSets = longest.filter(({ exact }) => exact === mostExact);
+  // Only the request words that named the set are blanked, and the short words of its name
+  // ("be" in "All Will Be One"): the second "3" of "Modern Horizons 3 bis 3 Mana" is the mana
+  const setTokens = new Set(namedSets.flatMap(({ used }) => used));
+  tokens.forEach((token, index) => {
+    if (namedSets.some(({ set }) => set.words.includes(token) && !set.needed.includes(token))) {
+      setTokens.add(index);
+    }
+  });
+  // Without a set named in full, an exact word of 5 letters or more before a colon names that
+  // set ("Duskmourn", "Phyrexia"); a set called just that word wins ("Innistrad Crimson Vows" is
+  // Innistrad)
+  const colonCodes: string[] = [];
+  if (namedSets.length === 0) {
+    tokens.forEach((token, index) => {
+      if (token.length < BEFORE_COLON_MIN) return;
+      const cued = SET_CUES.has(tokens[index - 1] ?? '');
+      if (!cued && singular(token).some((type) => KNOWN_TRIBES.has(type))) return;
+      const before = names.filter((set) => set.beforeColon.includes(token));
+      if (before.length === 0) return;
+      const called = names.filter((set) => set.needed.length === 1 && set.needed[0] === token);
+      colonCodes.push(...(called.length > 0 ? called : before).map((set) => set.code));
+      setTokens.add(index);
+    });
+  }
+  for (const index of setTokens) {
+    const token = requestWords[index]!;
+    blank(token.index, token[0].length);
+  }
+
+  // Then synergies, so "Synergie mit Artefakten" asks for no artifacts and "mit Fliegern" for
+  // no flyers
   const synergyText = [...take(SYNERGY_AFTER), ...take(SYNERGY_BEFORE)]
     .map((match) => match[0])
     .join(' ');
@@ -210,6 +428,12 @@ export function parseQuery(request: string): SearchQuery {
   const tribes = [...take(TRIBE_AFTER), ...take(TRIBE_BEFORE)]
     .map((match) => tribeCandidates(match.groups?.tribe ?? ''))
     .filter((candidates) => candidates.length > 0);
+  const roles = ROLE_WORDS.filter(([, pattern]) => take(pattern).length > 0).map(([role]) => role);
+  // Every archetype word is understood; the one named first counts ("aggro control" is aggro)
+  const archetype =
+    ARCHETYPE_WORDS.flatMap(([name, pattern]) =>
+      take(pattern).map((match) => [match.index, name] as const),
+    ).sort(([a], [b]) => a - b)[0]?.[1] ?? null;
 
   const priceMatch = take(MAX_PRICE)[0];
   const maxPrice = priceMatch ? Number(priceMatch[1]!.replace(',', '.')) : null;
@@ -217,12 +441,20 @@ export function parseQuery(request: string): SearchQuery {
   let minMana: number | null = null;
   let maxMana: number | null = null;
   const atMost = take(AT_MOST_MANA)[0];
+  const atLeast = take(AT_LEAST_MANA)[0];
   if (take(LOW_MANA).length > 0) maxMana = 2;
+  if (take(LATE_GAME).length > 0) minMana = 5;
   if (atMost) {
     const groups = atMost.groups ?? {};
     const value = Number(groups.n ?? groups.n2 ?? groups.n3);
     maxMana = groups.below ? value - 1 : value;
-  } else if (maxMana === null) {
+  }
+  if (atLeast) {
+    const groups = atLeast.groups ?? {};
+    const value = Number(groups.n ?? groups.n2 ?? groups.n3);
+    minMana = groups.above ? value + 1 : value;
+  }
+  if (minMana === null && maxMana === null) {
     const exact = take(DROP)[0] ?? take(EXACT_MANA)[0];
     if (exact) minMana = maxMana = Number(exact.groups?.n);
   }
@@ -250,9 +482,11 @@ export function parseQuery(request: string): SearchQuery {
   const sort = SORT_WORDS.find(([, pattern]) => take(pattern).length > 0)?.[0] ?? null;
   const unknown = rest
     .split(/[^\p{L}\d]+/u)
-    .filter((token) => token.length > 1 && !FILLER.has(token));
+    .filter((token) => token.length > 1 && !FILLER.has(token))
+    .map((token) => token.replace(/^staerk(?=en?$)/, 'stark'));
 
   return {
+    sets: [...new Set([...setCodes, ...namedSets.map(({ set }) => set.code), ...colonCodes])],
     colors,
     exactColors,
     types,
@@ -260,6 +494,8 @@ export function parseQuery(request: string): SearchQuery {
     synergies,
     answers,
     tribes,
+    roles,
+    archetype,
     minMana,
     maxMana,
     maxPrice,
@@ -271,6 +507,7 @@ export function parseQuery(request: string): SearchQuery {
 /** Whether the request named any filter or order at all. */
 export function understood(query: SearchQuery): boolean {
   return (
+    query.sets.length > 0 ||
     query.colors !== '' ||
     query.exactColors ||
     query.types.length > 0 ||
@@ -278,12 +515,39 @@ export function understood(query: SearchQuery): boolean {
     query.synergies.length > 0 ||
     query.answers.length > 0 ||
     query.tribes.length > 0 ||
+    query.roles.length > 0 ||
+    query.archetype !== null ||
     query.minMana !== null ||
     query.maxMana !== null ||
     query.maxPrice !== null ||
     query.sort !== null
   );
 }
+
+/**
+ * Whether the request is exactly the name of a card. `names` holds the card names normalized
+ * (lib/cards/sort.ts); the search then looks for that name, even where its words read as
+ * filters ("Control Magic", "Dark Ritual").
+ */
+export function exactNameMatch(request: string, names: ReadonlySet<string>): boolean {
+  return names.has(normalizeForSearch(request).trim());
+}
+
+// Answers and card draw
+const CONTROL_ROLES: readonly Role[] = ['removal', 'counterspell', 'wipe', 'draw'];
+
+/**
+ * What makes a card fit an archetype: a rough rule over roles and mana value, not deck data.
+ * Lands are in every deck, so the matcher leaves them out of all archetypes.
+ */
+const ARCHETYPE_RULES: Readonly<Record<Archetype, (card: SearchableCard) => boolean>> = {
+  // Cheap creatures and damage to the opponent's face
+  aggro: (card) =>
+    (card.types.includes('creature') && card.cmc <= 3) || card.roles.includes('burn'),
+  control: (card) => card.roles.some((role) => CONTROL_ROLES.includes(role)),
+  // Creatures in the middle of the curve
+  midrange: (card) => card.types.includes('creature') && card.cmc >= 3 && card.cmc <= 5,
+};
 
 /**
  * The test for a parsed request. A request without any filter ("Opt") is a name search;
@@ -296,7 +560,9 @@ export function queryMatcher(query: SearchQuery): (card: SearchableCard) => bool
   }
   const colors = [...query.colors];
   const manaLimit = query.minMana !== null || query.maxMana !== null;
+  const archetype = query.archetype === null ? null : ARCHETYPE_RULES[query.archetype];
   return (card) =>
+    (query.sets.length === 0 || card.printedIn.some((code) => query.sets.includes(code))) &&
     (query.exactColors
       ? card.colors === query.colors
       : colors.every((color) => card.colors.includes(color))) &&
@@ -305,6 +571,8 @@ export function queryMatcher(query: SearchQuery): (card: SearchableCard) => bool
     query.synergies.every((synergy) => card.synergies.includes(synergy)) &&
     query.answers.every((theme) => card.answers.includes(theme)) &&
     query.tribes.every((candidates) => candidates.some((tribe) => card.tribes.includes(tribe))) &&
+    query.roles.every((role) => card.roles.includes(role)) &&
+    (archetype === null || (!card.isLand && archetype(card))) &&
     (!manaLimit ||
       (!card.isLand &&
         card.cmc >= (query.minMana ?? 0) &&

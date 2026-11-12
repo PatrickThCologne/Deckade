@@ -5,12 +5,14 @@
  */
 import { isLocale } from '../config/site';
 import { type CatalogCard, type CatalogFile, decodeCatalog } from '../lib/cards/catalog';
-import { compareCards, isSortKey, normalizeForSearch } from '../lib/cards/sort';
+import { compareCards, isSortKey, normalizeForSearch, searchWords } from '../lib/cards/sort';
 import { createFormatters } from '../lib/format';
 import {
+  exactNameMatch,
   nameRank,
   parseQuery,
   queryMatcher,
+  type SearchSet,
   understood as namesFilters,
 } from '../lib/search/query';
 
@@ -33,6 +35,14 @@ interface Result extends CatalogCard {
   element?: HTMLLIElement;
 }
 
+/** The loaded card list, with the sets a request may name ("aus Reality Fracture"). */
+interface Catalog {
+  readonly cards: readonly Result[];
+  readonly sets: readonly SearchSet[];
+  /** Every card name, shown and other language, normalized: a request that is one wins. */
+  readonly names: ReadonlySet<string>;
+}
+
 export async function initCardSearch(): Promise<void> {
   const root = document.querySelector<HTMLElement>('[data-card-search]');
   const form = root?.querySelector<HTMLFormElement>('[data-search-form]');
@@ -48,19 +58,28 @@ export async function initCardSearch(): Promise<void> {
   const format = createFormatters(isLocale(root.dataset.locale) ? root.dataset.locale : 'de');
   const numbers = new Intl.NumberFormat(document.documentElement.lang || undefined);
 
-  let cards: Promise<Result[] | null> | undefined;
+  let catalog: Promise<Catalog | null> | undefined;
   const load = () =>
-    (cards ??= fetch(src)
+    (catalog ??= fetch(src)
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json() as Promise<CatalogFile>;
       })
-      .then((file) =>
-        decodeCatalog(file).map((card) => ({
+      .then((file) => {
+        const cards = decodeCatalog(file).map((card) => ({
           ...card,
           search: normalizeForSearch(`${card.name}\n${card.altName}`),
-        })),
-      )
+        }));
+        return {
+          cards,
+          sets: Object.entries(file.sets).map(([code, name]) => ({ code, name })),
+          names: new Set(
+            cards.flatMap((card) =>
+              [card.name, card.altName].filter(Boolean).map((name) => normalizeForSearch(name)),
+            ),
+          ),
+        };
+      })
       .catch(() => null));
 
   const element = (tag: string, className: string, text = '') => {
@@ -112,7 +131,6 @@ export async function initCardSearch(): Promise<void> {
   let latest = '';
   const run = async (request: string) => {
     latest = request;
-    const query = parseQuery(request);
     list.replaceChildren();
     more.hidden = true;
     shown = 0;
@@ -124,12 +142,18 @@ export async function initCardSearch(): Promise<void> {
 
     status.textContent = labels.loading;
     status.hidden = false;
-    const all = await load();
+    const loaded = await load();
     if (request !== latest) return; // a newer search has started meanwhile
-    if (!all) {
+    if (!loaded) {
       status.textContent = labels.error;
       return;
     }
+    // Parsed only now: the set names a request may use come with the card list. A card name is
+    // looked up as a name, even where its words read as filters ("Control Magic", "Dark
+    // Ritual"): like a request without filters, which is what parseQuery('') gives.
+    const query = exactNameMatch(request, loaded.names)
+      ? { ...parseQuery(''), unknown: searchWords(request) }
+      : parseQuery(request, loaded.sets);
     // The chosen order, otherwise the one the request names ("günstig"), otherwise play rate
     const chosen = isSortKey(sort.value) ? sort.value : null;
     const key = chosen ?? query.sort ?? 'played';
@@ -138,7 +162,7 @@ export async function initCardSearch(): Promise<void> {
       chosen || namesFilters(query)
         ? () => 0
         : (card: Result) => nameRank(card.search, query.unknown);
-    matches = all
+    matches = loaded.cards
       .filter(queryMatcher(query))
       .sort((a, b) => rank(a) - rank(b) || compareCards(a, b, key));
     status.textContent =

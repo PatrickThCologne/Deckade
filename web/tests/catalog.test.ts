@@ -133,6 +133,43 @@ describe('catalog file', () => {
     expect(decodeCatalog(file)[0]?.synergies).toEqual(['artifacts', 'tokens', 'sacrifice']);
   });
 
+  it('reads the roles of a card from the English rules text', () => {
+    const [elves] = buildCatalog(
+      [
+        printing('m19', '2018-07-13', {
+          name: 'Llanowar Elves',
+          typeLine: 'Creature — Elf Druid',
+          text: '{T}: Add {G}.',
+        }),
+      ],
+      'en',
+    );
+    expect(elves?.roles).toEqual(['ramp']);
+  });
+
+  it('keeps the roles as the last field, one digit per role', () => {
+    const catalog = buildCatalog(
+      [
+        printing('m19', '2018-07-13', { text: '{T}: Add {G}.\nWhen this enters, draw two cards.' }),
+        printing('m20', '2019-07-12', { oracleId: 'other', name: 'Other', text: 'Vigilance' }),
+      ],
+      'en',
+    );
+    const file = JSON.parse(JSON.stringify(encodeCatalog(catalog, {})));
+
+    expect(catalog.map((entry) => entry.roles)).toEqual([['ramp', 'draw'], []]);
+    expect(file.cards.map((encoded: unknown[]) => encoded.at(-1))).toEqual(['04', '']);
+    expect(decodeCatalog(file).map((entry) => entry.roles)).toEqual([['ramp', 'draw'], []]);
+  });
+
+  it('reads files without roles as cards without roles', () => {
+    const catalog = buildCatalog([printing('m19', '2018-07-13', { text: '{T}: Add {G}.' })], 'en');
+    const file = JSON.parse(JSON.stringify(encodeCatalog(catalog, {})));
+    const older = { ...file, cards: file.cards.map((encoded: unknown[]) => encoded.slice(0, 17)) };
+
+    expect(decodeCatalog(older)[0]?.roles).toEqual([]);
+  });
+
   it('keeps every set that printed a card', () => {
     const catalog = buildCatalog(
       [printing('lea', '1993-08-05'), printing('m20', '2019-07-12', { de: german })],
