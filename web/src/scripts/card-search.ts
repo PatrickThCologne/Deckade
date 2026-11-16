@@ -1,22 +1,14 @@
 /**
- * The search tab (pages/[lang]/search.astro): reads the request (lib/search/query.ts) and lists
- * the matching cards of the "All cards" list as images. The list is large, so it is loaded with
- * the first search, not with the page.
+ * The search tab (pages/[lang]/search.astro): lists the cards of the "All cards" list that a
+ * request finds (lib/search/results.ts) as images. This script does only the page's part:
+ * loading the list, showing the results step by step and keeping the request in the address.
+ * The list is large, so it is loaded with the first search, not with the page.
  */
 import { isLocale } from '../config/site';
 import { type CatalogCard, type CatalogFile, decodeCatalog } from '../lib/cards/catalog';
-import { compareCards, isSortKey, normalizeForSearch } from '../lib/cards/sort';
+import { isSortKey, normalizeForSearch } from '../lib/cards/sort';
 import { createFormatters } from '../lib/format';
-import {
-  exactNameMatch,
-  nameQuery,
-  nameRank,
-  nameWins,
-  parseQuery,
-  queryMatcher,
-  type SearchSet,
-  understood as namesFilters,
-} from '../lib/search/query';
+import { type ResultCard, type SearchCatalog, searchResults } from '../lib/search/results';
 
 /** Cards added per step */
 const STEP = 48;
@@ -32,23 +24,9 @@ interface Labels {
   readonly scryfall: string;
 }
 
-interface Result extends CatalogCard {
-  readonly search: string;
-  /** The names of the card, normalized: shown and other language, and each face of "A // B". */
-  readonly names: readonly string[];
+/** A card of the list with what the search needs, and its item once it was shown. */
+interface Result extends CatalogCard, ResultCard {
   element?: HTMLLIElement;
-}
-
-/**
- * The loaded card list, with the sets ("aus Reality Fracture") and creature types ("Elfen") a
- * request may name.
- */
-interface Catalog {
-  readonly cards: readonly Result[];
-  readonly sets: readonly SearchSet[];
-  readonly creatureTypes: readonly string[];
-  /** Every name of every card (Result.names): a request that is one may be a name search. */
-  readonly names: ReadonlySet<string>;
 }
 
 const cardNames = (card: CatalogCard) => [
@@ -75,7 +53,7 @@ export async function initCardSearch(): Promise<void> {
   const format = createFormatters(isLocale(root.dataset.locale) ? root.dataset.locale : 'de');
   const numbers = new Intl.NumberFormat(document.documentElement.lang || undefined);
 
-  let catalog: Promise<Catalog | null> | undefined;
+  let catalog: Promise<SearchCatalog<Result> | null> | undefined;
   const load = () =>
     (catalog ??= fetch(src)
       .then((response) => {
@@ -148,9 +126,11 @@ export async function initCardSearch(): Promise<void> {
   };
   more.addEventListener('click', showMore);
 
-  let latest = '';
+  // Counts the runs, so only the newest one shows its results: comparing the request would let
+  // two runs of the same request (typed, then submitted while the list loads) both render
+  let runs = 0;
   const run = async (request: string) => {
-    latest = request;
+    const current = ++runs;
     list.replaceChildren();
     more.hidden = true;
     shown = 0;
@@ -163,36 +143,14 @@ export async function initCardSearch(): Promise<void> {
     status.textContent = labels.loading;
     status.hidden = false;
     const loaded = await load();
-    if (request !== latest) return; // a newer search has started meanwhile
+    if (current !== runs) return; // a newer search has started meanwhile
     if (!loaded) {
       status.textContent = labels.error;
       return;
     }
-    // Parsed only now: the set names and creature types a request may use come with the card
-    // list. A card name is searched as a name where words are left that no filter reads
-    // ("Control Magic", "Dark Ritual"); where all of it reads as filters ("Flash"), the filters
-    // are searched and the card of that name comes first.
-    const parsed = parseQuery(request, loaded.sets, loaded.creatureTypes);
-    const asName = nameWins(parsed, request, loaded.names);
-    const query = asName ? nameQuery(request) : parsed;
-    const pinned =
-      !asName && exactNameMatch(request, loaded.names) ? normalizeForSearch(request) : null;
-    // The chosen order, otherwise the one the request names ("günstig"), otherwise play rate
-    const chosen = isSortKey(sort.value) ? sort.value : null;
-    const key = chosen ?? query.sort ?? 'played';
-    // A name search puts the card of that name first, then names that start with it; the face
-    // of a card with two counts as its name ("Fire" for "Fire // Ice")
-    const rank =
-      chosen || namesFilters(query)
-        ? () => 0
-        : (card: Result) => nameRank(card.names.join('\n'), query.unknown);
-    const order = (a: Result, b: Result) => rank(a) - rank(b) || compareCards(a, b, key);
-    matches = loaded.cards.filter(queryMatcher(query)).sort(order);
-    if (pinned !== null) {
-      // Every card of that name, whether the filters find it or not
-      const own = loaded.cards.filter((card) => card.names.includes(pinned)).sort(order);
-      matches = [...own, ...matches.filter((card) => !own.includes(card))];
-    }
+    // Searched only now: the set names and creature types a request may use come with the
+    // card list
+    matches = searchResults(request, loaded, isSortKey(sort.value) ? sort.value : null);
     status.textContent =
       matches.length > 0
         ? labels.count.replace('{count}', numbers.format(matches.length))

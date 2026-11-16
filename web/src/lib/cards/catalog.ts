@@ -55,18 +55,21 @@ export interface CatalogCard extends SortableCard {
 
 /**
  * One entry per card (oracle id). The price is that of the cheapest printing, as in the
- * set tables; the play share is the highest one, since only Standard sets have one.
+ * set tables; the play share is the highest one, since only Standard sets have one. Token
+ * cards ("Token Creature — Angel", from The List and token sets) are left out: no deck plays
+ * them, and the search would find them for "Angel" and read their types as creature types.
  */
 export function buildCatalog(printings: readonly Printing[], locale: Locale): CatalogCard[] {
+  const cards = printings.filter((p) => !/\bToken\b/.test(p.card.typeLine));
   const byCard = new Map<string, Printing[]>();
-  for (const printing of printings) {
+  for (const printing of cards) {
     const list = byCard.get(printing.card.oracleId);
     if (list) list.push(printing);
     else byCard.set(printing.card.oracleId, [printing]);
   }
   // Every creature type of any card, so the rules text is read against real types only
   const known = new Set(
-    printings.flatMap((p) => creatureTypes(p.card.typeLine).map((type) => type.toLowerCase())),
+    cards.flatMap((p) => creatureTypes(p.card.typeLine).map((type) => type.toLowerCase())),
   );
   return [...byCard.values()].map((list) => catalogCard(list, locale, known));
 }

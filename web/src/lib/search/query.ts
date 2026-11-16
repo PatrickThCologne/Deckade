@@ -1,14 +1,17 @@
 /**
  * The search tab reads a request in plain German or English ("günstige rote Kreaturen mit
  * Eile") as filters over the card list: sets ("aus Reality Fracture", "FRA"; lib/search/sets.ts),
- * colours, card types, creature types ("Elfen", "dragons"), keyword abilities, synergies
- * ("Synergie mit Artefakten", "synergiert mit Elementarwesen"), answers ("Konter gegen Flieger",
- * "entfernt Fäulnis"), roles ("zum Rampen", "Tutor"), archetypes ("Aggro", "Control",
- * "Midrange"), mana value, a price limit and a sort order. It runs in the browser without a
- * model, so it needs no server and the request never leaves the page
- * (docs/adr/0002-natural-language-search.md). This is the only parser; an earlier C# version
- * with the basic rules is kept in the git tag archive/api-phase2. Sets, synergies, answers,
- * creature types, roles and archetypes were only ever added here.
+ * colours (also guild, shard and wedge names, and ruled out: "nicht blau"), card types
+ * ("Artefaktkreaturen" needs both), creature types ("Elfen", "dragons"), keyword abilities (also
+ * ruled out: "ohne Fliegen"), synergies ("Synergie mit Artefakten", "synergiert mit
+ * Elementarwesen", "mill"), answers ("Konter gegen Flieger", "entfernt Fäulnis", "artifact
+ * removal"), roles ("zum Rampen", "Tutor"), archetypes ("Aggro", "Control", "Midrange"), mana
+ * value, a price limit and a sort order; which cards a request finds, and in which order, is
+ * lib/search/results.ts. It runs in the browser without a model, so it needs no server and the
+ * request never leaves the page (docs/adr/0002-natural-language-search.md). This is the only
+ * parser; an earlier C# version with the basic rules is kept in the git tag archive/api-phase2.
+ * Sets, synergies, answers, creature types, roles, archetypes and the ruled out colours and
+ * keywords were only ever added here.
  */
 import {
   type CardType,
@@ -43,12 +46,22 @@ export interface SearchQuery {
   readonly colorMode: ColorMode;
   /** Whether colorMode is 'exact': the cards have exactly `colors` and no other. */
   readonly exactColors: boolean;
-  /** Any of these types. */
+  /** Colours in WUBRG order the cards must not have ("nicht blau", "non-blue"). */
+  readonly notColors: string;
+  /** Any of these types: every type of the groups in typeGroups, once. */
   readonly types: readonly CardType[];
+  /**
+   * The cards must have every type of one group. A group has one type per type word, and both
+   * for a word that names two ("Artefaktkreaturen", "artifact creatures"), so "Artefakte und
+   * Kreaturen" is either and "Artefaktkreaturen" is both.
+   */
+  readonly typeGroups: readonly (readonly CardType[])[];
   /** Any of these creature types, lower case ("elf"); the cards must be one. */
   readonly creatureTypes: readonly string[];
   /** All of these keywords. */
   readonly keywords: readonly Keyword[];
+  /** None of these keywords ("ohne Fliegen", "without flying"). */
+  readonly notKeywords: readonly Keyword[];
   /** All of these synergies. */
   readonly synergies: readonly Synergy[];
   /** All of these answers: what the cards fight. */
@@ -84,7 +97,11 @@ export interface SearchableCard {
   readonly cmc: number;
   readonly isLand: boolean;
   readonly price: number | null;
-  /** Names, normalized (lib/cards/sort.ts), for requests that name no filter at all. */
+  /**
+   * The full names, shown and other language, one per line, normalized (lib/cards/sort.ts):
+   * for requests that name no filter at all, and for the card of an exact name
+   * (lib/search/results.ts).
+   */
   readonly search: string;
 }
 
@@ -106,8 +123,8 @@ const COLOR_WORDS: readonly (readonly [string, RegExp])[] = [
 ];
 
 /**
- * Two-colour groups have fixed names in Magic. They stand for a deck of these two colours, so
- * they mean the cards such a deck can play: of one or both of the colours and no other.
+ * Two- and three-colour groups have fixed names in Magic. They stand for a deck of these
+ * colours, so they mean the cards such a deck can play: of some of the colours and no other.
  */
 const GUILDS: Readonly<Record<string, string>> = {
   azorius: 'WU',
@@ -120,10 +137,27 @@ const GUILDS: Readonly<Record<string, string>> = {
   golgari: 'BG',
   boros: 'WR',
   simic: 'UG',
+  // The shards and wedges name three-colour decks the same way
+  esper: 'WUB',
+  grixis: 'UBR',
+  jund: 'BRG',
+  naya: 'WRG',
+  bant: 'WUG',
+  abzan: 'WBG',
+  jeskai: 'WUR',
+  sultai: 'UBG',
+  mardu: 'WBR',
+  temur: 'URG',
 };
 const GUILD = word(Object.keys(GUILDS).join('|'));
 const COLORLESS = word('farblos\\p{L}*|colou?rless');
-const MONO = word('mono|nur|only|rein');
+const ANY_COLOR = COLOR_WORDS.map(([, pattern]) => pattern.source).join('|');
+// Mono only right before a colour word ("nur rote Karten", "only green"): "rote Karten nur bis 3
+// Mana" is red cards up to 3 mana, and there "nur" is a filler word
+const MONO = new RegExp(`(?<![\\p{L}\\d])(?:mono|nur|only|rein)[\\s-]*(?=${ANY_COLOR})`, 'gu');
+// "nicht blau", "keine blauen Karten", "non-blue", "ohne Fliegen", "without flying"
+const NOT = `(?<![\\p{L}\\d])(?:nicht|kein${ending}|ohne|not|non|no|without)[\\s-]+`;
+const negated = (pattern: RegExp) => new RegExp(NOT + pattern.source, 'gu');
 
 const TYPE_WORDS: readonly (readonly [CardType, RegExp])[] = [
   ['creature', word('kreatur(?:en)?|creatures?')],
@@ -135,9 +169,19 @@ const TYPE_WORDS: readonly (readonly [CardType, RegExp])[] = [
   ['land', word('lander|lands?')],
   ['battle', word('schlacht(?:en)?|battles?')],
 ];
+// One word for two types, as the type line has them: "Artefaktkreaturen", "artifact creatures",
+// "Verzauberungskreatur", "Artefaktländer". Read before the single types; such a card is both.
+const JOINED_TYPE_WORDS: readonly (readonly [readonly CardType[], RegExp])[] = [
+  [['artifact', 'creature'], word('artefakt[\\s-]?kreatur(?:en)?|artifact[\\s-]creatures?')],
+  [
+    ['enchantment', 'creature'],
+    word('verzauberungs?[\\s-]?kreatur(?:en)?|enchantment[\\s-]creatures?'),
+  ],
+  [['artifact', 'land'], word('artefakt[\\s-]?land(?:er)?|artifact[\\s-]lands?')],
+];
 
 const KEYWORD_WORDS: Readonly<Record<Keyword, RegExp>> = {
-  flying: word('fliegen|fliegend\\p{L}*|flieger\\p{L}*|flugfahig\\p{L}*|flying|flyers?'),
+  flying: word('fliegen|fliegend\\p{L}*|flieger\\p{L}*|flugfahig\\p{L}*|flying|flyers?|fliers?'),
   haste: word('eile|haste'),
   trample: word('trampel\\p{L}*|trample'),
   vigilance: word('wachsam\\p{L}*|vigilance'),
@@ -157,7 +201,8 @@ const KEYWORD_WORDS: Readonly<Record<Keyword, RegExp>> = {
 
 /** What a synergy is called after "Synergie mit": German card words and English ones. */
 const SYNERGY_NAMES: Readonly<Record<Synergy, string>> = {
-  artifacts: 'artefakt\\p{L}*|artifacts?',
+  // Treasure tokens are artifacts, and the artifact synergy is what names them (synergies.ts)
+  artifacts: 'artefakt\\p{L}*|artifacts?|schatz\\p{L}*|treasures?',
   enchantments: 'verzauberung\\p{L}*|enchantments?|aura\\p{L}*',
   counters: '\\+1/\\+1(?:[\\s-]?(?:marke\\p{L}*|counters?))?|marke\\p{L}*|counter\\p{L}*',
   blight: '-1/-1(?:[\\s-]?(?:marke\\p{L}*|counters?))?|faulnis|blight\\p{L}*',
@@ -182,13 +227,21 @@ const SYNERGY_AFTER = word(
 );
 // "Artefakt-Synergie", "Fliegersynergien", "token synergy"
 const SYNERGY_BEFORE = word(`${SYNERGY_LIST}[\\s-]*synerg\\p{L}*`);
-// "Konter gegen Flieger", "gegen Artefakte", "entfernt Fäulnis", "answer to flyers", "removes blight"
+// "Konter gegen Flieger", "gegen Artefakte", "entfernt Fäulnis", "answer to flyers", "removes
+// blight". "für" only after a word for an answer ("Removal für Artefakte", "Konter für
+// Flieger"): "Karten für Artefakte" may as well mean cards for an artifact deck.
 const ANSWER_VERB = 'entfern\\p{L}*|zerstor\\p{L}*|vernicht\\p{L}*|beseitig\\p{L}*';
+const ANSWER_NOUN = 'konter\\p{L}*|antwort\\p{L}*|counters?|answers?|hate|removal';
 const ANSWER_AFTER = word(
-  `(?:(?:konter\\p{L}*|antwort\\p{L}*|counters?|answers?|hate|removal)\\s+)?(?:gegen|against|to|for)\\s+${SYNERGY_LIST}|(?:${ANSWER_VERB}|removes?|destroys?|kills?|exiles?)\\s+${SYNERGY_LIST}`,
+  `(?:(?:${ANSWER_NOUN})\\s+)?(?:gegen|against|to|for)\\s+${SYNERGY_LIST}|(?:${ANSWER_NOUN})\\s+fur\\s+${SYNERGY_LIST}|(?:${ANSWER_VERB}|removes?|destroys?|kills?|exiles?)\\s+${SYNERGY_LIST}`,
 );
-// German word order: "die Fäulnis entfernt", "der Flieger zerstört"
-const ANSWER_BEFORE = word(`${SYNERGY_LIST}\\s+(?:${ANSWER_VERB}|kontert?)`);
+// German word order: "die Fäulnis entfernt", "der Flieger zerstört". And a theme in front of
+// removal or hate: "artifact removal", "Verzauberungs-Removal", "graveyard hate",
+// "Friedhofs-Hate". Removal of artifacts or enchantments is what such cards fight, not cards
+// of that type, and no removal role (lib/search/roles.ts).
+const ANSWER_BEFORE = word(
+  `${SYNERGY_LIST}(?:\\s+(?:${ANSWER_VERB}|kontert?)|[\\s-]*(?:removal|hate))`,
+);
 // "synergiert mit Elementarwesen", "Synergie mit Elfen", "synergizes with Goblins" and "der mit
 // Elementarkreaturen synergiert". After the themes, so "Synergie mit Artefakten" stays a theme.
 const TRIBE_AFTER = word(
@@ -199,10 +252,20 @@ const TRIBE_BEFORE = word(`(?:mit|with)\\s+(?<tribe>\\p{L}+)\\s+synerg\\p{L}*`);
 // "creatures you control synergy" asks for no creature type "control"
 const TRIBE_NEXT = word(`(?<tribe>\\p{L}+)[\\s-]*synerg\\p{L}*`);
 // Themes that are named on their own as well: "Lebensgewinn", "lifegain", "token makers",
-// "Spielsteinerzeuger". Other theme words alone are card types ("Artefakte") or keywords.
+// "Spielsteinerzeuger", "tokens" (a token deck), "mill" and "mahlen" (filling graveyards),
+// "landfall", "sacrifice outlets". Read after the answers, so "gegen Spielsteine" stays an
+// answer. Other theme words alone are card types ("Artefakte") or keywords.
 const BARE_SYNERGIES: readonly (readonly [Synergy, RegExp])[] = [
   ['lifegain', word('lebens?gewinn\\p{L}*|life[\\s-]?gain\\p{L}*')],
-  ['tokens', word('token[\\s-]?(?:makers?|erzeuger\\p{L}*)|spielstein[\\s-]?erzeug\\p{L}*')],
+  [
+    'tokens',
+    word(
+      'token[\\s-]?(?:makers?|erzeuger\\p{L}*)|spielstein[\\s-]?erzeug\\p{L}*|tokens?|spielstein(?:e|en)?',
+    ),
+  ],
+  ['graveyard', word('mill(?:s|ing)?|mahlen')],
+  ['lands', word('landfall')],
+  ['sacrifice', word('(?:sacrifice|sac|opfer)[\\s-]?outlets?')],
 ];
 // "Zauber", "spell": an instant or a sorcery
 const SPELL = word('zauber(?:spruch|spruche)?|spells?');
@@ -221,12 +284,13 @@ const ROLE_WORDS: readonly (readonly [Role, RegExp])[] = [
   ],
   ['counterspell', word('counterspells?|konter(?:n|zauber\\p{L}*)?|gegenzauber\\p{L}*')],
   ['wipe', word('(?:board[\\s-]?)?wipes?|brettfeger\\p{L}*|massenvernichtung\\p{L}*|wraths?')],
-  ['draw', word('karten[\\s-]?ziehen|card[\\s-]?draw|kartenvorteil\\p{L}*|draw')],
+  ['draw', word('karten[\\s-]?ziehen|card[\\s-]?draws?|kartenvorteil\\p{L}*|draws?')],
   ['burn', word('burn|direktschaden\\p{L}*|direct[\\s-]damage')],
   ['tutor', word('tutor(?:s|en)?|suchzauber\\p{L}*')],
 ];
-// "mana dorks" are creatures that ramp
+// "mana dorks" are creatures that ramp, "mana rocks" and "Manasteine" artifacts that do
 const MANA_DORKS = word('mana[\\s-]?dorks?');
+const MANA_ROCKS = word('mana[\\s-]?rocks?|mana[\\s-]?stein(?:e|en)?');
 // Not inside a phrase about taking a creature ("die Kontrolle übernehmen", "gain control of")
 // or about the cards a player has ("creatures you control", "you don't control")
 const ARCHETYPE_WORDS: readonly (readonly [Archetype, RegExp])[] = [
@@ -269,12 +333,13 @@ const EXACT_MANA = word('(?<n>\\d{1,2})\\s*mana');
 const SORT_WORDS: readonly (readonly [SortKey, RegExp])[] = [
   ['value-asc', word('gunstig\\p{L}*|billig\\p{L}*|preiswert\\p{L}*|cheap\\p{L}*|budget')],
   ['value-desc', word('teuer\\p{L}*|teur\\p{L}*|wertvoll\\p{L}*|expensive|valuable')],
-  // "stark", "mächtig" and "die reinknallen" have no field of their own: the most played first.
-  // Only these forms, so "Starkstrom" is no order; "stark", "starke" and "starken" are STRONG.
+  // "stark", "mächtig", "beste", "top" and "die reinknallen" have no field of their own: the
+  // most played first. Only these forms, so "Starkstrom" is no order; "stark", "starke" and
+  // "starken" are STRONG.
   [
     'played',
     word(
-      'beliebt\\p{L}*|meistgespielt\\p{L}*|popular|most\\s+played|starksten?|strong|powerful|machtige?|reinknallen',
+      `beliebt\\p{L}*|meistgespielt\\p{L}*|popular|most\\s+played|starksten?|strong|powerful|machtige?|reinknallen|best${ending}|top`,
     ),
   ],
 ];
@@ -284,12 +349,16 @@ const SORT_WORDS: readonly (readonly [SortKey, RegExp])[] = [
 const STRONG: readonly [SortKey, RegExp] = ['played', word('stark(?:e|en)?')];
 const STRENGTH_NOUN = /(?<![\p{L}\d])stärken?(?![\p{L}\d])/iu;
 
-/** Words that carry no filter: "zeig mir alle Karten mit …" */
+/**
+ * Words that carry no filter: "zeig mir alle Karten mit …", "a card that …". "nur" and "only"
+ * are mono before a colour word (MONO) and filler words elsewhere.
+ */
 const FILLER = new Set(
   (
     'a alle all an and are auf aus bitte cards card das dem den der des die ein eine einem einen ' +
     'einer find for from fur gib haben has have i ich im in is karte karten me mich mir mit nach ' +
-    'oder of or show some suche such the to welche which with zeig zeige und von zu deck decks'
+    'oder of or show some suche such the to welche which with zeig zeige und von zu deck decks ' +
+    'that who nur only'
   ).split(' '),
 );
 
@@ -388,8 +457,9 @@ function readFilters(
     ),
   ].filter((candidates) => candidates.length > 0);
   const dorks = take(MANA_DORKS).length > 0;
+  const rocks = take(MANA_ROCKS).length > 0;
   const roles = ROLE_WORDS.filter(
-    ([role, pattern]) => take(pattern).length > 0 || (role === 'ramp' && dorks),
+    ([role, pattern]) => take(pattern).length > 0 || (role === 'ramp' && (dorks || rocks)),
   ).map(([role]) => role);
   // Every archetype word is understood; the one named first counts ("aggro control" is aggro)
   const archetype =
@@ -405,14 +475,26 @@ function readFilters(
       ? Number(cents) / 100
       : Number(price[1]!.replace(',', '.'));
   const { minMana, maxMana } = readMana(take);
-  const { colors, colorMode } = readColors(take);
+  const { colors, colorMode, notColors } = readColors(take);
 
-  const types = TYPE_WORDS.filter(
-    ([type, pattern]) => take(pattern).length > 0 || (type === 'creature' && dorks),
-  ).map(([type]) => type);
-  if (take(SPELL).length > 0) {
-    for (const type of ['instant', 'sorcery'] as const) if (!types.includes(type)) types.push(type);
+  const typeGroups: CardType[][] = JOINED_TYPE_WORDS.filter(
+    ([, pattern]) => take(pattern).length > 0,
+  ).map(([joined]) => [...joined]);
+  for (const [type, pattern] of TYPE_WORDS) {
+    if (
+      take(pattern).length > 0 ||
+      (type === 'creature' && dorks) ||
+      (type === 'artifact' && rocks)
+    ) {
+      typeGroups.push([type]);
+    }
   }
+  if (take(SPELL).length > 0) typeGroups.push(['instant'], ['sorcery']);
+  const types = [...new Set(typeGroups.flat())];
+  // "ohne Fliegen" before the keywords themselves, so its "Fliegen" asks for no flying
+  const notKeywords = KEYWORDS.filter(
+    (keyword) => take(negated(KEYWORD_WORDS[keyword])).length > 0,
+  );
   const keywords = KEYWORDS.filter((keyword) => take(KEYWORD_WORDS[keyword]).length > 0);
   const sortWords = context.strengthNoun ? SORT_WORDS : [...SORT_WORDS, STRONG];
   const sort = sortWords.find(([, pattern]) => take(pattern).length > 0)?.[0] ?? null;
@@ -431,9 +513,12 @@ function readFilters(
       colors,
       colorMode,
       exactColors: colorMode === 'exact',
+      notColors,
       types,
+      typeGroups,
       creatureTypes,
       keywords,
+      notKeywords,
       synergies,
       answers,
       tribes,
@@ -487,16 +572,23 @@ function readMana(take: Take): { minMana: number | null; maxMana: number | null 
   return { minMana, maxMana };
 }
 
-/** The colours and how the cards must fit them (ColorMode). */
-function readColors(take: Take): { colors: string; colorMode: ColorMode } {
+/**
+ * The colours and how the cards must fit them (ColorMode), and the colours they must not have.
+ * The ruled out ones first, so "nicht blau" asks for no blue cards, and mono before the colour
+ * words, which it needs right behind it.
+ */
+function readColors(take: Take): { colors: string; colorMode: ColorMode; notColors: string } {
+  const notColors = COLOR_WORDS.filter(([, pattern]) => take(negated(pattern)).length > 0)
+    .map(([color]) => color)
+    .join('');
   const guild = take(GUILD)[0];
-  if (take(COLORLESS).length > 0) return { colors: '', colorMode: 'exact' };
-  if (guild) return { colors: GUILDS[guild[0]]!, colorMode: 'within' };
+  if (take(COLORLESS).length > 0) return { colors: '', colorMode: 'exact', notColors };
+  if (guild) return { colors: GUILDS[guild[0]]!, colorMode: 'within', notColors };
+  const mono = take(MONO).length > 0;
   const colors = COLOR_WORDS.filter(([, pattern]) => take(pattern).length > 0)
     .map(([color]) => color)
     .join('');
-  const mono = take(MONO).length > 0;
-  return { colors, colorMode: mono && colors.length > 0 ? 'exact' : 'all' };
+  return { colors, colorMode: mono && colors.length > 0 ? 'exact' : 'all', notColors };
 }
 
 /** Whether the request named any filter or order at all. */
@@ -505,9 +597,11 @@ export function understood(query: SearchQuery): boolean {
     query.sets.length > 0 ||
     query.colors !== '' ||
     query.exactColors ||
+    query.notColors !== '' ||
     query.types.length > 0 ||
     query.creatureTypes.length > 0 ||
     query.keywords.length > 0 ||
+    query.notKeywords.length > 0 ||
     query.synergies.length > 0 ||
     query.answers.length > 0 ||
     query.tribes.length > 0 ||
@@ -531,8 +625,9 @@ export function exactNameMatch(request: string, names: ReadonlySet<string>): boo
 /**
  * Whether the request is searched as the card name it is (exactNameMatch). It is where the
  * request names no filter ("Dark Ritual") or words are left that no filter reads ("Control
- * Magic", "Wrath of God"). Where every word reads as a filter ("Flash", "Counterspell") the
- * filters win; the search tab then puts the card of that name on top of their results.
+ * Magic", "Wall of Omens"). Where every word reads as a filter ("Flash", "Counterspell",
+ * "Wrath of God" with the creature type God) the filters win; searchResults
+ * (lib/search/results.ts) then puts the card of that name on top of their results.
  */
 export function nameWins(query: SearchQuery, request: string, names: ReadonlySet<string>): boolean {
   return exactNameMatch(request, names) && (!understood(query) || query.unknown.length > 0);
@@ -544,9 +639,12 @@ const NO_FILTERS: SearchQuery = {
   colors: '',
   colorMode: 'all',
   exactColors: false,
+  notColors: '',
   types: [],
+  typeGroups: [],
   creatureTypes: [],
   keywords: [],
+  notKeywords: [],
   synergies: [],
   answers: [],
   tribes: [],
@@ -561,7 +659,7 @@ const NO_FILTERS: SearchQuery = {
 
 /**
  * The query of a name search: no filter, and every word of the request a word of the name,
- * filler words too, so "Wrath of God" puts the card of exactly that name first (nameRank).
+ * filler words too, so "Day of Judgment" puts the card of exactly that name first (nameRank).
  */
 export function nameQuery(request: string): SearchQuery {
   return { ...NO_FILTERS, unknown: searchWords(request) };
@@ -606,10 +704,13 @@ export function queryMatcher(query: SearchQuery): (card: SearchableCard) => bool
   return (card) =>
     (query.sets.length === 0 || card.printedIn.some((code) => query.sets.includes(code))) &&
     fitsColors(card.colors) &&
-    (query.types.length === 0 || card.types.some((type) => query.types.includes(type))) &&
+    ![...query.notColors].some((color) => card.colors.includes(color)) &&
+    (query.typeGroups.length === 0 ||
+      query.typeGroups.some((group) => group.every((type) => card.types.includes(type)))) &&
     (query.creatureTypes.length === 0 ||
       card.creatureTypes.some((type) => query.creatureTypes.includes(type))) &&
     query.keywords.every((keyword) => card.keywords.includes(keyword)) &&
+    !query.notKeywords.some((keyword) => card.keywords.includes(keyword)) &&
     query.synergies.every((synergy) => card.synergies.includes(synergy)) &&
     query.answers.every((theme) => card.answers.includes(theme)) &&
     query.tribes.every((candidates) => candidates.some((tribe) => card.tribes.includes(tribe))) &&

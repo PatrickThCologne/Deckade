@@ -1,38 +1,23 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { normalizeForSearch } from '../src/lib/cards/sort';
-import { nameWins, parseQuery, type SearchQuery, understood } from '../src/lib/search/query';
+import {
+  exactNameMatch,
+  nameWins,
+  parseQuery,
+  type SearchQuery,
+  understood,
+} from '../src/lib/search/query';
+import CREATURE_TYPES from './fixtures/creature-types.json';
 import OVERVIEW_SETS from './fixtures/overview-sets.json';
 
 /**
  * Requests as players type them, in German and English, and what they mean: each row checks
  * only the fields the request is about. The sets are those the site searches
- * (fixtures/overview-sets.json), the creature types a small fixed part of those the site takes
- * from the catalog.
+ * (fixtures/overview-sets.json), the creature types those the site takes from the catalog
+ * (fixtures/creature-types.json), so everyday words that are creature types ("God", "Wall")
+ * are read as the site reads them.
  */
-const CREATURE_TYPES = [
-  'angel',
-  'avatar',
-  'bird',
-  'cat',
-  'dinosaur',
-  'dragon',
-  'elemental',
-  'elf',
-  'faerie',
-  'goblin',
-  'human',
-  'knight',
-  'merfolk',
-  'rat',
-  'sliver',
-  'spirit',
-  'squirrel',
-  'vampire',
-  'warrior',
-  'wizard',
-  'zombie',
-];
-
 const parse = (request: string) => parseQuery(request, OVERVIEW_SETS, CREATURE_TYPES);
 
 type Row = readonly [request: string, expected: Partial<SearchQuery>];
@@ -332,6 +317,139 @@ benchmark('combinations', [
   ['günstiges Removal in Schwarz', { colors: 'B', roles: ['removal'], sort: 'value-asc' }],
 ]);
 
+// Cards that destroy artifacts or enchantments: what they fight, not cards of that type, and no
+// removal (removal deals with creatures and planeswalkers, lib/search/roles.ts)
+benchmark('answers to card types and graveyards', [
+  ['artifact removal', { answers: ['artifacts'], types: [], roles: [] }],
+  ['enchantment removal', { answers: ['enchantments'], types: [], roles: [] }],
+  ['Removal für Artefakte', { answers: ['artifacts'], types: [], roles: [] }],
+  ['Artefakt-Removal', { answers: ['artifacts'], types: [], roles: [] }],
+  ['Verzauberungs-Removal', { answers: ['enchantments'], types: [], roles: [] }],
+  ['removal for enchantments', { answers: ['enchantments'], types: [], roles: [] }],
+  ['grünes Artefakt-Removal', { colors: 'G', answers: ['artifacts'], types: [], roles: [] }],
+  ['Konter für Flieger', { answers: ['flying'], roles: [], keywords: [] }],
+  ['graveyard hate', { answers: ['graveyard'], synergies: [], unknown: [] }],
+  ['Friedhofs-Hate', { answers: ['graveyard'], synergies: [], unknown: [] }],
+  ['Karten gegen Spielsteine', { answers: ['tokens'], synergies: [] }],
+]);
+
+benchmark('more role and order words', [
+  ['draws', { roles: ['draw'], unknown: [] }],
+  ['Draws', { roles: ['draw'], unknown: [] }],
+  ['blue draws', { colors: 'U', roles: ['draw'] }],
+  ['beste Kreaturen', { sort: 'played', types: ['creature'], unknown: [] }],
+  ['die besten roten Karten', { sort: 'played', colors: 'R', unknown: [] }],
+  ['best creatures', { sort: 'played', types: ['creature'], unknown: [] }],
+  ['top cards', { sort: 'played', unknown: [] }],
+  ['mana rocks', { roles: ['ramp'], types: ['artifact'], unknown: [] }],
+  ['Manasteine', { roles: ['ramp'], types: ['artifact'], unknown: [] }],
+]);
+
+// Themes a player names without "Synergie mit": "tokens" is a token deck, "mill" fills
+// graveyards, "landfall" cares about lands. Treasure is an artifact theme here: the artifact
+// synergy is what names Treasure tokens (lib/search/synergies.ts).
+benchmark('themes named on their own', [
+  ['tokens', { synergies: ['tokens'], answers: [], types: [], unknown: [] }],
+  ['Spielsteine', { synergies: ['tokens'], answers: [], unknown: [] }],
+  ['Token-Karten', { synergies: ['tokens'], unknown: [] }],
+  ['Selesnya tokens', { colors: 'WG', colorMode: 'within', synergies: ['tokens'] }],
+  ['mill', { synergies: ['graveyard'], unknown: [] }],
+  ['Mill-Karten', { synergies: ['graveyard'], unknown: [] }],
+  ['mahlen', { synergies: ['graveyard'], unknown: [] }],
+  ['Dimir mill', { colors: 'UB', colorMode: 'within', synergies: ['graveyard'] }],
+  ['landfall', { synergies: ['lands'], types: [], unknown: [] }],
+  ['Landfall', { synergies: ['lands'], types: [], unknown: [] }],
+  ['treasure synergy', { synergies: ['artifacts'], types: [], unknown: [] }],
+  ['Schatz-Synergie', { synergies: ['artifacts'], types: [], unknown: [] }],
+  ['sacrifice outlets', { synergies: ['sacrifice'], unknown: [] }],
+  ['Opfer-Outlets', { synergies: ['sacrifice'], unknown: [] }],
+]);
+
+benchmark('more keyword words', [
+  ['fliers', { keywords: ['flying'], unknown: [] }],
+  ['white fliers', { colors: 'W', keywords: ['flying'] }],
+]);
+
+// One word for two types: an artifact creature is both (queryMatcher needs both)
+benchmark('joined type words', [
+  ['Artefaktkreaturen', { types: expect.arrayContaining(['artifact', 'creature']), unknown: [] }],
+  ['eine Artefaktkreatur', { types: expect.arrayContaining(['artifact', 'creature']) }],
+  ['artifact creatures', { types: expect.arrayContaining(['artifact', 'creature']) }],
+]);
+
+// Shards and wedges stand for a deck of these three colours, like the guild names for two
+benchmark('three-colour names', [
+  ['Esper', { colors: 'WUB', colorMode: 'within', exactColors: false, unknown: [] }],
+  ['Bant', { colors: 'WUG', colorMode: 'within', unknown: [] }],
+  ['Grixis', { colors: 'UBR', colorMode: 'within', unknown: [] }],
+  ['Jund', { colors: 'BRG', colorMode: 'within', unknown: [] }],
+  ['Naya', { colors: 'WRG', colorMode: 'within', unknown: [] }],
+  ['Abzan', { colors: 'WBG', colorMode: 'within', unknown: [] }],
+  ['Jeskai', { colors: 'WUR', colorMode: 'within', unknown: [] }],
+  ['Sultai', { colors: 'UBG', colorMode: 'within', unknown: [] }],
+  ['Mardu', { colors: 'WBR', colorMode: 'within', unknown: [] }],
+  ['Temur', { colors: 'URG', colorMode: 'within', unknown: [] }],
+  ['Esper Control', { colors: 'WUB', colorMode: 'within', archetype: 'control' }],
+  ['Jund aggro', { colors: 'BRG', colorMode: 'within', archetype: 'aggro' }],
+  ['Temur Kreaturen mit Trampelschaden', { colors: 'URG', keywords: ['trample'] }],
+]);
+
+benchmark('colours and keywords a card must not have', [
+  ['nicht blau', { notColors: 'U', colors: '', unknown: [] }],
+  ['keine blauen Karten', { notColors: 'U', colors: '', unknown: [] }],
+  ['not blue', { notColors: 'U', colors: '', unknown: [] }],
+  ['non-blue creatures', { notColors: 'U', colors: '', types: ['creature'], unknown: [] }],
+  ['ohne Fliegen', { notKeywords: ['flying'], keywords: [], unknown: [] }],
+  ['without flying', { notKeywords: ['flying'], keywords: [], unknown: [] }],
+  ['creatures without flying', { types: ['creature'], notKeywords: ['flying'], keywords: [] }],
+  [
+    'rote Kreaturen ohne Eile',
+    { colors: 'R', types: ['creature'], notKeywords: ['haste'], keywords: [], unknown: [] },
+  ],
+  ['rote Kreaturen mit Eile', { colors: 'R', keywords: ['haste'], notColors: '', notKeywords: [] }],
+]);
+
+// "nur" and "only" are mono only right before a colour word; elsewhere they say nothing
+benchmark('"nur" and "only"', [
+  ['nur rot', { colors: 'R', colorMode: 'exact', exactColors: true }],
+  ['only green', { colors: 'G', colorMode: 'exact', exactColors: true }],
+  ['nur rote Karten', { colors: 'R', colorMode: 'exact', exactColors: true }],
+  [
+    'rote Karten nur bis 3 Mana',
+    { colors: 'R', colorMode: 'all', exactColors: false, maxMana: 3, unknown: [] },
+  ],
+  [
+    'green creatures only under 2 eur',
+    { colors: 'G', colorMode: 'all', exactColors: false, maxPrice: 2 },
+  ],
+]);
+
+// Creature types that are everyday words too: with the site's real creature types a player
+// asking for "hero cards" gets Heroes
+benchmark('everyday words that are creature types', [
+  ['hero cards', { creatureTypes: ['hero'] }],
+  ['Heroes', { creatureTypes: ['hero'] }],
+  ['Gods', { creatureTypes: ['god'] }],
+  ['walls', { creatureTypes: ['wall'] }],
+  ['mounts', { creatureTypes: ['mount'] }],
+  ['allies', { creatureTypes: ['ally'] }],
+  ['eggs', { creatureTypes: ['egg'] }],
+  ['robots', { creatureTypes: ['robot'] }],
+]);
+
+// The German word of a creature type with at most an ending, not any word that starts with it
+benchmark('German creature words', [
+  ['Hunde', { creatureTypes: ['dog'], unknown: [] }],
+  ['Hund', { creatureTypes: ['dog'], unknown: [] }],
+  ['Geister', { creatureTypes: ['spirit'], unknown: [] }],
+  ['Kreaturen unter hundert Euro', { types: ['creature'], creatureTypes: [] }],
+  ['menschlich', { creatureTypes: [] }],
+  ['menschliche Kreaturen', { types: ['creature'], creatureTypes: [] }],
+  ['geistreich', { creatureTypes: [] }],
+  ['elfmal', { creatureTypes: [] }],
+  ['Goblinkönig', { creatureTypes: [] }],
+]);
+
 benchmark('names that are filter words', [
   ['Flash', { keywords: ['flash'], unknown: [] }],
   ['Lifelink', { keywords: ['lifelink'], unknown: [] }],
@@ -350,7 +468,6 @@ const CARD_NAMES = [
   'Dark Ritual',
   'Schwarzer Ritus',
   'Control Magic',
-  'Wrath of God',
   'Zorn Gottes',
   'Serra Angel',
   'Serra-Engel',
@@ -372,12 +489,71 @@ const CARD_NAMES = [
   'Visions of Beyond',
   'Zendikar Resurgent',
   'Sheoldred, the Apocalypse',
+  // A creature type and a keyword next to a word no filter reads
+  'Wall of Omens',
+  'Ward of Bones',
 ];
-const NAMES: ReadonlySet<string> = new Set(CARD_NAMES.map((name) => normalizeForSearch(name)));
+// Card names in which every word reads as a filter: the filters win, and the search tab puts
+// the card of that name on top of their results (tests/search-results.test.ts)
+const PINNED_NAMES = ['Wrath of God', 'White Knight'];
+const NAMES: ReadonlySet<string> = new Set(
+  [...CARD_NAMES, ...PINNED_NAMES].map((name) => normalizeForSearch(name)),
+);
 
 describe('benchmark: name searches', () => {
   it.each(CARD_NAMES)('searches the card name "%s" as a name', (name) => {
     const query = parse(name);
     expect(!understood(query) || nameWins(query, name, NAMES)).toBe(true);
+  });
+
+  // With the real creature types "God" is one, so "Wrath of God" is wipes that are Gods
+  it('reads every word of "Wrath of God" as a filter: a wipe and the creature type god', () => {
+    const query = parse('Wrath of God');
+    expect(query).toMatchObject({ roles: ['wipe'], creatureTypes: ['god'], unknown: [] });
+    expect(nameWins(query, 'Wrath of God', NAMES)).toBe(false);
+  });
+
+  it('reads "White Knight" as white Knights, with the card of that name on top', () => {
+    const query = parse('White Knight');
+    expect(query).toMatchObject({ colors: 'W', creatureTypes: ['knight'], unknown: [] });
+    expect(nameWins(query, 'White Knight', NAMES)).toBe(false);
+  });
+
+  it.each(PINNED_NAMES)('still knows "%s" as a card name, so it is pinned', (name) => {
+    expect(exactNameMatch(name, NAMES)).toBe(true);
+  });
+});
+
+// The check below needs the real generated data. In CI the generated data is the copy of
+// tests/contract (npm run fixture) with 3 sets, which says nothing about the real list, so it
+// is skipped for a snapshot of fewer than 50 sets, as for fixtures/overview-sets.json
+// (tests/search-query.test.ts).
+const SNAPSHOT = new URL('../src/data/generated/snapshot.json', import.meta.url);
+const REAL_DATA =
+  existsSync(SNAPSHOT) &&
+  (JSON.parse(readFileSync(SNAPSHOT, 'utf8')) as { sets: readonly unknown[] }).sets.length >= 50;
+
+describe('the creature type fixture', () => {
+  // Fails after the pipeline wrote new cards with new creature types: then copy the
+  // creatureTypes of the English card list file into the fixture again. lib/data/load.ts reads
+  // every generated card file on import, which takes some seconds.
+  it.skipIf(!REAL_DATA)(
+    'equals the creature types the site passes to the search in the generated data',
+    async () => {
+      const { cardCatalog } = await import('../src/lib/data/load');
+      const { encodeCatalog } = await import('../src/lib/cards/catalog');
+      expect(CREATURE_TYPES).toEqual(encodeCatalog(cardCatalog('en'), {}).creatureTypes);
+    },
+    60_000,
+  );
+
+  it('is lower case, sorted and has every type once', () => {
+    expect(CREATURE_TYPES.every((type) => type === type.toLowerCase())).toBe(true);
+    expect(CREATURE_TYPES).toEqual([...new Set(CREATURE_TYPES)].sort());
+  });
+
+  it('holds no type that is none: no Saga, no Aura', () => {
+    expect(CREATURE_TYPES).not.toContain('saga');
+    expect(CREATURE_TYPES).not.toContain('aura');
   });
 });

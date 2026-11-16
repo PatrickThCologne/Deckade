@@ -1013,6 +1013,55 @@ describe('queryMatcher', () => {
     expect(matches('rote Late-Game Karten', { cmc: 6 })).toBe(true);
     expect(matches('rote Late-Game Karten', { cmc: 4 })).toBe(false);
   });
+
+  it.each(['Artefaktkreaturen', 'artifact creatures'])(
+    'needs both types for one word of two: "%s" are artifact creatures',
+    (request) => {
+      expect(matches(request, { types: ['creature', 'artifact'] })).toBe(true);
+      expect(matches(request, { types: ['creature'] })).toBe(false);
+      expect(matches(request, { types: ['artifact'] })).toBe(false);
+    },
+  );
+
+  it('still takes any of several type words: "Artefakte und Kreaturen"', () => {
+    expect(matches('Artefakte und Kreaturen', { types: ['creature'] })).toBe(true);
+    expect(matches('Artefakte und Kreaturen', { types: ['artifact'] })).toBe(true);
+  });
+
+  it('takes the cards a three-colour deck can play for a shard or wedge name', () => {
+    const wipe = { types: ['sorcery'], roles: ['wipe'], keywords: [] } as const;
+    expect(matches('Esper Control', { ...wipe, colors: 'W' })).toBe(true);
+    expect(matches('Esper Control', { ...wipe, colors: 'WUB' })).toBe(true);
+    expect(matches('Esper Control', { ...wipe, colors: 'R' })).toBe(false);
+    expect(matches('Esper Control', { ...wipe, colors: 'WR' })).toBe(false);
+    expect(matches('Esper Control', { ...wipe, colors: '' })).toBe(false);
+  });
+
+  it('leaves out the cards of a colour the request rules out', () => {
+    expect(matches('nicht blau', { colors: 'R' })).toBe(true);
+    expect(matches('nicht blau', { colors: '' })).toBe(true);
+    expect(matches('nicht blau', { colors: 'U' })).toBe(false);
+    expect(matches('nicht blau', { colors: 'UR' })).toBe(false);
+    expect(matches('non-blue creatures', { colors: 'G' })).toBe(true);
+    expect(matches('non-blue creatures', { colors: 'UG' })).toBe(false);
+  });
+
+  it('leaves out the cards with a keyword the request rules out', () => {
+    expect(matches('ohne Fliegen', { keywords: ['haste'] })).toBe(true);
+    expect(matches('ohne Fliegen', { keywords: ['flying', 'haste'] })).toBe(false);
+    expect(matches('without flying', { keywords: ['flying'] })).toBe(false);
+  });
+
+  it('reads "rote Kreaturen ohne Eile" as red creatures that have no haste', () => {
+    expect(matches('rote Kreaturen ohne Eile', { keywords: ['vigilance'] })).toBe(true);
+    expect(matches('rote Kreaturen ohne Eile', { keywords: ['haste'] })).toBe(false);
+    expect(matches('rote Kreaturen ohne Eile', { colors: 'G', keywords: [] })).toBe(false);
+  });
+
+  it('reads "nur" as mono only right before a colour word', () => {
+    expect(matches('nur rote Karten', { colors: 'BR' })).toBe(false);
+    expect(matches('rote Karten nur bis 3 Mana', { colors: 'BR' })).toBe(true);
+  });
 });
 
 describe('cardKeywords', () => {

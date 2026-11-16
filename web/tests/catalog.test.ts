@@ -79,6 +79,49 @@ describe('buildCatalog', () => {
     expect(buildCatalog(printings, 'de')[0]?.printedIn).toEqual(['m20', 'fdn', 'lea']);
   });
 
+  // Token cards come from The List and token sets; they are no cards of a deck
+  it('leaves token cards out, by the word "Token" in the type line', () => {
+    const catalog = buildCatalog(
+      [
+        printing('plst', '2024-01-01', {
+          oracleId: 'angel-token',
+          name: 'Angel',
+          typeLine: 'Token Creature — Angel',
+          text: 'Flying',
+          price: 1.36,
+        }),
+        printing('plst', '2024-01-01', {
+          oracleId: 'ashaya',
+          name: 'Ashaya, the Awoken World',
+          typeLine: 'Token Legendary Creature — Elemental',
+          text: '',
+        }),
+        printing('plst', '2024-01-01', {
+          oracleId: 'tentacle',
+          name: 'Tentacle',
+          typeLine: 'Token Creature — Tentacle',
+          text: '',
+        }),
+        printing('plst', '2024-01-01', {
+          oracleId: 'treasure',
+          name: 'Treasure',
+          typeLine: 'Token Artifact — Treasure',
+          text: '{T}, Sacrifice this token: Add one mana of any color.',
+        }),
+        printing('m19', '2018-07-13', {
+          oracleId: 'sprout',
+          name: 'Sprout',
+          typeLine: 'Instant',
+          text: 'Create a 1/1 green Saproling creature token.',
+        }),
+        printing('m20', '2019-07-12'),
+      ],
+      'en',
+    );
+    expect(catalog.map((entry) => entry.name)).toEqual(['Sprout', 'Serra Angel']);
+    expect(encodeCatalog(catalog, {}).creatureTypes).toEqual(['angel']);
+  });
+
   it('knows every type of the card and its main type', () => {
     const [artifactCreature] = buildCatalog(
       [printing('bro', '2022-11-18', { typeLine: 'Artifact Creature — Golem' })],

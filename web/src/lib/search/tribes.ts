@@ -6,8 +6,12 @@
  */
 
 // Artifact types that a few artifact creatures carry too; as themes they are artifacts and
-// tokens (lib/search/synergies.ts), not creature types
+// tokens (lib/search/synergies.ts), not creature types. And enchantment types on the type
+// line of a creature or a Kindred card: the summons of Final Fantasy are Saga creatures
+// ("Enchantment Creature — Saga Phoenix"), and there are Kindred Auras.
 const NOT_CREATURE_TYPES = new Set([
+  'Saga',
+  'Aura',
   'Treasure',
   'Food',
   'Clue',
@@ -71,11 +75,14 @@ export function cardTribes(oracleText: string, name: string, known: ReadonlySet<
 }
 
 /**
- * German words for common creature types, as they start on German cards (normalized: no
- * umlauts). "Elementarkreaturen" and "Elementarwesen" both start with "elementar".
+ * German words for common creature types, as on German cards (normalized: no umlauts). A request
+ * word is one of them with at most a short ending (GERMAN_ENDING): "Hunde" and "Geister" are,
+ * "hundert" and "menschlich" are not. Compounds have entries of their own ("Elementarwesen").
  */
 export const GERMAN_TRIBES: readonly (readonly [string, string])[] = [
   ['elementar', 'elemental'],
+  ['elementarwesen', 'elemental'],
+  ['elementarkreatur', 'elemental'],
   ['elf', 'elf'],
   ['elfen', 'elf'],
   ['goblin', 'goblin'],
@@ -93,6 +100,7 @@ export const GERMAN_TRIBES: readonly (readonly [string, string])[] = [
   ['katze', 'cat'],
   ['ratte', 'rat'],
   ['eichhorn', 'squirrel'],
+  ['eichhornchen', 'squirrel'],
   ['dinosaurier', 'dinosaur'],
   ['pirat', 'pirate'],
   ['soldat', 'soldier'],
@@ -113,12 +121,17 @@ export const GERMAN_TRIBES: readonly (readonly [string, string])[] = [
   ['avatar', 'avatar'],
 ];
 
+/** The endings of the German plural and case forms: "Hunde", "Geister", "Drachen", "Goblins". */
+const GERMAN_ENDING = /^(?:e|en|er|n|s)?$/;
+
 /**
  * The creature types a request word may name: the German one, or the English word's possible
  * singulars (the cards decide which one is a type).
  */
 export function tribeCandidates(word: string): string[] {
-  const german = GERMAN_TRIBES.find(([start]) => word.startsWith(start));
+  const german = GERMAN_TRIBES.find(
+    ([stem]) => word.startsWith(stem) && GERMAN_ENDING.test(word.slice(stem.length)),
+  );
   if (german) return [german[1]];
   return /^[a-z'-]{3,}$/.test(word) ? [...new Set(singular(word))] : [];
 }

@@ -102,15 +102,23 @@ Set names are also words of card names, so the rules are narrow:
 
 A request that is exactly a card name, or the face of one, is searched as that name where it
 names no filter ("Dark Ritual") or words are left that no filter reads ("Control Magic"). Where
-every word reads as a filter ("Flash", "Counterspell"), the filters win and the card of that
-name is put on top of their results.
+every word reads as a filter ("Flash", "Counterspell", "Wrath of God" with the creature type
+God), the filters win and the card of that full name is put on top of their results; one face
+of a split card is no full name ("Burn" is burn, not Turn // Burn). This decision, the name
+ranking and the order are `web/src/lib/search/results.ts` (`searchResults`), a pure function
+with its own tests; `web/src/scripts/card-search.ts` only loads, shows and pages the results.
 
 Creature types come from the type lines into the card list (one more field per card and the
 list of all types in the file). A request word that is one ("Elfen", "dragons") asks for cards
 of that type; "Synergie mit Elfen" and "elf synergy" stay a synergy with the type. A guild name
 means the cards a deck of its colours can play: one or both colours and no other ("Izzet"
-finds mono-red spells too, but no colourless card); "mono" and "farblos" mean exactly these
-colours, plain colour words all of them and maybe more.
+finds mono-red spells too, but no colourless card), and so do the shard and wedge names for
+three colours ("Esper", "Jund"). "mono" and "farblos" mean exactly these colours, "nur" and
+"only" too, but only right before a colour word ("rote Karten nur bis 3 Mana" is not mono);
+plain colour words mean all of them and maybe more. Colours and keywords can be ruled out
+("nicht blau", "non-blue", "ohne Fliegen", "without flying"). One word for two types
+("Artefaktkreaturen", "artifact creatures") needs both, while "Artefakte und Kreaturen" is
+either. German creature words count with at most a short ending ("Hunde", not "hundert").
 
 Seven card roles are read from the English rules text at build time, like the synergies, and
 can be searched: ramp, removal, counterspell, wipe, draw, burn and tutor ("Removal", "Edikte",
