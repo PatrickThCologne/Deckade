@@ -14,7 +14,8 @@ const { locale } = Astro.props;
 const { t } = useTranslations(locale);
 const format = createFormatters(locale);
 const updated = format.date(snapshot.generatedAt.slice(0, 10));
-// Scryfall asks to name the artist wherever an art crop is shown, so the list stays visible.
+// Scryfall asks to name the artist wherever an art crop is shown: every artist of the wall is
+// listed, behind a toggle to keep the footer quiet.
 const artists = creditedArtists(
   snapshot.featuredArt.map((art) => art.artist),
   LOCALE_TAGS[locale],
