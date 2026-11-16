@@ -10,34 +10,14 @@ import { SORT_KEYS } from '../../lib/cards/sort';
 import { useTranslations } from '../../lib/i18n';
 import { withBase } from '../../lib/links';
 import { localeFrom, localePaths } from '../../lib/routing';
+import { SEARCH_EXAMPLES } from '../../lib/search/examples';
 
 export const getStaticPaths = localePaths;
 
 const locale = localeFrom(Astro.params.lang);
 const { t } = useTranslations(locale);
 
-const examples =
-  locale === 'de'
-    ? [
-        'günstige rote Kreaturen mit Eile',
-        'Azorius Flieger bis 3 Mana',
-        'beliebte grüne Karten unter 2 €',
-        'farblose Artefakte',
-        'grüne Kreaturen, Synergie mit Countern',
-        'blauer Konter gegen Flieger',
-        'schwarze Karte, die Fäulnis entfernt',
-        'blauer Zauber, der mit Elementarwesen synergiert',
-      ]
-    : [
-        'cheap red creatures with haste',
-        'Azorius flyers up to 3 mana',
-        'popular green cards under 2 €',
-        'colourless artifacts',
-        'green creatures, synergy with counters',
-        'blue answer to flyers',
-        'black card that removes blight',
-        'blue spell that synergizes with Elementals',
-      ];
+const examples = SEARCH_EXAMPLES[locale];
 
 // What the request may name, each with an example, on the banner's right
 const guide = [
@@ -118,7 +98,10 @@ const labels = {
       </p>
     </form>
 
-    <p class="status" data-status hidden></p>
+    <!-- A live region that is always there, so screen readers announce the new count -->
+    <div role="status" aria-live="polite">
+      <p class="status" data-status hidden></p>
+    </div>
     <ul class="results" role="list" data-results></ul>
     <button type="button" class="more" data-more hidden></button>
   </div>
