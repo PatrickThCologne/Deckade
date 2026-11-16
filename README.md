@@ -39,10 +39,10 @@ how AI was used: [AI-DECLARATION.md](AI-DECLARATION.md)
 
 The project consists of two parts with a clear contract between them:
 
-| Part                    | Stack                                                    | Responsibility                                                   |
-| ----------------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
-| [`pipeline/`](pipeline) | Python 3.12, httpx, Pillow · pytest, mypy (strict), ruff | Fetch and process the data, write a JSON snapshot and the images |
-| [`web/`](web)           | Astro 7, TypeScript (strict), Zod · Vitest, Prettier     | Validate the snapshot and render a static, SEO-friendly website  |
+| Part                    | Stack                                                        | Responsibility                                                   |
+| ----------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------- |
+| [`pipeline/`](pipeline) | Python 3.12, httpx, Pillow · pytest, mypy (strict), ruff     | Fetch and process the data, write a JSON snapshot and the images |
+| [`web/`](web)           | Astro 7, TypeScript (strict), Zod · Vitest, ESLint, Prettier | Validate the snapshot and render a static, SEO-friendly website  |
 
 ### Architecture
 

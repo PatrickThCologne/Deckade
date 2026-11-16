@@ -13,7 +13,7 @@
     "check": "astro check",
     "test": "vitest run",
     "format": "prettier --write .",
-    "lint": "prettier --check .",
+    "lint": "eslint . && prettier --check .",
     "fixture": "node -e \"require('node:fs').cpSync('tests/contract','src/data/generated',{recursive:true})\"",
     "astro": "astro"
   },
@@ -23,9 +23,14 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0",
+    "eslint-plugin-astro": "^3.2.1",
+    "globals": "^17.14.0",
     "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.2",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
     "vitest": "^5.1.0"
   }
 }
