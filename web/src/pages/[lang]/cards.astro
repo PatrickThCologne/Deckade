@@ -117,7 +117,10 @@ const stats: HeroStat[] = [
           <tbody></tbody>
         </table>
       </div>
-      <p class="status" data-status hidden></p>
+      <!-- A live region that is always there, so screen readers announce the new count -->
+      <div role="status" aria-live="polite">
+        <p class="status" data-status hidden></p>
+      </div>
       <noscript>
         <p class="status">{t('cards.noscript')}</p>
       </noscript>
