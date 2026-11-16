@@ -7,11 +7,13 @@ import { cardSynergies } from '../src/lib/search/synergies';
 import {
   exactNameMatch,
   nameRank,
+  nameWins,
   parseQuery,
   queryMatcher,
   type SearchableCard,
   understood,
 } from '../src/lib/search/query';
+import OVERVIEW_SETS from './fixtures/overview-sets.json';
 
 // The first cases come from the earlier C# parser (tag archive/api-phase2), so this one still
 // reads those requests the same way.
@@ -33,14 +35,27 @@ describe('parseQuery: colours', () => {
     },
   );
 
+  // A guild name stands for the cards of that deck: mono-coloured ones of its colours too
   it.each([
-    ['mono grüne Kreaturen', 'G'],
-    ['Selesnya Lebensgewinn', 'WG'],
-    ['izzet spells', 'UR'],
-  ])('reads mono and guild names in "%s" as exactly these colours', (request, colors) => {
-    const query = parseQuery(request);
-    expect(query.colors).toBe(colors);
-    expect(query.exactColors).toBe(true);
+    ['mono grüne Kreaturen', 'G', 'exact', true],
+    ['Selesnya Lebensgewinn', 'WG', 'within', false],
+    ['izzet spells', 'UR', 'within', false],
+  ] as const)(
+    'reads mono in "%s" as exactly these colours and guild names as within them',
+    (request, colors, colorMode, exactColors) => {
+      const query = parseQuery(request);
+      expect(query.colors).toBe(colors);
+      expect(query.colorMode).toBe(colorMode);
+      expect(query.exactColors).toBe(exactColors);
+    },
+  );
+
+  it('reads plain colour words as all of these colours', () => {
+    expect(parseQuery('rote und schwarze Kreaturen')).toMatchObject({
+      colors: 'BR',
+      colorMode: 'all',
+      exactColors: false,
+    });
   });
 
   it('reads colourless as exactly no colour', () => {
@@ -373,6 +388,22 @@ describe('parseQuery: set names against real words', () => {
   });
 
   it.each([
+    [
+      'Modern Horizons Kreaturen bis 3 Mana',
+      { sets: ['mh1'], types: ['creature'], maxMana: 3, unknown: [] },
+    ],
+    ['Kreaturen aus Modern Horizons bis 2 Mana', { sets: ['mh1'], maxMana: 2 }],
+    ['2-drops aus Modern Horizons', { sets: ['mh1'], minMana: 2, maxMana: 2 }],
+    ['creatures from Modern Horizons with 3 mana', { sets: ['mh1'], minMana: 3, maxMana: 3 }],
+    ['Modern Horizons 3 Kreaturen', { sets: ['mh3'], types: ['creature'] }],
+  ])(
+    'counts a number as a set name word only right after the name word before it: "%s"',
+    (request, expected) => {
+      expect(parseQuery(request, SETS)).toMatchObject(expected);
+    },
+  );
+
+  it.each([
     ['Kreaturen aus Duskmourn', ['dsk']],
     ['Tarkir Karten', ['tdm']],
     ['Strixhaven', ['stx']],
@@ -426,15 +457,38 @@ describe('parseQuery: set names against real words', () => {
   });
 });
 
-// The sets of the real data, if the pipeline has written it; in CI these are the few sets of
-// tests/contract (npm run fixture), which these card names do not touch anyway
+// OVERVIEW_SETS (fixtures/overview-sets.json) are the sets the site searches: overviewSets() of
+// lib/data/load.ts, which pages/[lang]/cards.json.ts writes, as code and name sorted by code. A
+// fixture, so the tests run on the real list in CI as well.
 const SNAPSHOT = new URL('../src/data/generated/snapshot.json', import.meta.url);
-const REAL_SETS = existsSync(SNAPSHOT)
-  ? SnapshotSchema.parse(JSON.parse(readFileSync(SNAPSHOT, 'utf8'))).sets.map(({ code, name }) => ({
-      code,
-      name,
-    }))
-  : [];
+// The check below needs the real generated data. In CI the generated data is the copy of
+// tests/contract (npm run fixture) with 3 sets, which says nothing about the real list, so the
+// check is skipped for a snapshot of fewer than 50 sets (the real one has well over 100).
+const REAL_DATA =
+  existsSync(SNAPSHOT) &&
+  SnapshotSchema.parse(JSON.parse(readFileSync(SNAPSHOT, 'utf8'))).sets.length >= 50;
+const byCode = (a: { code: string }, b: { code: string }) =>
+  a.code < b.code ? -1 : a.code > b.code ? 1 : 0;
+
+describe('the set list fixture', () => {
+  // Fails after the pipeline wrote new sets: then copy overviewSets() into the fixture again.
+  // lib/data/load.ts reads every generated card file on import, which takes some seconds.
+  it.skipIf(!REAL_DATA)(
+    'equals the sets the site searches in the generated data',
+    async () => {
+      const { overviewSets } = await import('../src/lib/data/load');
+      const sets = overviewSets()
+        .map(({ code, name }) => ({ code, name }))
+        .sort(byCode);
+      expect(OVERVIEW_SETS).toEqual(sets);
+    },
+    60_000,
+  );
+
+  it('is sorted by code', () => {
+    expect(OVERVIEW_SETS).toEqual(OVERVIEW_SETS.toSorted(byCode));
+  });
+});
 
 describe('parseQuery: card names against the real set list', () => {
   it.each([
@@ -447,7 +501,91 @@ describe('parseQuery: card names against the real set list', () => {
     'Scourge of Valkas',
     'Fugitive Listener',
   ])('names no set in "%s"', (request) => {
-    expect(parseQuery(request, REAL_SETS).sets).toEqual([]);
+    expect(parseQuery(request, OVERVIEW_SETS).sets).toEqual([]);
+  });
+});
+
+describe('parseQuery: set names next to filters (real set list)', () => {
+  it.each([
+    ['Bloomburrow creatures', ['blb']],
+    ['Bloomburrow Kreaturen', ['blb']],
+    ['Bloomburrow removal', ['blb']],
+    ['Zendikar lands', ['zen']],
+    ['Kaladesh artifacts', ['kld']],
+    ['Theros enchantments', ['ths']],
+    ['Foundations Kreaturen', ['fdn']],
+  ])('names a one-word set right next to a word read as a filter: "%s"', (request, sets) => {
+    expect(parseQuery(request, OVERVIEW_SETS).sets).toEqual(sets);
+  });
+
+  it('takes the set called exactly that word where several sets share it: "Dominaria Kreaturen"', () => {
+    // Not Dominaria United or Dominaria Remastered
+    expect(parseQuery('Dominaria Kreaturen', OVERVIEW_SETS).sets).toEqual(['dom']);
+  });
+
+  it.each(['Uneasy Alliance', 'Scourge of Valkas', 'Dark Ritual', 'Visions of Beyond'])(
+    'still names no set in the card name "%s"',
+    (request) => {
+      expect(parseQuery(request, OVERVIEW_SETS).sets).toEqual([]);
+    },
+  );
+
+  it.each([
+    ['Crimson Vow removal', ['vow']],
+    ['Midnight Hunt creatures', ['mid']],
+    ['Neon Dynasty', ['neo']],
+  ])('names a set by the part after its colon: "%s"', (request, sets) => {
+    expect(parseQuery(request, OVERVIEW_SETS).sets).toEqual(sets);
+  });
+
+  it('names a set by a part of several words before its colon: "Lord of the Rings creatures"', () => {
+    expect(parseQuery('Lord of the Rings creatures', OVERVIEW_SETS)).toMatchObject({
+      sets: ['ltr'],
+      types: ['creature'],
+    });
+  });
+
+  it('names the Spider-Man set without "Marvel\'s"', () => {
+    expect(parseQuery('Spider-Man Kreaturen', OVERVIEW_SETS)).toMatchObject({
+      sets: ['spm'],
+      types: ['creature'],
+    });
+  });
+
+  it.each(['aus Eldraine', 'Karten aus Eldraine'])(
+    'names every set with the word after a cue when several share it: "%s"',
+    (request) => {
+      expect([...parseQuery(request, OVERVIEW_SETS).sets].sort()).toEqual(['eld', 'woe']);
+    },
+  );
+
+  it.each(['dragons from Tarkir Dragonstorm', 'Tarkir Dragonstorm dragons'])(
+    'prefers the set whose words stand next to each other: "%s"',
+    (request) => {
+      // Not Dragons of Tarkir, although "dragons" and "Tarkir" are both in the request
+      expect(parseQuery(request, OVERVIEW_SETS).sets).toEqual(['tdm']);
+    },
+  );
+});
+
+describe('parseQuery: requests in capitals', () => {
+  it.each([
+    ['ZEIG MIR ROTE KREATUREN', { colors: 'R', types: ['creature'], sets: [] }],
+    ['ALL CARDS WITH FLYING', { keywords: ['flying'], sets: [] }],
+  ])('reads a request all in capitals as words, not as set codes: "%s"', (request, expected) => {
+    expect(parseQuery(request, OVERVIEW_SETS)).toMatchObject(expected);
+  });
+
+  it.each([
+    ['Kreaturen aus FRA', ['fra']],
+    ['Karten aus ONE', ['one']],
+    ['cards from ALL', ['all']],
+  ])('still reads a code in a mixed request, after a cue even if a word: "%s"', (request, sets) => {
+    expect(parseQuery(request, OVERVIEW_SETS).sets).toEqual(sets);
+  });
+
+  it('reads "ONE drop creatures" as no set', () => {
+    expect(parseQuery('ONE drop creatures', OVERVIEW_SETS).sets).toEqual([]);
   });
 });
 
@@ -469,6 +607,59 @@ describe('exactNameMatch', () => {
     'finds no card name in "%s"',
     (request) => {
       expect(exactNameMatch(request, names)).toBe(false);
+    },
+  );
+});
+
+describe('nameWins', () => {
+  // All of these are card names; the first ones are a filter word as well
+  const names = new Set(
+    [
+      'Flash',
+      'Lifelink',
+      'Vigilance',
+      'Counterspell',
+      'Gegenzauber',
+      'Aufblitzen',
+      'Wachsamkeit',
+      'Control Magic',
+      'Wrath of God',
+      'Dark Ritual',
+      'Lightning Bolt',
+    ].map((name) => normalizeForSearch(name)),
+  );
+  const wins = (request: string) => nameWins(parseQuery(request), request, names);
+
+  it.each([
+    'Flash',
+    'Lifelink',
+    'Vigilance',
+    'Counterspell',
+    'Gegenzauber',
+    'Aufblitzen',
+    'Wachsamkeit',
+  ])('lets the filter win where the whole name reads as filters: "%s"', (request) => {
+    expect(wins(request)).toBe(false);
+  });
+
+  it.each(['Control Magic', 'Wrath of God'])(
+    'lets the name win where words are left that no filter reads: "%s"',
+    (request) => {
+      expect(wins(request)).toBe(true);
+    },
+  );
+
+  it.each(['Dark Ritual', 'Lightning Bolt', '  dark ritual '])(
+    'lets the name win where the request names no filter: "%s"',
+    (request) => {
+      expect(wins(request)).toBe(true);
+    },
+  );
+
+  it.each(['rote Kreaturen mit Glitzer', 'Control Magic Kreaturen', 'Glitzer', ''])(
+    'lets no name win in a request that is no card name: "%s"',
+    (request) => {
+      expect(wins(request)).toBe(false);
     },
   );
 });
@@ -644,10 +835,48 @@ describe('parseQuery: game phase and strength', () => {
   });
 });
 
+// The creature types the site finds in the catalog, a few of them
+const CREATURE_TYPES = ['dragon', 'elf', 'goblin', 'zombie', 'angel', 'merfolk'];
+
+describe('parseQuery: creature types', () => {
+  const parse = (request: string) => parseQuery(request, [], CREATURE_TYPES);
+
+  it.each([
+    ['Late-Game Drachen', { minMana: 5, creatureTypes: ['dragon'] }],
+    ['Zombies in Schwarz', { colors: 'B', creatureTypes: ['zombie'] }],
+    ['Elfen', { creatureTypes: ['elf'], unknown: [] }],
+    ['elves', { creatureTypes: ['elf'], unknown: [] }],
+    ['Goblins mit Eile', { creatureTypes: ['goblin'], keywords: ['haste'] }],
+  ])('reads German words and English plurals as creature types: "%s"', (request, expected) => {
+    expect(parse(request)).toMatchObject(expected);
+  });
+
+  it('names a creature type as a filter', () => {
+    expect(understood(parse('Elfen'))).toBe(true);
+  });
+
+  it('reads no creature type in a word that is none: "Lightning Bolt"', () => {
+    const query = parse('Lightning Bolt');
+    expect(query).toMatchObject({ creatureTypes: [], unknown: ['lightning', 'bolt'] });
+    expect(understood(query)).toBe(false);
+  });
+
+  it('keeps "Synergie mit Elfen" a synergy with the type, not the type itself', () => {
+    expect(parse('Synergie mit Elfen')).toMatchObject({ tribes: [['elf']], creatureTypes: [] });
+  });
+
+  it('reads no creature type without the list of types', () => {
+    const query = parseQuery('Elfen');
+    expect(query).toMatchObject({ creatureTypes: [], unknown: ['elfen'] });
+    expect(understood(query)).toBe(false);
+  });
+});
+
 describe('queryMatcher', () => {
   const card = (overrides: Partial<SearchableCard>): SearchableCard => ({
     colors: 'R',
     types: ['creature'],
+    creatureTypes: [],
     keywords: ['haste'],
     synergies: [],
     answers: [],
@@ -663,10 +892,33 @@ describe('queryMatcher', () => {
   const matches = (request: string, overrides: Partial<SearchableCard> = {}) =>
     queryMatcher(parseQuery(request))(card(overrides));
 
-  it('needs every named colour, or exactly them for mono and guild names', () => {
+  it('needs every named colour, exactly them for mono and some of them for guild names', () => {
     expect(matches('rote Kreaturen', { colors: 'BR' })).toBe(true);
     expect(matches('mono rote Kreaturen', { colors: 'BR' })).toBe(false);
     expect(matches('Rakdos', { colors: 'BR' })).toBe(true);
+    expect(matches('Rakdos', { colors: 'B' })).toBe(true);
+  });
+
+  it('takes the cards a guild deck can play for a guild name', () => {
+    const monoRedInstant = { types: ['instant'], keywords: ['prowess'] } as const;
+    expect(matches('Izzet Spells mit Bravour', monoRedInstant)).toBe(true);
+    const monoWhiteWrath = { colors: 'W', types: ['sorcery'], roles: ['wipe'] } as const;
+    expect(matches('Azorius Control', monoWhiteWrath)).toBe(true);
+  });
+
+  it('takes no card of another colour or without colour for a guild name', () => {
+    expect(matches('Rakdos', { colors: 'BG' })).toBe(false);
+    expect(matches('Rakdos', { colors: 'WBR' })).toBe(false);
+    expect(matches('Rakdos', { colors: '' })).toBe(false);
+  });
+
+  it('needs one of the named creature types on the card', () => {
+    const elves = queryMatcher(parseQuery('Elfen', [], CREATURE_TYPES));
+    expect(elves(card({ creatureTypes: ['elf', 'druid'] }))).toBe(true);
+    expect(elves(card({ creatureTypes: ['goblin'] }))).toBe(false);
+    // A synergy with elves needs no elf: the card works with them
+    const synergy = queryMatcher(parseQuery('Synergie mit Elfen', [], CREATURE_TYPES));
+    expect(synergy(card({ tribes: ['elf'] }))).toBe(true);
   });
 
   it('needs every named keyword', () => {

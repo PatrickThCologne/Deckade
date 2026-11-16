@@ -86,6 +86,33 @@ describe('buildCatalog', () => {
     );
     expect(artifactCreature).toMatchObject({ type: 'creature', types: ['creature', 'artifact'] });
   });
+
+  it('knows the creature types of the type line, lower case, of every face', () => {
+    const catalog = buildCatalog(
+      [
+        printing('m19', '2018-07-13', {
+          oracleId: 'elf',
+          typeLine: 'Legendary Creature — Elf Druid',
+        }),
+        printing('m19', '2018-07-13', { oracleId: 'instant', typeLine: 'Instant' }),
+        printing('ori', '2015-07-17', {
+          oracleId: 'jace',
+          typeLine: 'Legendary Creature — Human Wizard // Legendary Planeswalker — Jace',
+        }),
+        printing('mid', '2021-09-24', {
+          oracleId: 'board',
+          typeLine: 'Artifact // Creature — Spirit',
+        }),
+      ],
+      'en',
+    );
+    expect(catalog.map((entry) => entry.creatureTypes)).toEqual([
+      ['elf', 'druid'],
+      [],
+      ['human', 'wizard'],
+      ['spirit'],
+    ]);
+  });
 });
 
 describe('catalog file', () => {
@@ -147,7 +174,7 @@ describe('catalog file', () => {
     expect(elves?.roles).toEqual(['ramp']);
   });
 
-  it('keeps the roles as the last field, one digit per role', () => {
+  it('keeps the roles after the tribes, one digit per role', () => {
     const catalog = buildCatalog(
       [
         printing('m19', '2018-07-13', { text: '{T}: Add {G}.\nWhen this enters, draw two cards.' }),
@@ -158,7 +185,7 @@ describe('catalog file', () => {
     const file = JSON.parse(JSON.stringify(encodeCatalog(catalog, {})));
 
     expect(catalog.map((entry) => entry.roles)).toEqual([['ramp', 'draw'], []]);
-    expect(file.cards.map((encoded: unknown[]) => encoded.at(-1))).toEqual(['04', '']);
+    expect(file.cards.map((encoded: unknown[]) => encoded[17])).toEqual(['04', '']);
     expect(decodeCatalog(file).map((entry) => entry.roles)).toEqual([['ramp', 'draw'], []]);
   });
 
@@ -168,6 +195,55 @@ describe('catalog file', () => {
     const older = { ...file, cards: file.cards.map((encoded: unknown[]) => encoded.slice(0, 17)) };
 
     expect(decodeCatalog(older)[0]?.roles).toEqual([]);
+  });
+
+  it('keeps the creature types as the last field, separated by spaces', () => {
+    const catalog = buildCatalog(
+      [
+        printing('m19', '2018-07-13', { name: 'Llanowar Elves', typeLine: 'Creature — Elf Druid' }),
+        printing('m20', '2019-07-12', { oracleId: 'other', name: 'Shock', typeLine: 'Instant' }),
+      ],
+      'en',
+    );
+    const file = JSON.parse(JSON.stringify(encodeCatalog(catalog, {})));
+
+    expect(file.cards.map((encoded: unknown[]) => encoded.at(-1))).toEqual(['elf druid', '']);
+    expect(decodeCatalog(file).map((entry) => entry.creatureTypes)).toEqual([['elf', 'druid'], []]);
+  });
+
+  it('reads files without creature types as cards without creature types', () => {
+    const catalog = buildCatalog(
+      [printing('m19', '2018-07-13', { typeLine: 'Creature — Elf Druid', text: '{T}: Add {G}.' })],
+      'en',
+    );
+    const file = JSON.parse(JSON.stringify(encodeCatalog(catalog, {})));
+    const older = { ...file, cards: file.cards.map((encoded: unknown[]) => encoded.slice(0, 18)) };
+
+    expect(decodeCatalog(older)[0]?.creatureTypes).toEqual([]);
+    expect(decodeCatalog(older)[0]?.roles).toEqual(['ramp']);
+  });
+
+  it('lists every creature type of the cards once, sorted, for the search', () => {
+    const catalog = buildCatalog(
+      [
+        printing('m19', '2018-07-13', { oracleId: 'llanowar', typeLine: 'Creature — Elf Druid' }),
+        printing('m20', '2019-07-12', { oracleId: 'guide', typeLine: 'Creature — Goblin Scout' }),
+        printing('m21', '2020-07-03', { oracleId: 'mystic', typeLine: 'Creature — Elf Druid' }),
+        printing('m21', '2020-07-03', { oracleId: 'shock', typeLine: 'Instant' }),
+      ],
+      'en',
+    );
+    const file = encodeCatalog(catalog, {});
+
+    expect(file.creatureTypes).toEqual(['druid', 'elf', 'goblin', 'scout']);
+    expect(JSON.parse(JSON.stringify(file)).creatureTypes).toEqual(file.creatureTypes);
+  });
+
+  it('lists no creature types for cards without any', () => {
+    const catalog = buildCatalog([printing('m21', '2020-07-03', { typeLine: 'Instant' })], 'en');
+
+    expect(encodeCatalog(catalog, {}).creatureTypes).toEqual([]);
+    expect(encodeCatalog([], {}).creatureTypes).toEqual([]);
   });
 
   it('keeps every set that printed a card', () => {

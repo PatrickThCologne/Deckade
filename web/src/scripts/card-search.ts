@@ -5,11 +5,13 @@
  */
 import { isLocale } from '../config/site';
 import { type CatalogCard, type CatalogFile, decodeCatalog } from '../lib/cards/catalog';
-import { compareCards, isSortKey, normalizeForSearch, searchWords } from '../lib/cards/sort';
+import { compareCards, isSortKey, normalizeForSearch } from '../lib/cards/sort';
 import { createFormatters } from '../lib/format';
 import {
   exactNameMatch,
+  nameQuery,
   nameRank,
+  nameWins,
   parseQuery,
   queryMatcher,
   type SearchSet,
@@ -32,16 +34,31 @@ interface Labels {
 
 interface Result extends CatalogCard {
   readonly search: string;
+  /** The names of the card, normalized: shown and other language, and each face of "A // B". */
+  readonly names: readonly string[];
   element?: HTMLLIElement;
 }
 
-/** The loaded card list, with the sets a request may name ("aus Reality Fracture"). */
+/**
+ * The loaded card list, with the sets ("aus Reality Fracture") and creature types ("Elfen") a
+ * request may name.
+ */
 interface Catalog {
   readonly cards: readonly Result[];
   readonly sets: readonly SearchSet[];
-  /** Every card name, shown and other language, normalized: a request that is one wins. */
+  readonly creatureTypes: readonly string[];
+  /** Every name of every card (Result.names): a request that is one may be a name search. */
   readonly names: ReadonlySet<string>;
 }
+
+const cardNames = (card: CatalogCard) => [
+  ...new Set(
+    [card.name, card.altName]
+      .filter(Boolean)
+      .flatMap((name) => [name, ...(name.includes(' // ') ? name.split(' // ') : [])])
+      .map((name) => normalizeForSearch(name)),
+  ),
+];
 
 export async function initCardSearch(): Promise<void> {
   const root = document.querySelector<HTMLElement>('[data-card-search]');
@@ -69,18 +86,21 @@ export async function initCardSearch(): Promise<void> {
         const cards = decodeCatalog(file).map((card) => ({
           ...card,
           search: normalizeForSearch(`${card.name}\n${card.altName}`),
+          names: cardNames(card),
         }));
         return {
           cards,
           sets: Object.entries(file.sets).map(([code, name]) => ({ code, name })),
-          names: new Set(
-            cards.flatMap((card) =>
-              [card.name, card.altName].filter(Boolean).map((name) => normalizeForSearch(name)),
-            ),
-          ),
+          // Older card list files have no creature types
+          creatureTypes: file.creatureTypes ?? [],
+          names: new Set(cards.flatMap((card) => card.names)),
         };
       })
-      .catch(() => null));
+      .catch(() => {
+        // Not kept, so the next search tries to load the list again
+        catalog = undefined;
+        return null;
+      }));
 
   const element = (tag: string, className: string, text = '') => {
     const node = document.createElement(tag);
@@ -148,23 +168,31 @@ export async function initCardSearch(): Promise<void> {
       status.textContent = labels.error;
       return;
     }
-    // Parsed only now: the set names a request may use come with the card list. A card name is
-    // looked up as a name, even where its words read as filters ("Control Magic", "Dark
-    // Ritual"): like a request without filters, which is what parseQuery('') gives.
-    const query = exactNameMatch(request, loaded.names)
-      ? { ...parseQuery(''), unknown: searchWords(request) }
-      : parseQuery(request, loaded.sets);
+    // Parsed only now: the set names and creature types a request may use come with the card
+    // list. A card name is searched as a name where words are left that no filter reads
+    // ("Control Magic", "Dark Ritual"); where all of it reads as filters ("Flash"), the filters
+    // are searched and the card of that name comes first.
+    const parsed = parseQuery(request, loaded.sets, loaded.creatureTypes);
+    const asName = nameWins(parsed, request, loaded.names);
+    const query = asName ? nameQuery(request) : parsed;
+    const pinned =
+      !asName && exactNameMatch(request, loaded.names) ? normalizeForSearch(request) : null;
     // The chosen order, otherwise the one the request names ("günstig"), otherwise play rate
     const chosen = isSortKey(sort.value) ? sort.value : null;
     const key = chosen ?? query.sort ?? 'played';
-    // A name search puts the card of that name first, then names that start with it
+    // A name search puts the card of that name first, then names that start with it; the face
+    // of a card with two counts as its name ("Fire" for "Fire // Ice")
     const rank =
       chosen || namesFilters(query)
         ? () => 0
-        : (card: Result) => nameRank(card.search, query.unknown);
-    matches = loaded.cards
-      .filter(queryMatcher(query))
-      .sort((a, b) => rank(a) - rank(b) || compareCards(a, b, key));
+        : (card: Result) => nameRank(card.names.join('\n'), query.unknown);
+    const order = (a: Result, b: Result) => rank(a) - rank(b) || compareCards(a, b, key);
+    matches = loaded.cards.filter(queryMatcher(query)).sort(order);
+    if (pinned !== null) {
+      // Every card of that name, whether the filters find it or not
+      const own = loaded.cards.filter((card) => card.names.includes(pinned)).sort(order);
+      matches = [...own, ...matches.filter((card) => !own.includes(card))];
+    }
     status.textContent =
       matches.length > 0
         ? labels.count.replace('{count}', numbers.format(matches.length))

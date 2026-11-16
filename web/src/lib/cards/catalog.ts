@@ -32,6 +32,8 @@ export interface CatalogCard extends SortableCard {
   readonly altName: string;
   readonly manaCost: string;
   readonly types: readonly CardType[];
+  /** The creature types of the type line, of every face, lower case ("elf", "druid"). */
+  readonly creatureTypes: readonly string[];
   /** Keyword abilities, for the search tab (lib/search). */
   readonly keywords: readonly Keyword[];
   /** What the rules text works with ("Synergie mit Artefakten"), for the search tab. */
@@ -90,6 +92,7 @@ function catalogCard(
     cmc: card.cmc,
     type: mainType(card.typeLine),
     types: cardTypes(card.typeLine),
+    creatureTypes: [...new Set(creatureTypes(card.typeLine).map((type) => type.toLowerCase()))],
     keywords: cardKeywords(card.text),
     synergies: cardSynergies(card.text, card.name),
     answers: cardAnswers(card.text, card.name),
@@ -137,13 +140,17 @@ type EncodedCard = [
   answers: string,
   /** Creature types the card works with, separated by spaces; usually empty. */
   tribes: string,
-  /** Indexes into ROLES, one base-36 digit each; last, so older files still read. */
+  /** Indexes into ROLES, one base-36 digit each; usually empty. */
   roles: string,
+  /** Creature types of the type line, separated by spaces; last, so older files still read. */
+  creatureTypes: string,
 ];
 
 export interface CatalogFile {
   /** Set names by code, for the set column. */
   readonly sets: Readonly<Record<string, string>>;
+  /** Every creature type of the cards once, sorted, for the search ("Elfen", "Drachen"). */
+  readonly creatureTypes: readonly string[];
   readonly cards: readonly EncodedCard[];
 }
 
@@ -178,6 +185,7 @@ export function encodeCatalog(
 ): CatalogFile {
   return {
     sets,
+    creatureTypes: [...new Set(cards.flatMap((card) => card.creatureTypes))].sort(),
     cards: cards.map((card) => [
       card.name,
       card.altName,
@@ -197,6 +205,7 @@ export function encodeCatalog(
       card.answers.map((theme) => SYNERGIES.indexOf(theme).toString(36)).join(''),
       card.tribes.join(' '),
       card.roles.map((role) => ROLES.indexOf(role).toString(36)).join(''),
+      card.creatureTypes.join(' '),
     ]),
   };
 }
@@ -222,6 +231,7 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
       answers = '',
       tribes = '',
       roles = '',
+      creatureTypes = '',
     ]) => {
       const [main, ...all] = [...types].map((index) => CARD_TYPES[Number(index)]);
       return {
@@ -232,6 +242,7 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
         cmc,
         type: isCardType(main) ? main : 'other',
         types: all.filter(isCardType),
+        creatureTypes: creatureTypes ? creatureTypes.split(' ') : [],
         keywords: [...keywords].flatMap((digit) => KEYWORDS[parseInt(digit, 36)] ?? []),
         synergies: [...synergies].flatMap((digit) => SYNERGIES[parseInt(digit, 36)] ?? []),
         answers: [...answers].flatMap((digit) => SYNERGIES[parseInt(digit, 36)] ?? []),

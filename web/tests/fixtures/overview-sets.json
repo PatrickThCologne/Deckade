@@ -1,0 +1,686 @@
+[
+  {
+    "code": "10e",
+    "name": "Tenth Edition"
+  },
+  {
+    "code": "2ed",
+    "name": "Unlimited Edition"
+  },
+  {
+    "code": "2x2",
+    "name": "Double Masters 2022"
+  },
+  {
+    "code": "2xm",
+    "name": "Double Masters"
+  },
+  {
+    "code": "3ed",
+    "name": "Revised Edition"
+  },
+  {
+    "code": "4ed",
+    "name": "Fourth Edition"
+  },
+  {
+    "code": "5dn",
+    "name": "Fifth Dawn"
+  },
+  {
+    "code": "5ed",
+    "name": "Fifth Edition"
+  },
+  {
+    "code": "6ed",
+    "name": "Classic Sixth Edition"
+  },
+  {
+    "code": "7ed",
+    "name": "Seventh Edition"
+  },
+  {
+    "code": "8ed",
+    "name": "Eighth Edition"
+  },
+  {
+    "code": "9ed",
+    "name": "Ninth Edition"
+  },
+  {
+    "code": "a25",
+    "name": "Masters 25"
+  },
+  {
+    "code": "acr",
+    "name": "Assassin's Creed"
+  },
+  {
+    "code": "aer",
+    "name": "Aether Revolt"
+  },
+  {
+    "code": "afr",
+    "name": "Adventures in the Forgotten Realms"
+  },
+  {
+    "code": "akh",
+    "name": "Amonkhet"
+  },
+  {
+    "code": "ala",
+    "name": "Shards of Alara"
+  },
+  {
+    "code": "all",
+    "name": "Alliances"
+  },
+  {
+    "code": "apc",
+    "name": "Apocalypse"
+  },
+  {
+    "code": "arb",
+    "name": "Alara Reborn"
+  },
+  {
+    "code": "arn",
+    "name": "Arabian Nights"
+  },
+  {
+    "code": "atq",
+    "name": "Antiquities"
+  },
+  {
+    "code": "avr",
+    "name": "Avacyn Restored"
+  },
+  {
+    "code": "bbd",
+    "name": "Battlebond"
+  },
+  {
+    "code": "bfz",
+    "name": "Battle for Zendikar"
+  },
+  {
+    "code": "blb",
+    "name": "Bloomburrow"
+  },
+  {
+    "code": "bng",
+    "name": "Born of the Gods"
+  },
+  {
+    "code": "bok",
+    "name": "Betrayers of Kamigawa"
+  },
+  {
+    "code": "bro",
+    "name": "The Brothers' War"
+  },
+  {
+    "code": "chk",
+    "name": "Champions of Kamigawa"
+  },
+  {
+    "code": "chr",
+    "name": "Chronicles"
+  },
+  {
+    "code": "clb",
+    "name": "Commander Legends: Battle for Baldur's Gate"
+  },
+  {
+    "code": "cmm",
+    "name": "Commander Masters"
+  },
+  {
+    "code": "cmr",
+    "name": "Commander Legends"
+  },
+  {
+    "code": "cn2",
+    "name": "Conspiracy: Take the Crown"
+  },
+  {
+    "code": "cns",
+    "name": "Conspiracy"
+  },
+  {
+    "code": "con",
+    "name": "Conflux"
+  },
+  {
+    "code": "csp",
+    "name": "Coldsnap"
+  },
+  {
+    "code": "dbl",
+    "name": "Innistrad: Double Feature"
+  },
+  {
+    "code": "dft",
+    "name": "Aetherdrift"
+  },
+  {
+    "code": "dgm",
+    "name": "Dragon's Maze"
+  },
+  {
+    "code": "dis",
+    "name": "Dissension"
+  },
+  {
+    "code": "dka",
+    "name": "Dark Ascension"
+  },
+  {
+    "code": "dmr",
+    "name": "Dominaria Remastered"
+  },
+  {
+    "code": "dmu",
+    "name": "Dominaria United"
+  },
+  {
+    "code": "dom",
+    "name": "Dominaria"
+  },
+  {
+    "code": "drk",
+    "name": "The Dark"
+  },
+  {
+    "code": "dsk",
+    "name": "Duskmourn: House of Horror"
+  },
+  {
+    "code": "dst",
+    "name": "Darksteel"
+  },
+  {
+    "code": "dtk",
+    "name": "Dragons of Tarkir"
+  },
+  {
+    "code": "ecl",
+    "name": "Lorwyn Eclipsed"
+  },
+  {
+    "code": "eld",
+    "name": "Throne of Eldraine"
+  },
+  {
+    "code": "ema",
+    "name": "Eternal Masters"
+  },
+  {
+    "code": "emn",
+    "name": "Eldritch Moon"
+  },
+  {
+    "code": "eoe",
+    "name": "Edge of Eternities"
+  },
+  {
+    "code": "eve",
+    "name": "Eventide"
+  },
+  {
+    "code": "exo",
+    "name": "Exodus"
+  },
+  {
+    "code": "fdn",
+    "name": "Foundations"
+  },
+  {
+    "code": "fem",
+    "name": "Fallen Empires"
+  },
+  {
+    "code": "fin",
+    "name": "Final Fantasy"
+  },
+  {
+    "code": "fra",
+    "name": "Reality Fracture"
+  },
+  {
+    "code": "frf",
+    "name": "Fate Reforged"
+  },
+  {
+    "code": "fut",
+    "name": "Future Sight"
+  },
+  {
+    "code": "gpt",
+    "name": "Guildpact"
+  },
+  {
+    "code": "grn",
+    "name": "Guilds of Ravnica"
+  },
+  {
+    "code": "gtc",
+    "name": "Gatecrash"
+  },
+  {
+    "code": "hml",
+    "name": "Homelands"
+  },
+  {
+    "code": "hob",
+    "name": "The Hobbit"
+  },
+  {
+    "code": "hou",
+    "name": "Hour of Devastation"
+  },
+  {
+    "code": "ice",
+    "name": "Ice Age"
+  },
+  {
+    "code": "iko",
+    "name": "Ikoria: Lair of Behemoths"
+  },
+  {
+    "code": "ima",
+    "name": "Iconic Masters"
+  },
+  {
+    "code": "inr",
+    "name": "Innistrad Remastered"
+  },
+  {
+    "code": "inv",
+    "name": "Invasion"
+  },
+  {
+    "code": "isd",
+    "name": "Innistrad"
+  },
+  {
+    "code": "j22",
+    "name": "Jumpstart 2022"
+  },
+  {
+    "code": "jmp",
+    "name": "Jumpstart"
+  },
+  {
+    "code": "jou",
+    "name": "Journey into Nyx"
+  },
+  {
+    "code": "jud",
+    "name": "Judgment"
+  },
+  {
+    "code": "khm",
+    "name": "Kaldheim"
+  },
+  {
+    "code": "kld",
+    "name": "Kaladesh"
+  },
+  {
+    "code": "ktk",
+    "name": "Khans of Tarkir"
+  },
+  {
+    "code": "lci",
+    "name": "The Lost Caverns of Ixalan"
+  },
+  {
+    "code": "lea",
+    "name": "Limited Edition Alpha"
+  },
+  {
+    "code": "leb",
+    "name": "Limited Edition Beta"
+  },
+  {
+    "code": "leg",
+    "name": "Legends"
+  },
+  {
+    "code": "lgn",
+    "name": "Legions"
+  },
+  {
+    "code": "lrw",
+    "name": "Lorwyn"
+  },
+  {
+    "code": "ltr",
+    "name": "The Lord of the Rings: Tales of Middle-earth"
+  },
+  {
+    "code": "m10",
+    "name": "Magic 2010"
+  },
+  {
+    "code": "m11",
+    "name": "Magic 2011"
+  },
+  {
+    "code": "m12",
+    "name": "Magic 2012"
+  },
+  {
+    "code": "m13",
+    "name": "Magic 2013"
+  },
+  {
+    "code": "m14",
+    "name": "Magic 2014"
+  },
+  {
+    "code": "m15",
+    "name": "Magic 2015"
+  },
+  {
+    "code": "m19",
+    "name": "Core Set 2019"
+  },
+  {
+    "code": "m20",
+    "name": "Core Set 2020"
+  },
+  {
+    "code": "m21",
+    "name": "Core Set 2021"
+  },
+  {
+    "code": "mat",
+    "name": "March of the Machine: The Aftermath"
+  },
+  {
+    "code": "mbs",
+    "name": "Mirrodin Besieged"
+  },
+  {
+    "code": "mh1",
+    "name": "Modern Horizons"
+  },
+  {
+    "code": "mh2",
+    "name": "Modern Horizons 2"
+  },
+  {
+    "code": "mh3",
+    "name": "Modern Horizons 3"
+  },
+  {
+    "code": "mid",
+    "name": "Innistrad: Midnight Hunt"
+  },
+  {
+    "code": "mir",
+    "name": "Mirage"
+  },
+  {
+    "code": "mkm",
+    "name": "Murders at Karlov Manor"
+  },
+  {
+    "code": "mm2",
+    "name": "Modern Masters 2015"
+  },
+  {
+    "code": "mm3",
+    "name": "Modern Masters 2017"
+  },
+  {
+    "code": "mma",
+    "name": "Modern Masters"
+  },
+  {
+    "code": "mmq",
+    "name": "Mercadian Masques"
+  },
+  {
+    "code": "mom",
+    "name": "March of the Machine"
+  },
+  {
+    "code": "mor",
+    "name": "Morningtide"
+  },
+  {
+    "code": "mrd",
+    "name": "Mirrodin"
+  },
+  {
+    "code": "msh",
+    "name": "Marvel Super Heroes"
+  },
+  {
+    "code": "nem",
+    "name": "Nemesis"
+  },
+  {
+    "code": "neo",
+    "name": "Kamigawa: Neon Dynasty"
+  },
+  {
+    "code": "nph",
+    "name": "New Phyrexia"
+  },
+  {
+    "code": "ody",
+    "name": "Odyssey"
+  },
+  {
+    "code": "ogw",
+    "name": "Oath of the Gatewatch"
+  },
+  {
+    "code": "one",
+    "name": "Phyrexia: All Will Be One"
+  },
+  {
+    "code": "ons",
+    "name": "Onslaught"
+  },
+  {
+    "code": "ori",
+    "name": "Magic Origins"
+  },
+  {
+    "code": "otj",
+    "name": "Outlaws of Thunder Junction"
+  },
+  {
+    "code": "pcy",
+    "name": "Prophecy"
+  },
+  {
+    "code": "plc",
+    "name": "Planar Chaos"
+  },
+  {
+    "code": "pls",
+    "name": "Planeshift"
+  },
+  {
+    "code": "plst",
+    "name": "The List"
+  },
+  {
+    "code": "rav",
+    "name": "Ravnica: City of Guilds"
+  },
+  {
+    "code": "ren",
+    "name": "Renaissance"
+  },
+  {
+    "code": "rin",
+    "name": "Rinascimento"
+  },
+  {
+    "code": "rix",
+    "name": "Rivals of Ixalan"
+  },
+  {
+    "code": "rna",
+    "name": "Ravnica Allegiance"
+  },
+  {
+    "code": "roe",
+    "name": "Rise of the Eldrazi"
+  },
+  {
+    "code": "rtr",
+    "name": "Return to Ravnica"
+  },
+  {
+    "code": "rvr",
+    "name": "Ravnica Remastered"
+  },
+  {
+    "code": "scg",
+    "name": "Scourge"
+  },
+  {
+    "code": "shm",
+    "name": "Shadowmoor"
+  },
+  {
+    "code": "slx",
+    "name": "Universes Within"
+  },
+  {
+    "code": "snc",
+    "name": "Streets of New Capenna"
+  },
+  {
+    "code": "soi",
+    "name": "Shadows over Innistrad"
+  },
+  {
+    "code": "sok",
+    "name": "Saviors of Kamigawa"
+  },
+  {
+    "code": "som",
+    "name": "Scars of Mirrodin"
+  },
+  {
+    "code": "sos",
+    "name": "Secrets of Strixhaven"
+  },
+  {
+    "code": "spm",
+    "name": "Marvel's Spider-Man"
+  },
+  {
+    "code": "sth",
+    "name": "Stronghold"
+  },
+  {
+    "code": "stx",
+    "name": "Strixhaven: School of Mages"
+  },
+  {
+    "code": "sum",
+    "name": "Summer Magic / Edgar"
+  },
+  {
+    "code": "tdm",
+    "name": "Tarkir: Dragonstorm"
+  },
+  {
+    "code": "thb",
+    "name": "Theros Beyond Death"
+  },
+  {
+    "code": "ths",
+    "name": "Theros"
+  },
+  {
+    "code": "tla",
+    "name": "Avatar: The Last Airbender"
+  },
+  {
+    "code": "tmp",
+    "name": "Tempest"
+  },
+  {
+    "code": "tmt",
+    "name": "Teenage Mutant Ninja Turtles"
+  },
+  {
+    "code": "tor",
+    "name": "Torment"
+  },
+  {
+    "code": "trk",
+    "name": "Star Trek"
+  },
+  {
+    "code": "tsp",
+    "name": "Time Spiral"
+  },
+  {
+    "code": "tsr",
+    "name": "Time Spiral Remastered"
+  },
+  {
+    "code": "uds",
+    "name": "Urza's Destiny"
+  },
+  {
+    "code": "ulg",
+    "name": "Urza's Legacy"
+  },
+  {
+    "code": "uma",
+    "name": "Ultimate Masters"
+  },
+  {
+    "code": "usg",
+    "name": "Urza's Saga"
+  },
+  {
+    "code": "vis",
+    "name": "Visions"
+  },
+  {
+    "code": "vow",
+    "name": "Innistrad: Crimson Vow"
+  },
+  {
+    "code": "war",
+    "name": "War of the Spark"
+  },
+  {
+    "code": "woe",
+    "name": "Wilds of Eldraine"
+  },
+  {
+    "code": "wth",
+    "name": "Weatherlight"
+  },
+  {
+    "code": "wwk",
+    "name": "Worldwake"
+  },
+  {
+    "code": "xln",
+    "name": "Ixalan"
+  },
+  {
+    "code": "zen",
+    "name": "Zendikar"
+  },
+  {
+    "code": "znr",
+    "name": "Zendikar Rising"
+  }
+]

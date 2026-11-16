@@ -93,6 +93,7 @@ describe('search for answers and creature types', () => {
   const card = (overrides: Partial<SearchableCard>): SearchableCard => ({
     colors: 'U',
     types: ['instant'],
+    creatureTypes: [],
     keywords: [],
     synergies: [],
     answers: [],
