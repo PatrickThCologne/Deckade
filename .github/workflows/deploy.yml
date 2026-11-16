@@ -40,13 +40,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Cache downloads and pack images
+      # actions/cache saves only under a new key; a key per run stored about 0.5 GB every day.
+      # One key per ISO week: the runs of a week restore the same cache, the first run of the
+      # next week starts from it (restore-keys) and saves a new one. A failed run saves nothing.
+      - name: Cache key for this week
+        id: week
+        run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+      # The last snapshot.json is the reference for the pipeline's checks (domain/checks.py):
+      # a build that lost many sets or decks since then fails instead of being published.
+      - name: Cache downloads, pack images and the last snapshot
         uses: actions/cache@v4
         with:
           path: |
             pipeline/.cache
             web/public/images
-          key: pipeline-${{ github.run_id }}
+            web/src/data/generated/snapshot.json
+          key: pipeline-${{ steps.week.outputs.week }}
           restore-keys: pipeline-
       - run: pip install -c pipeline/requirements-pinned.txt -e ./pipeline
       - name: Build data snapshot
@@ -69,6 +78,8 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io', github.repository_owner) }}
           BASE_PATH: ${{ vars.SITE_URL && '/' || format('/{0}/', github.event.repository.name) }}
           # Shown in the imprint and privacy notice; set under Settings > Secrets and variables > Variables
+          # PRODUCTION_BUILD makes the build fail if one of them is missing (web/src/lib/operator.ts)
+          PRODUCTION_BUILD: true
           OPERATOR_NAME: ${{ vars.OPERATOR_NAME }}
           OPERATOR_ADDRESS: ${{ vars.OPERATOR_ADDRESS }}
           OPERATOR_EMAIL: ${{ vars.OPERATOR_EMAIL }}
