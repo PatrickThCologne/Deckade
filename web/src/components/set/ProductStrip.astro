@@ -6,7 +6,6 @@
  */
 import type { Locale } from '../../config/site';
 import type { MtgSet } from '../../lib/data/schema';
-import { createFormatters } from '../../lib/format';
 import { useTranslations } from '../../lib/i18n';
 import { cardmarketSearch } from '../../lib/links';
 import { productLabel, sortProducts } from '../../lib/products';
@@ -18,7 +17,6 @@ interface Props {
 
 const { set, locale } = Astro.props;
 const { t } = useTranslations(locale);
-const format = createFormatters(locale);
 const products = sortProducts(set.products).toSorted((a, b) =>
   a.category.localeCompare(b.category),
 );
@@ -33,7 +31,6 @@ const upcoming = set.standard?.status === 'upcoming';
           <details class="product">
             <summary title={product.name}>
               <span class="name">{productLabel(product, set.name)}</span>
-              {product.price != null && <span class="price">{format.price(product.price)}</span>}
               <span class="toggle" aria-hidden="true"></span>
               <span class="visually-hidden">{t('products.showContents')}</span>
             </summary>
@@ -46,9 +43,6 @@ const upcoming = set.standard?.status === 'upcoming';
                   </li>
                 ))}
               </ul>
-              {product.pricePerPack != null && (
-                <p>{t('products.perPackShort', { price: format.price(product.pricePerPack) })}</p>
-              )}
               <p class="dim">
                 {upcoming ? `${t('facts.preorder')} · ` : ''}
                 <a href={cardmarketSearch(locale, product.name)} target="_blank" rel="noopener">
@@ -93,9 +87,8 @@ const upcoming = set.standard?.status === 'upcoming';
     background: linear-gradient(160deg, var(--surface-hover), var(--surface-raised) 70%);
   }
 
-  /* Name on one line over the whole width, so every price in the strip sits at the same
-     height; the open/close button stands next to the price. Too long a name ends in "…",
-     the summary's title shows it whole. */
+  /* Name on one line over the whole width, the open/close button below it. Too long a name
+     ends in "…", the summary's title shows it whole. */
   summary {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -119,13 +112,6 @@ const upcoming = set.standard?.status === 'upcoming';
     color: var(--text-dim);
     white-space: nowrap;
     text-overflow: ellipsis;
-  }
-
-  .price {
-    font-family: var(--font-display), sans-serif;
-    font-size: 18px;
-    font-weight: var(--font-display-weight);
-    font-variant-numeric: tabular-nums;
   }
 
   .toggle {

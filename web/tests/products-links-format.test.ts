@@ -16,8 +16,8 @@ describe('products', () => {
 
   it('lists the regular product first', () => {
     const sorted = sortProducts([
-      product('Collector', { subtype: 'collector', price: 400 }),
-      product('Play', { subtype: 'play', price: 130 }),
+      product('Collector', { subtype: 'collector' }),
+      product('Play', { subtype: 'play' }),
     ]);
     expect(sorted.map((p) => p.name)).toEqual(['Play', 'Collector']);
   });

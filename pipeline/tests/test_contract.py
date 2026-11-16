@@ -14,6 +14,7 @@ then check the diff of ``web/tests/contract`` and run the website tests.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 from datetime import UTC, date, datetime
@@ -64,18 +65,12 @@ def contract_snapshot() -> tuple[Snapshot, dict[str, list[CardRow]]]:
                 category="booster_box",
                 subtype="play",
                 contents=(PackCount(30, PackKind.PLAY),),
-                price=129.9,
-                average_sale=124.5,
-                price_per_pack=4.33,
             ),
             ProductEntry(
                 name="Duskmourn Bundle",
                 category="bundle",
                 subtype=None,
                 contents=(PackCount(9, PackKind.PLAY), PackCount(1, PackKind.COLLECTOR)),
-                price=None,
-                average_sale=None,
-                price_per_pack=None,
             ),
         ),
     )
@@ -249,9 +244,27 @@ def test_every_optional_field_is_filled_once_and_empty_once() -> None:
         [s.icon_url for s in sets],
         [s.standard for s in sets],
         [s.parent_code for s in sets],
-        [p.price for s in sets for p in s.products],
+        [p.subtype for s in sets for p in s.products],
         [r.de for r in rows],
         [r.price for r in rows],
         [r.image_normal for r in rows],
     ):
         assert None in values and any(v is not None for v in values)
+
+
+def test_the_contract_is_version_7() -> None:
+    # v7 dropped the product prices that were always empty
+    assert SCHEMA_VERSION == 7
+
+
+def test_products_carry_no_price_fields(tmp_path: Path) -> None:
+    # No product prices: the only source, Cardmarket, needs written consent to show them
+    # (docs/adr/0003-scryfall-prices.md). The website links to a search there instead.
+    snapshot, cards = contract_snapshot()
+    write_snapshot(snapshot, cards, tmp_path)
+    written = json.loads((tmp_path / "snapshot.json").read_text("utf-8"))
+
+    products = [p for s in written["sets"] for p in s["products"]]
+    assert products
+    for product in products:
+        assert set(product) == {"name", "category", "subtype", "contents"}

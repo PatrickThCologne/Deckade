@@ -68,6 +68,11 @@ flowchart LR
 - **One data contract.** The pipeline writes camelCase JSON (`snapshot.py`, `SCHEMA_VERSION`);
   the website validates it with Zod at build time (`web/src/lib/data/schema.ts`) and fails the
   build instead of shipping a broken page.
+- **A bad build keeps the good one.** Before writing, the pipeline checks the snapshot
+  (`domain/checks.py`): at least 100 sets, Standard sets, decks for the play rate, German text
+  for half the cards, and no sudden drop in sets or decks since the last snapshot. A failed
+  check, or a source that still fails after its retries, ends the build with every problem
+  listed and leaves the previous snapshot in place.
 - **Wording is logic, too.** `web/src/lib/rotation/describe.ts` turns rotation data into text
   for both languages and is tested with the real dictionaries.
 

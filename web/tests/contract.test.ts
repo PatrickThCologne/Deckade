@@ -22,6 +22,23 @@ describe('data contract with the pipeline', () => {
     expect(snapshot.sets[1]?.products[0]?.contents).toEqual([{ count: 30, kind: 'play' }]);
   });
 
+  it('is version 7 and turns away snapshots of version 6', () => {
+    const raw = read('snapshot.json') as Record<string, unknown>;
+
+    expect(raw['schemaVersion']).toBe(7);
+    expect(SnapshotSchema.safeParse({ ...raw, schemaVersion: 6 }).success).toBe(false);
+  });
+
+  it('has products without prices', () => {
+    const raw = read('snapshot.json') as { sets: { products: Record<string, unknown>[] }[] };
+    const products = raw.sets.flatMap((set) => set.products);
+
+    expect(products.length).toBeGreaterThan(0);
+    for (const product of products) {
+      expect(Object.keys(product).sort()).toEqual(['category', 'contents', 'name', 'subtype']);
+    }
+  });
+
   it('accepts every card file', () => {
     const files = readdirSync(new URL('cards/', contract));
 

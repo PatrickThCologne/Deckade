@@ -66,7 +66,6 @@ export const de = {
   'facts.includes': 'inkl. {sets}',
   'facts.special': 'Sonderregel von Wizards',
   'facts.preorder': 'Vorverkauf',
-  'products.perPackShort': '{price} je Booster',
 
   'cards.heading': 'Karten',
   'cards.search': 'Name oder Kartentext suchen',

@@ -68,7 +68,6 @@ export const en: Record<UiKey, string> = {
   'facts.includes': 'incl. {sets}',
   'facts.special': 'special rule by Wizards',
   'facts.preorder': 'pre-order',
-  'products.perPackShort': '{price} per booster',
 
   'cards.heading': 'Cards',
   'cards.search': 'Search name or card text',

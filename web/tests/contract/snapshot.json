@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "generatedAt": "2026-11-09T04:30:00+00:00",
   "rotation": {
     "day": "2027-01-22",
@@ -75,10 +75,7 @@
               "count": 30,
               "kind": "play"
             }
-          ],
-          "price": 129.9,
-          "averageSale": 124.5,
-          "pricePerPack": 4.33
+          ]
         },
         {
           "name": "Duskmourn Bundle",
@@ -93,10 +90,7 @@
               "count": 1,
               "kind": "collector"
             }
-          ],
-          "price": null,
-          "averageSale": null,
-          "pricePerPack": null
+          ]
         }
       ]
     },
