@@ -10,6 +10,13 @@ but public data:
 - every card with an estimated price and how often it is played in tournaments
 - what bundles and booster boxes contain
 
+**Live: [deckade.de](https://deckade.de)** · updated every day ·
+how AI was used: [AI-DECLARATION.md](AI-DECLARATION.md)
+
+| All sets                                                    | Standard rotation                                    | Search                                                 |
+| ----------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| ![All sets on one timeline](docs/screenshots/overview.webp) | ![Standard rotation](docs/screenshots/rotation.webp) | ![Plain-language search](docs/screenshots/search.webp) |
+
 ## Features
 
 - **All sets** – a timeline by year. Each set opens as an overlay with its own URL: release
