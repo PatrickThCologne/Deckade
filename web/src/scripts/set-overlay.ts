@@ -116,7 +116,8 @@ class SetOverlay {
     initSetView(this.dialog);
 
     const packImage = content.querySelector<HTMLImageElement>('[data-pack-image]');
-    if (tileImage && packImage) {
+    // Phones show no pack in the overlay (sets/[code].astro): no flight, just the fade
+    if (tileImage && packImage && packImage.getClientRects().length > 0) {
       tileImage.style.visibility = 'hidden';
       // The packs differ in shape: measure the flight's end only once the image knows its size
       packImage.style.visibility = 'hidden';
