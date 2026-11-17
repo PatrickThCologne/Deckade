@@ -103,8 +103,11 @@ Set names are also words of card names, so the rules are narrow:
 A request that is exactly a card name, or the face of one, is searched as that name where it
 names no filter ("Dark Ritual") or words are left that no filter reads ("Control Magic"). Where
 every word reads as a filter ("Flash", "Counterspell", "Wrath of God" with the creature type
-God), the filters win and the card of that full name is put on top of their results; one face
-of a split card is no full name ("Burn" is burn, not Turn // Burn). This decision, the name
+God), the filters win and the card of that full name is put on top of their results. A face of
+more than one word counts as a full name too ("Green Goblin" puts Norman Osborn // Green Goblin
+on top); a face of one word is a single filter word there and does not ("Burn" is burn, not
+Turn // Burn). The card list has no layout field, so this rule stands in for telling split
+cards from double-faced ones; the catalog format stays as it is. This decision, the name
 ranking and the order are `web/src/lib/search/results.ts` (`searchResults`), a pure function
 with its own tests; `web/src/scripts/card-search.ts` only loads, shows and pages the results.
 
@@ -113,12 +116,22 @@ list of all types in the file). A request word that is one ("Elfen", "dragons") 
 of that type; "Synergie mit Elfen" and "elf synergy" stay a synergy with the type. A guild name
 means the cards a deck of its colours can play: one or both colours and no other ("Izzet"
 finds mono-red spells too, but no colourless card), and so do the shard and wedge names for
-three colours ("Esper", "Jund"). "mono" and "farblos" mean exactly these colours, "nur" and
-"only" too, but only right before a colour word ("rote Karten nur bis 3 Mana" is not mono);
-plain colour words mean all of them and maybe more. Colours and keywords can be ruled out
-("nicht blau", "non-blue", "ohne Fliegen", "without flying"). One word for two types
-("Artefaktkreaturen", "artifact creatures") needs both, while "Artefakte und Kreaturen" is
-either. German creature words count with at most a short ending ("Hunde", not "hundert").
+three colours ("Esper", "Jund"). "mono" and "farblos" mean exactly these colours ("monoblau"
+too), "nur" and "only" too, but only right before a colour word ("nur in Rot"), and "only" at
+the very end a word or two behind one ("red creatures only"); "rote Karten nur bis 3 Mana" is
+not mono. Plain colour words mean all of them and maybe more. Colours, keywords, card types and
+creature types can be ruled out ("nicht blau", "non-blue", "nonblack", "nicht Izzet", "ohne
+Fliegen", "without flying", "non-artifact creatures", "Nicht-Artefakt-Kreaturen", "non-human",
+"Kreaturen ohne Menschen"; new query fields `notTypes` and `notCreatureTypes`). A negation
+covers the whole list behind it while its words are of one kind ("ohne Fliegen oder
+Reichweite", "keine blauen oder roten Karten", "weder blau noch rot", "neither blue nor red")
+and ends with the list ("Kreaturen ohne Fliegen mit Reichweite" asks for reach). "keine
+farblosen Karten" are cards of any colour. One word for two types ("Artefaktkreaturen",
+"artifact creatures") needs both, while "Artefakte und Kreaturen" is either. German creature
+words count with at most a short ending, the dative "-ern" included ("Hunde", "Geistern", not
+"hundert"), and in compounds with a card word or a second creature word ("Zombiekarten",
+"Drachenkreaturen" as creatures, "Elfenkriegern" as elf or warrior); any other second part
+makes no compound ("Elfmeter", "Geistreich", "Goblinkönig").
 
 Seven card roles are read from the English rules text at build time, like the synergies, and
 can be searched: ramp, removal, counterspell, wipe, draw, burn and tutor ("Removal", "Edikte",

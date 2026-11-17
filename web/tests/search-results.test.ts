@@ -173,3 +173,83 @@ describe('searchResults: filters and order', () => {
     ]);
   });
 });
+
+// The card list has no layout field, so these cards look as they do there: a split card has a
+// mana cost per face, a double-faced card only that of its front.
+describe('searchResults: faces of double-faced cards', () => {
+  const creature = { type: 'creature', types: ['creature'] } as const;
+  const FACES = [
+    entry('Norman Osborn // Green Goblin', {
+      ...creature,
+      colors: 'U',
+      manaCost: '{1}{U}',
+      cmc: 2,
+      creatureTypes: ['human', 'scientist', 'goblin', 'villain'],
+      playShare: 0.1,
+    }),
+    entry('Scarwood Goblins', {
+      ...creature,
+      colors: 'RG',
+      manaCost: '{R}{G}',
+      cmc: 2,
+      creatureTypes: ['goblin'],
+      playShare: 3,
+    }),
+    entry('Ultimate Green Goblin', {
+      ...creature,
+      colors: 'BR',
+      manaCost: '{1}{B/R}{B/R}',
+      cmc: 3,
+      creatureTypes: ['goblin', 'villain'],
+      playShare: 2,
+    }),
+    entry('Peter Parker // Spider-Man', {
+      ...creature,
+      colors: 'W',
+      manaCost: '{1}{W}',
+      cmc: 2,
+      creatureTypes: ['human', 'spider', 'hero'],
+      playShare: 0.1,
+    }),
+    entry('Superior Spider-Man', {
+      ...creature,
+      colors: 'UB',
+      manaCost: '{2}{U}{B}',
+      cmc: 4,
+      creatureTypes: ['spider', 'human', 'hero'],
+      playShare: 4,
+    }),
+    entry('Skyward Spider', {
+      ...creature,
+      colors: 'U',
+      manaCost: '{1}{U}',
+      cmc: 2,
+      creatureTypes: ['spider'],
+      playShare: 5,
+    }),
+    entry('Turn // Burn', {
+      ...burn,
+      colors: 'UR',
+      manaCost: '{2}{U} // {1}{R}',
+      cmc: 5,
+      playShare: 0.1,
+    }),
+    entry('Lightning Bolt', { ...burn, playShare: 5 }),
+  ];
+  const FACE_CATALOG = catalogOf(FACES, ['goblin', 'human', 'spider', 'hero', 'villain']);
+
+  it('pins a double-faced card for the name of its back face: "Green Goblin"', () => {
+    const results = names(searchResults('Green Goblin', FACE_CATALOG));
+    expect(results[0]).toBe('Norman Osborn // Green Goblin');
+    // The filters still find the green goblins
+    expect(results).toContain('Scarwood Goblins');
+  });
+
+  it('pins a double-faced card for the name of its back face: "Spider-Man"', () => {
+    expect(names(searchResults('Spider-Man', FACE_CATALOG))[0]).toBe('Peter Parker // Spider-Man');
+  });
+
+  it('still pins no split card for one face that is a filter word: "Burn"', () => {
+    expect(names(searchResults('Burn', FACE_CATALOG))).toEqual(['Lightning Bolt', 'Turn // Burn']);
+  });
+});

@@ -56,8 +56,12 @@ export interface SearchQuery {
    * Kreaturen" is either and "Artefaktkreaturen" is both.
    */
   readonly typeGroups: readonly (readonly CardType[])[];
+  /** None of these types ("non-artifact creatures", "Nicht-Artefakt-Kreaturen"). */
+  readonly notTypes: readonly CardType[];
   /** Any of these creature types, lower case ("elf"); the cards must be one. */
   readonly creatureTypes: readonly string[];
+  /** None of these creature types, lower case ("non-human", "ohne Menschen"). */
+  readonly notCreatureTypes: readonly string[];
   /** All of these keywords. */
   readonly keywords: readonly Keyword[];
   /** None of these keywords ("ohne Fliegen", "without flying"). */
@@ -114,13 +118,16 @@ const ending = '(?:e|en|er|es|em)?';
 const blank = (text: string, index: number, length: number) =>
   text.slice(0, index) + ' '.repeat(length) + text.slice(index + length);
 
-const COLOR_WORDS: readonly (readonly [string, RegExp])[] = [
-  ['W', word(`wei(?:ß|ss)${ending}|white`)],
-  ['U', word(`blau${ending}|blue`)],
-  ['B', word(`schwarz${ending}|black`)],
-  ['R', word(`rot${ending}|red`)],
-  ['G', word(`grun${ending}|green`)],
+const COLOR_NAMES: readonly (readonly [string, string])[] = [
+  ['W', `wei(?:ß|ss)${ending}|white`],
+  ['U', `blau${ending}|blue`],
+  ['B', `schwarz${ending}|black`],
+  ['R', `rot${ending}|red`],
+  ['G', `grun${ending}|green`],
 ];
+const COLOR_WORDS: readonly (readonly [string, RegExp])[] = COLOR_NAMES.map(
+  ([color, names]) => [color, word(names)] as const,
+);
 
 /**
  * Two- and three-colour groups have fixed names in Magic. They stand for a deck of these
@@ -151,13 +158,30 @@ const GUILDS: Readonly<Record<string, string>> = {
 };
 const GUILD = word(Object.keys(GUILDS).join('|'));
 const COLORLESS = word('farblos\\p{L}*|colou?rless');
-const ANY_COLOR = COLOR_WORDS.map(([, pattern]) => pattern.source).join('|');
-// Mono only right before a colour word ("nur rote Karten", "only green"): "rote Karten nur bis 3
-// Mana" is red cards up to 3 mana, and there "nur" is a filler word
-const MONO = new RegExp(`(?<![\\p{L}\\d])(?:mono|nur|only|rein)[\\s-]*(?=${ANY_COLOR})`, 'gu');
-// "nicht blau", "keine blauen Karten", "non-blue", "ohne Fliegen", "without flying"
-const NOT = `(?<![\\p{L}\\d])(?:nicht|kein${ending}|ohne|not|non|no|without)[\\s-]+`;
-const negated = (pattern: RegExp) => new RegExp(NOT + pattern.source, 'gu');
+// A colour word, also right behind "mono" in one word ("monoblau")
+const ANY_COLOR = `(?:${COLOR_NAMES.map(([, names]) => names).join('|')})(?![\\p{L}])`;
+// Mono only right before a colour word ("nur rote Karten", "only green", "nur in Rot",
+// "monoblau"): "rote Karten nur bis 3 Mana" is red cards up to 3 mana, and there "nur" is a
+// filler word
+const MONO = new RegExp(
+  `(?<![\\p{L}\\d])(?:mono[\\s-]*|(?:nur|only|rein)[\\s-]+(?:in\\s+)?)(?=${ANY_COLOR})`,
+  'gu',
+);
+// "red cards only", "red creatures only": "only" a word or two behind the colour word, and only
+// at the end of the request (readColors)
+const MONO_AFTER = new RegExp(
+  `(?<=(?<![\\p{L}\\d])${ANY_COLOR}(?:[\\s-]+\\p{L}+){0,2}\\s+)only(?![\\p{L}\\d])`,
+  'gu',
+);
+// "nicht blau", "keine blauen oder roten Karten", "weder blau noch rot", "non-blue", "nonblack",
+// "Nicht-Artefakt-Kreaturen", "ohne Fliegen oder Reichweite", "without flying"; what may follow
+// is in NEGATABLE (readNegations)
+const NOT = new RegExp(
+  `(?<![\\p{L}\\d])(?:(?:nicht|kein${ending}|ohne|weder|not|no|without|neither)[\\s-]+|non[\\s-]*)`,
+  'gu',
+);
+// Between the words of a ruled out list: the negation covers all of them
+const NOT_LIST = /\s*[,&/]\s*|\s+(?:und|and|oder|or|sowie|noch|nor)\s+/uy;
 
 const TYPE_WORDS: readonly (readonly [CardType, RegExp])[] = [
   ['creature', word('kreatur(?:en)?|creatures?')],
@@ -198,6 +222,24 @@ const KEYWORD_WORDS: Readonly<Record<Keyword, RegExp>> = {
   ward: word('abwehr|ward'),
   prowess: word('bravour|prowess'),
 };
+
+/** What a negation may rule out; a ruled out list holds words of one kind. */
+type NotKind = 'keyword' | 'color' | 'colorless' | 'type' | 'creatureType';
+/** `pattern` matching only at the start of the text it runs on (lastIndex 0). */
+const sticky = (pattern: RegExp) => new RegExp(pattern.source, 'uy');
+// The words a negation reads, right behind it: keywords, colours (a guild name rules out its
+// colours: "nicht Izzet"), "farblos" ("keine farblosen Karten" are cards with a colour) and
+// single card types ("Nicht-Artefakt-Kreaturen" are creatures that are no artifacts, so not the
+// joined type words). Creature types come last, as in readFilters (readNegations).
+const NEGATABLE: readonly (readonly [NotKind, readonly string[], RegExp])[] = [
+  ...KEYWORDS.map((keyword) => ['keyword', [keyword], sticky(KEYWORD_WORDS[keyword])] as const),
+  ...COLOR_WORDS.map(([color, pattern]) => ['color', [color], sticky(pattern)] as const),
+  ...Object.entries(GUILDS).map(
+    ([guild, colors]) => ['color', [...colors], sticky(word(guild))] as const,
+  ),
+  ['colorless', [], sticky(COLORLESS)],
+  ...TYPE_WORDS.map(([type, pattern]) => ['type', [type], sticky(pattern)] as const),
+];
 
 /** What a synergy is called after "Synergie mit": German card words and English ones. */
 const SYNERGY_NAMES: Readonly<Record<Synergy, string>> = {
@@ -267,6 +309,8 @@ const BARE_SYNERGIES: readonly (readonly [Synergy, RegExp])[] = [
   ['lands', word('landfall')],
   ['sacrifice', word('(?:sacrifice|sac|opfer)[\\s-]?outlets?')],
 ];
+// "Drachenkreaturen": a German creature type word joined to "Kreaturen" (lib/search/tribes.ts)
+const TRIBE_CREATURES = word('\\p{L}+kreatur(?:en)?');
 // "Zauber", "spell": an instant or a sorcery
 const SPELL = word('zauber(?:spruch|spruche)?|spells?');
 
@@ -475,15 +519,23 @@ function readFilters(
       ? Number(cents) / 100
       : Number(price[1]!.replace(',', '.'));
   const { minMana, maxMana } = readMana(take);
-  const { colors, colorMode, notColors } = readColors(take);
+  // What is ruled out before the colours, types and keywords themselves, so "ohne Fliegen" asks
+  // for no flying and "Nicht-Artefakt-Kreaturen" for no artifact creatures
+  const negations = readNegations(rest, typesOf);
+  rest = negations.rest;
+  const { colors, colorMode } = readColors(take, text, negations.colored);
 
   const typeGroups: CardType[][] = JOINED_TYPE_WORDS.filter(
     ([, pattern]) => take(pattern).length > 0,
   ).map(([joined]) => [...joined]);
+  // "Drachenkreaturen", "Zombiekreaturen": creatures of a creature type, in one German word
+  const tribeCreatures = take(TRIBE_CREATURES, ([word]) => typesOf(word).length > 0).flatMap(
+    ([word]) => typesOf(word),
+  );
   for (const [type, pattern] of TYPE_WORDS) {
     if (
       take(pattern).length > 0 ||
-      (type === 'creature' && dorks) ||
+      (type === 'creature' && (dorks || tribeCreatures.length > 0)) ||
       (type === 'artifact' && rocks)
     ) {
       typeGroups.push([type]);
@@ -491,20 +543,17 @@ function readFilters(
   }
   if (take(SPELL).length > 0) typeGroups.push(['instant'], ['sorcery']);
   const types = [...new Set(typeGroups.flat())];
-  // "ohne Fliegen" before the keywords themselves, so its "Fliegen" asks for no flying
-  const notKeywords = KEYWORDS.filter(
-    (keyword) => take(negated(KEYWORD_WORDS[keyword])).length > 0,
-  );
   const keywords = KEYWORDS.filter((keyword) => take(KEYWORD_WORDS[keyword]).length > 0);
   const sortWords = context.strengthNoun ? SORT_WORDS : [...SORT_WORDS, STRONG];
   const sort = sortWords.find(([, pattern]) => take(pattern).length > 0)?.[0] ?? null;
   // Last, among the words no other filter read: "Elfen", "dragons", "Zombies in Schwarz"
   const creatureTypes = [
-    ...new Set(
-      take(/\p{L}+/gu, ([word]) => !FILLER.has(word) && typesOf(word).length > 0).flatMap(
+    ...new Set([
+      ...tribeCreatures,
+      ...take(/\p{L}+/gu, ([word]) => !FILLER.has(word) && typesOf(word).length > 0).flatMap(
         ([word]) => typesOf(word),
       ),
-    ),
+    ]),
   ];
   const unknown = rest.split(/[^\p{L}\d]+/u).filter((word) => word.length > 1 && !FILLER.has(word));
 
@@ -513,12 +562,14 @@ function readFilters(
       colors,
       colorMode,
       exactColors: colorMode === 'exact',
-      notColors,
+      notColors: negations.notColors,
       types,
       typeGroups,
+      notTypes: negations.notTypes,
       creatureTypes,
+      notCreatureTypes: negations.notCreatureTypes,
       keywords,
-      notKeywords,
+      notKeywords: negations.notKeywords,
       synergies,
       answers,
       tribes,
@@ -573,22 +624,94 @@ function readMana(take: Take): { minMana: number | null; maxMana: number | null 
 }
 
 /**
- * The colours and how the cards must fit them (ColorMode), and the colours they must not have.
- * The ruled out ones first, so "nicht blau" asks for no blue cards, and mono before the colour
- * words, which it needs right behind it.
+ * The colours and how the cards must fit them (ColorMode); the ruled out ones are read before
+ * (readNegations). Mono before the colour words, which it needs right behind it; "only" behind
+ * them only at the end of `text`, the request, so "red cards only up to 3 mana" is not mono.
+ * `colored` is a ruled out "farblos": without a colour named, the cards have any colour.
  */
-function readColors(take: Take): { colors: string; colorMode: ColorMode; notColors: string } {
-  const notColors = COLOR_WORDS.filter(([, pattern]) => take(negated(pattern)).length > 0)
-    .map(([color]) => color)
-    .join('');
+function readColors(
+  take: Take,
+  text: string,
+  colored: boolean,
+): { colors: string; colorMode: ColorMode } {
   const guild = take(GUILD)[0];
-  if (take(COLORLESS).length > 0) return { colors: '', colorMode: 'exact', notColors };
-  if (guild) return { colors: GUILDS[guild[0]]!, colorMode: 'within', notColors };
-  const mono = take(MONO).length > 0;
+  if (take(COLORLESS).length > 0) return { colors: '', colorMode: 'exact' };
+  if (guild) return { colors: GUILDS[guild[0]]!, colorMode: 'within' };
+  const mono =
+    take(MONO).length > 0 ||
+    take(MONO_AFTER, (match) => text.slice(match.index + match[0].length).trim() === '').length > 0;
   const colors = COLOR_WORDS.filter(([, pattern]) => take(pattern).length > 0)
     .map(([color]) => color)
     .join('');
-  return { colors, colorMode: mono && colors.length > 0 ? 'exact' : 'all', notColors };
+  // A card of any colour is one a five-colour deck can play, and no colourless one
+  if (colors === '' && colored) return { colors: 'WUBRG', colorMode: 'within' };
+  return { colors, colorMode: mono && colors.length > 0 ? 'exact' : 'all' };
+}
+
+/** What a request rules out (readNegations). */
+interface Negations {
+  /** Colours in WUBRG order. */
+  readonly notColors: string;
+  /** Whether "farblos" is ruled out: the cards must have a colour. */
+  readonly colored: boolean;
+  readonly notTypes: readonly CardType[];
+  readonly notCreatureTypes: readonly string[];
+  readonly notKeywords: readonly Keyword[];
+}
+
+/**
+ * The colours, card types, creature types and keywords `text` rules out, and `text` with them
+ * blanked out. A negation covers the whole list behind it ("ohne Fliegen oder Reichweite",
+ * "keine blauen oder roten Karten", "weder blau noch rot") while its words are of one kind, and
+ * ends where the list does: "Kreaturen ohne Fliegen mit Reichweite" asks for reach.
+ */
+function readNegations(
+  text: string,
+  typesOf: (word: string) => string[],
+): Negations & { rest: string } {
+  let rest = text;
+  const ruledOut: (readonly [NotKind, readonly string[]])[] = [];
+  // The NEGATABLE word or creature type at the start of `tail`
+  const item = (tail: string) => {
+    for (const [kind, values, pattern] of NEGATABLE) {
+      pattern.lastIndex = 0;
+      const match = pattern.exec(tail);
+      if (match) return { kind, values, length: match[0].length };
+    }
+    const word = /^\p{L}+/u.exec(tail)?.[0] ?? '';
+    const types = word && !FILLER.has(word) ? typesOf(word) : [];
+    return types.length > 0
+      ? { kind: 'creatureType' as const, values: types, length: word.length }
+      : null;
+  };
+  for (const not of text.matchAll(NOT)) {
+    let kind: NotKind | null = null;
+    let start = not.index + not[0].length;
+    let end = start;
+    for (;;) {
+      // Sliced, so a word right behind "non" counts as a word of its own ("nonblack")
+      const found = item(rest.slice(start));
+      if (!found || (kind !== null && found.kind !== kind)) break;
+      kind = found.kind;
+      ruledOut.push([found.kind, found.values]);
+      end = start + found.length;
+      NOT_LIST.lastIndex = 0;
+      const join = NOT_LIST.exec(rest.slice(end));
+      if (!join) break;
+      start = end + join[0].length;
+    }
+    if (kind !== null) rest = blank(rest, not.index, end - not.index);
+  }
+  const of = (kind: NotKind) =>
+    ruledOut.filter(([each]) => each === kind).flatMap(([, values]) => values);
+  return {
+    notColors: [...'WUBRG'].filter((color) => of('color').includes(color)).join(''),
+    colored: ruledOut.some(([kind]) => kind === 'colorless'),
+    notTypes: TYPE_WORDS.map(([type]) => type).filter((type) => of('type').includes(type)),
+    notCreatureTypes: [...new Set(of('creatureType'))],
+    notKeywords: KEYWORDS.filter((keyword) => of('keyword').includes(keyword)),
+    rest,
+  };
 }
 
 /** Whether the request named any filter or order at all. */
@@ -599,7 +722,9 @@ export function understood(query: SearchQuery): boolean {
     query.exactColors ||
     query.notColors !== '' ||
     query.types.length > 0 ||
+    query.notTypes.length > 0 ||
     query.creatureTypes.length > 0 ||
+    query.notCreatureTypes.length > 0 ||
     query.keywords.length > 0 ||
     query.notKeywords.length > 0 ||
     query.synergies.length > 0 ||
@@ -642,7 +767,9 @@ const NO_FILTERS: SearchQuery = {
   notColors: '',
   types: [],
   typeGroups: [],
+  notTypes: [],
   creatureTypes: [],
+  notCreatureTypes: [],
   keywords: [],
   notKeywords: [],
   synergies: [],
@@ -707,8 +834,10 @@ export function queryMatcher(query: SearchQuery): (card: SearchableCard) => bool
     ![...query.notColors].some((color) => card.colors.includes(color)) &&
     (query.typeGroups.length === 0 ||
       query.typeGroups.some((group) => group.every((type) => card.types.includes(type)))) &&
+    !query.notTypes.some((type) => card.types.includes(type)) &&
     (query.creatureTypes.length === 0 ||
       card.creatureTypes.some((type) => query.creatureTypes.includes(type))) &&
+    !query.notCreatureTypes.some((type) => card.creatureTypes.includes(type)) &&
     query.keywords.every((keyword) => card.keywords.includes(keyword)) &&
     !query.notKeywords.some((keyword) => card.keywords.includes(keyword)) &&
     query.synergies.every((synergy) => card.synergies.includes(synergy)) &&

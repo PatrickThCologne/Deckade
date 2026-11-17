@@ -4,7 +4,13 @@
  * order. Pure, so the tests can run it on a card list of their own; the search tab
  * (scripts/card-search.ts) only loads the list and shows the result.
  */
-import { compareCards, normalizeForSearch, type SortableCard, type SortKey } from '../cards/sort';
+import {
+  compareCards,
+  normalizeForSearch,
+  searchWords,
+  type SortableCard,
+  type SortKey,
+} from '../cards/sort';
 import {
   exactNameMatch,
   nameQuery,
@@ -44,8 +50,9 @@ export interface SearchCatalog<Card extends ResultCard> {
  * start with it, and the face of a card with two counts as its name ("Fire" for "Fire // Ice").
  * Where all of a full card name reads as filters ("Flash", "Wrath of God" with the creature
  * type God) the filters are searched and every card of that name comes first, whether the
- * filters find it or not. One face of a split card is no full name: "Burn" is burn, not Turn //
- * Burn.
+ * filters find it or not. So does a face of more than one word, such as the back of a
+ * double-faced card ("Green Goblin" of Norman Osborn // Green Goblin). A face of one word is a
+ * single filter word here and no full name: "Burn" is burn, not Turn // Burn.
  *
  * `chosen` is the order picked on the page; it replaces the name ranking. Without it the
  * results follow the order the request names ("günstig"), otherwise the play rate.
@@ -68,8 +75,11 @@ export function searchResults<Card extends ResultCard>(
   const matches = catalog.cards.filter(queryMatcher(query)).sort(order);
   if (asName || !exactNameMatch(request, catalog.names)) return matches;
 
-  // `search` holds the full names, one per line, without the faces
+  // `search` holds the full names, one per line, without the faces; `names` has the faces too
   const name = normalizeForSearch(request);
-  const own = catalog.cards.filter((card) => card.search.split('\n').includes(name)).sort(order);
+  const face = searchWords(request).length > 1;
+  const own = catalog.cards
+    .filter((card) => card.search.split('\n').includes(name) || (face && card.names.includes(name)))
+    .sort(order);
   return [...own, ...matches.filter((card) => !own.includes(card))];
 }
