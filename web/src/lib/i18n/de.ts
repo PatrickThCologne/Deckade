@@ -112,10 +112,6 @@ export const de = {
   'type.other': 'Sonstige',
 
   'products.heading': 'Bundles & Booster Boxes',
-  'products.contents': 'Inhalt',
-  'products.price': 'Preis',
-  'products.perPack': 'je Booster',
-  'products.empty': 'Für dieses Set sind keine Bundles oder Booster Boxes gelistet.',
 
   'pack.play': 'Play Booster',
   'pack.set': 'Set Booster',
@@ -186,7 +182,7 @@ export const de = {
 
   'meta.overview.title': 'Alle Magic-Sets im Überblick',
   'meta.overview.description':
-    'Alle Magic-Sets seit 1993 auf einen Blick – mit Markierungen, ab wo sie in Standard, Pioneer und Modern legal sind, Kartenpreisen und Booster-Box-Preisen.',
+    'Alle Magic-Sets seit 1993 auf einen Blick – mit Markierungen, ab wo sie in Standard, Pioneer und Modern legal sind, Kartenpreisen und dem Inhalt der Booster-Boxen.',
   'meta.set.descriptionFormats': '{name}: legal in {formats}. {cards} mit Preis.',
   'tabs.label': 'Bereiche',
   'tabs.overview': 'Alle Sets',

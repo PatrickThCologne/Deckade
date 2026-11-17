@@ -113,10 +113,6 @@ export const en: Record<UiKey, string> = {
   'type.other': 'Other',
 
   'products.heading': 'Bundles & booster boxes',
-  'products.contents': 'Contents',
-  'products.price': 'Price',
-  'products.perPack': 'per booster',
-  'products.empty': 'No bundles or booster boxes are listed for this set.',
 
   'pack.play': 'Play Booster',
   'pack.set': 'Set Booster',
@@ -187,7 +183,7 @@ export const en: Record<UiKey, string> = {
 
   'meta.overview.title': 'All Magic sets at a glance',
   'meta.overview.description':
-    'Every Magic set since 1993 at a glance – marked where they are legal in Standard, Pioneer and Modern, with card prices and booster box prices.',
+    'Every Magic set since 1993 at a glance – marked where they are legal in Standard, Pioneer and Modern, with card prices and what their booster boxes contain.',
   'meta.set.descriptionFormats': '{name}: legal in {formats}. {cards} with price.',
   'tabs.label': 'Sections',
   'tabs.overview': 'All sets',
