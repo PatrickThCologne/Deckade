@@ -7,14 +7,19 @@
 3. Enrichment for every set that is legal anywhere: card rows, products, pack images
    (official images from Wizards where a product page has one; the website shows the set
    symbol for the others).
+4. Checks: the snapshot is only written when it passes ``domain/checks.py``, also against the
+   last build, so a bad build never replaces the good one.
 """
 
 from __future__ import annotations
 
+import json
 import logging
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
+from typing import Any
 
 from rotation_radar.config import (
     OFFICIAL_PACK_IMAGES_SINCE,
@@ -31,6 +36,7 @@ from rotation_radar.domain.cards import (
     count_legality,
     mana_symbols,
 )
+from rotation_radar.domain.checks import ensure_snapshot_ok
 from rotation_radar.domain.formats import FormatRule, format_candidates, legal_sets
 from rotation_radar.domain.play import PlayRate, PlaySummary, play_rates
 from rotation_radar.domain.products import (
@@ -183,11 +189,25 @@ def build(
         formats=format_entries,
         featured_art=with_hues(art, hues),
     )
-    write_snapshot(
-        snapshot, {code: cards_by_set.get(code, []) for code in catalog_codes}, paths.data_dir
-    )
+    written_cards = {code: cards_by_set.get(code, []) for code in catalog_codes}
+    ensure_snapshot_ok(snapshot, written_cards, _previous_snapshot(paths.data_dir))
+    write_snapshot(snapshot, written_cards, paths.data_dir)
     log.info("Snapshot with %d sets written to %s", len(catalog), paths.data_dir)
     return snapshot
+
+
+def _previous_snapshot(data_dir: Path) -> dict[str, Any] | None:
+    """The snapshot of the last build, to compare the new one with; None if there is none."""
+    path = data_dir / "snapshot.json"
+    if not path.exists():
+        return None
+    try:
+        previous = json.loads(path.read_text("utf-8"))
+    except ValueError as error:
+        # A broken file is no reference; the checks that need none still apply
+        log.warning("Not comparing with the last snapshot, it cannot be read: %s", error)
+        return None
+    return previous if isinstance(previous, dict) else None
 
 
 def _standard(
@@ -354,9 +374,6 @@ def _product_entry(sealed: SealedProduct) -> ProductEntry:
         category=product.category.value,
         subtype=product.subtype,
         contents=product.contents,
-        price=product.price,
-        average_sale=product.average_sale,
-        price_per_pack=product.price_per_pack,
     )
 
 

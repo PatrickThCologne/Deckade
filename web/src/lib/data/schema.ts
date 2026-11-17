@@ -28,9 +28,6 @@ const ProductSchema = z.object({
   category: z.enum(['bundle', 'booster_box']),
   subtype: z.string().nullable(),
   contents: z.array(PackCountSchema),
-  price: z.number().nullable(),
-  averageSale: z.number().nullable(),
-  pricePerPack: z.number().nullable(),
 });
 
 const SetRotationSchema = z.object({
@@ -97,7 +94,7 @@ const FeaturedArtSchema = z.object({
 });
 
 export const SnapshotSchema = z.object({
-  schemaVersion: z.literal(6),
+  schemaVersion: z.literal(7),
   generatedAt: z.string(),
   rotation: RotationEstimateSchema,
   rules: z.object({

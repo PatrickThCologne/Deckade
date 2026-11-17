@@ -68,7 +68,6 @@ export const en: Record<UiKey, string> = {
   'facts.includes': 'incl. {sets}',
   'facts.special': 'special rule by Wizards',
   'facts.preorder': 'pre-order',
-  'products.perPackShort': '{price} per booster',
 
   'cards.heading': 'Cards',
   'cards.search': 'Search name or card text',
@@ -114,10 +113,6 @@ export const en: Record<UiKey, string> = {
   'type.other': 'Other',
 
   'products.heading': 'Bundles & booster boxes',
-  'products.contents': 'Contents',
-  'products.price': 'Price',
-  'products.perPack': 'per booster',
-  'products.empty': 'No bundles or booster boxes are listed for this set.',
 
   'pack.play': 'Play Booster',
   'pack.set': 'Set Booster',
@@ -188,7 +183,7 @@ export const en: Record<UiKey, string> = {
 
   'meta.overview.title': 'All Magic sets at a glance',
   'meta.overview.description':
-    'Every Magic set since 1993 at a glance – marked where they are legal in Standard, Pioneer and Modern, with card prices and booster box prices.',
+    'Every Magic set since 1993 at a glance – marked where they are legal in Standard, Pioneer and Modern, with card prices and what their booster boxes contain.',
   'meta.set.descriptionFormats': '{name}: legal in {formats}. {cards} with price.',
   'tabs.label': 'Sections',
   'tabs.overview': 'All sets',
@@ -225,12 +220,16 @@ export const en: Record<UiKey, string> = {
   'search.guide.colors.example': '"red", "Azorius"',
   'search.guide.types': 'Types and keywords',
   'search.guide.types.example': '"creatures with haste"',
+  'search.guide.sets': 'Sets',
+  'search.guide.sets.example': '"creatures from Reality Fracture"',
   'search.guide.limits': 'Mana value and price',
   'search.guide.limits.example': '"up to 3 mana", "under 2 €"',
   'search.guide.synergies': 'Synergies',
   'search.guide.synergies.example': '"synergy with Elves"',
   'search.guide.answers': 'Answers',
   'search.guide.answers.example': '"answer to flyers"',
+  'search.guide.styles': 'Play styles',
+  'search.guide.styles.example': '"ramp", "aggro", "late game"',
   'search.guide.order': 'Order',
   'search.guide.order.example': '"cheap", "popular"',
   'search.label': 'What are you looking for?',

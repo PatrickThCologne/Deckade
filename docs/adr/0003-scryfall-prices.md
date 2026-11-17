@@ -32,3 +32,6 @@ trends or provide a general estimate". Scryfall has no prices for sealed product
   under Scryfall's terms is the usual way fan sites show prices, but whether Cardmarket's
   rights reach through to them was not checked legally.
 - Schema version 6: `sources.cardmarketPriceDate` is gone.
+- Update 2026-11-16, schema version 7: the product fields `price`, `averageSale` and
+  `pricePerPack` are gone as well; they were always empty. A licensed source would bring them
+  back with a new schema version.

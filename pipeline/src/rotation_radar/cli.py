@@ -10,6 +10,7 @@ from pathlib import Path
 
 from rotation_radar.build import BuildOptions, build
 from rotation_radar.config import Paths
+from rotation_radar.domain.checks import SnapshotError
 from rotation_radar.rules import load_formats, load_rules
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
@@ -24,7 +25,12 @@ def main(argv: list[str] | None = None) -> int:
         today=args.today or date.today(),
         github_token=os.environ.get("GITHUB_TOKEN") or None,
     )
-    build(paths, load_rules(paths.rules_file), load_formats(paths.rules_file), options)
+    try:
+        build(paths, load_rules(paths.rules_file), load_formats(paths.rules_file), options)
+    except SnapshotError as error:
+        # Expected when a source delivered too little: the problems, not a traceback
+        logging.getLogger(__name__).error("%s", error)
+        return 1
     return 0
 
 

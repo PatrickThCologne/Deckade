@@ -8,3 +8,6 @@ public/
 # Reports of Lighthouse CI (lighthouserc.json), in CI and when run locally
 .lighthouseci/
 lighthouse/
+# Playwright results
+test-results/
+playwright-report/

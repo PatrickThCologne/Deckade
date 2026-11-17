@@ -1,18 +1,14 @@
 /**
- * The search tab (pages/[lang]/search.astro): reads the request (lib/search/query.ts) and lists
- * the matching cards of the "All cards" list as images. The list is large, so it is loaded with
- * the first search, not with the page.
+ * The search tab (pages/[lang]/search.astro): lists the cards of the "All cards" list that a
+ * request finds (lib/search/results.ts) as images. This script does only the page's part:
+ * loading the list, showing the results step by step and keeping the request in the address.
+ * The list is large, so it is loaded with the first search, not with the page.
  */
 import { isLocale } from '../config/site';
 import { type CatalogCard, type CatalogFile, decodeCatalog } from '../lib/cards/catalog';
-import { compareCards, isSortKey, normalizeForSearch } from '../lib/cards/sort';
+import { isSortKey, normalizeForSearch } from '../lib/cards/sort';
 import { createFormatters } from '../lib/format';
-import {
-  nameRank,
-  parseQuery,
-  queryMatcher,
-  understood as namesFilters,
-} from '../lib/search/query';
+import { type ResultCard, type SearchCatalog, searchResults } from '../lib/search/results';
 
 /** Cards added per step */
 const STEP = 48;
@@ -28,10 +24,19 @@ interface Labels {
   readonly scryfall: string;
 }
 
-interface Result extends CatalogCard {
-  readonly search: string;
+/** A card of the list with what the search needs, and its item once it was shown. */
+interface Result extends CatalogCard, ResultCard {
   element?: HTMLLIElement;
 }
+
+const cardNames = (card: CatalogCard) => [
+  ...new Set(
+    [card.name, card.altName]
+      .filter(Boolean)
+      .flatMap((name) => [name, ...(name.includes(' // ') ? name.split(' // ') : [])])
+      .map((name) => normalizeForSearch(name)),
+  ),
+];
 
 export async function initCardSearch(): Promise<void> {
   const root = document.querySelector<HTMLElement>('[data-card-search]');
@@ -48,20 +53,32 @@ export async function initCardSearch(): Promise<void> {
   const format = createFormatters(isLocale(root.dataset.locale) ? root.dataset.locale : 'de');
   const numbers = new Intl.NumberFormat(document.documentElement.lang || undefined);
 
-  let cards: Promise<Result[] | null> | undefined;
+  let catalog: Promise<SearchCatalog<Result> | null> | undefined;
   const load = () =>
-    (cards ??= fetch(src)
+    (catalog ??= fetch(src)
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json() as Promise<CatalogFile>;
       })
-      .then((file) =>
-        decodeCatalog(file).map((card) => ({
+      .then((file) => {
+        const cards = decodeCatalog(file).map((card) => ({
           ...card,
           search: normalizeForSearch(`${card.name}\n${card.altName}`),
-        })),
-      )
-      .catch(() => null));
+          names: cardNames(card),
+        }));
+        return {
+          cards,
+          sets: Object.entries(file.sets).map(([code, name]) => ({ code, name })),
+          // Older card list files have no creature types
+          creatureTypes: file.creatureTypes ?? [],
+          names: new Set(cards.flatMap((card) => card.names)),
+        };
+      })
+      .catch(() => {
+        // Not kept, so the next search tries to load the list again
+        catalog = undefined;
+        return null;
+      }));
 
   const element = (tag: string, className: string, text = '') => {
     const node = document.createElement(tag);
@@ -109,10 +126,11 @@ export async function initCardSearch(): Promise<void> {
   };
   more.addEventListener('click', showMore);
 
-  let latest = '';
+  // Counts the runs, so only the newest one shows its results: comparing the request would let
+  // two runs of the same request (typed, then submitted while the list loads) both render
+  let runs = 0;
   const run = async (request: string) => {
-    latest = request;
-    const query = parseQuery(request);
+    const current = ++runs;
     list.replaceChildren();
     more.hidden = true;
     shown = 0;
@@ -124,23 +142,15 @@ export async function initCardSearch(): Promise<void> {
 
     status.textContent = labels.loading;
     status.hidden = false;
-    const all = await load();
-    if (request !== latest) return; // a newer search has started meanwhile
-    if (!all) {
+    const loaded = await load();
+    if (current !== runs) return; // a newer search has started meanwhile
+    if (!loaded) {
       status.textContent = labels.error;
       return;
     }
-    // The chosen order, otherwise the one the request names ("günstig"), otherwise play rate
-    const chosen = isSortKey(sort.value) ? sort.value : null;
-    const key = chosen ?? query.sort ?? 'played';
-    // A name search puts the card of that name first, then names that start with it
-    const rank =
-      chosen || namesFilters(query)
-        ? () => 0
-        : (card: Result) => nameRank(card.search, query.unknown);
-    matches = all
-      .filter(queryMatcher(query))
-      .sort((a, b) => rank(a) - rank(b) || compareCards(a, b, key));
+    // Searched only now: the set names and creature types a request may use come with the
+    // card list
+    matches = searchResults(request, loaded, isSortKey(sort.value) ? sort.value : null);
     status.textContent =
       matches.length > 0
         ? labels.count.replace('{count}', numbers.format(matches.length))

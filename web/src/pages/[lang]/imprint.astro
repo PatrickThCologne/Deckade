@@ -2,23 +2,32 @@
 /**
  * Imprint and contact. Who runs the site comes from the deployment (OPERATOR_NAME,
  * OPERATOR_ADDRESS, OPERATOR_EMAIL), so it is not part of the repository; locally the page shows
- * a placeholder instead.
+ * a placeholder instead, the production build fails without them (lib/operator.ts).
  */
-import { OPERATOR_ADDRESS, OPERATOR_EMAIL, OPERATOR_NAME } from 'astro:env/server';
+import {
+  OPERATOR_ADDRESS,
+  OPERATOR_EMAIL,
+  OPERATOR_NAME,
+  PRODUCTION_BUILD,
+} from 'astro:env/server';
 
 import { SITE_NAME, SOURCE_REPO } from '../../config/site';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { useTranslations } from '../../lib/i18n';
 import { mailto } from '../../lib/links';
+import { operatorOrThrow } from '../../lib/operator';
 import { localeFrom, localePaths } from '../../lib/routing';
 
 export const getStaticPaths = localePaths;
 
 const locale = localeFrom(Astro.params.lang);
 const { t } = useTranslations(locale);
-const operatorKnown = Boolean(OPERATOR_NAME && OPERATOR_EMAIL);
-const feedbackLink = OPERATOR_EMAIL
-  ? mailto(OPERATOR_EMAIL, t('feedback.subject', { site: SITE_NAME }))
+const operator = operatorOrThrow(
+  { OPERATOR_NAME, OPERATOR_EMAIL, OPERATOR_ADDRESS },
+  PRODUCTION_BUILD,
+);
+const feedbackLink = operator.email
+  ? mailto(operator.email, t('feedback.subject', { site: SITE_NAME }))
   : undefined;
 ---
 
@@ -34,18 +43,14 @@ const feedbackLink = OPERATOR_EMAIL
 
     <section class="panel block">
       <h2>{t('imprint.operator.heading')}</h2>
-      {operatorKnown ? (
+      {operator.known ? (
         <p>
-          {OPERATOR_NAME}
-          {OPERATOR_ADDRESS && (
-            <Fragment>
-              <br />
-              {OPERATOR_ADDRESS}
-            </Fragment>
-          )}
+          {operator.name}
           <br />
-          <a class="text-link" href={`mailto:${OPERATOR_EMAIL}`}>
-            {OPERATOR_EMAIL}
+          {operator.address}
+          <br />
+          <a class="text-link" href={`mailto:${operator.email}`}>
+            {operator.email}
           </a>
         </p>
       ) : (

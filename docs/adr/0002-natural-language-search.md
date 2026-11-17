@@ -61,14 +61,83 @@ mana value, a price and an order ("cheap", "popular").
 - Synergies are a rough reading of the rules text: 12,999 of the 29,451 cards have at least
   one. Some cards are found that only fight a theme, and some that use it in their own words
   are missed.
-- Only what the rules know is understood. "Kartenziehen", "Removal" or "like Lightning Bolt"
-  are left out without notice. Rules text is not in the card list, so it is not searched.
-- Later phases, if wanted: more rules (card draw, removal, tribes) from the rules text at build
-  time, like the synergies; similar cards from embeddings computed in the pipeline with a local model and shipped
-  as a short list of neighbours per card; a server with a model only if that is not enough.
+- Only what the rules know is understood; anything else ("like Lightning Bolt") is left out
+  without notice. Rules text is not in the card list, so it is not searched. Card draw and
+  removal were not understood at first; they are roles now (update below).
+- Later phases, if wanted: more rules from the rules text at build time, like the synergies
+  (roles and creature types came that way, update below); similar cards from embeddings
+  computed in the pipeline with a local model and shipped as a short list of neighbours per
+  card; a server with a model only if that is not enough.
 
 ## Update 2026-11-12
 
 The C# code was moved out of `main` into the git tag `archive/api-phase2`: it was never
 deployed, and its server and indexer were only stubs. `web/src/lib/search/query.ts` is now the only parser; the
 references above to `api/` and `RuleBasedQueryParser.cs` describe the state of 2026-11-10.
+
+The search now also reads sets (`web/src/lib/search/sets.ts`), by their English names only.
+Set names are also words of card names, so the rules are narrow:
+
+- A code counts only in capitals ("FRA", "DSK-Karten"), so "one", "war" and "all" stay words.
+  A code that is also a filler word or "one" ("ALL", "MIR", "ONE") counts only right after a
+  cue word ("aus", "von", "from", "in", "set", "edition"): "ALL CARDS WITH FLYING", "ZEIG MIR …"
+  and "ONE drop creatures" name no set, "cards from ALL" does.
+- A name counts in any word order; another ending counts only as an ending (from 4 letters, at
+  most 2 letters more, so "Aether" is not "Aetherdrift"). A number counts only right after the
+  name word before it: "Modern Horizons 3", but "Modern Horizons Kreaturen bis 3 Mana" is
+  Modern Horizons and 3 mana.
+- Short names count as well: the part after the colon ("Crimson Vow"), a part of several words
+  before it ("Lord of the Rings") and the name without a possessive at its start
+  ("Spider-Man"), each of two words at least.
+- A name of one word counts on its own, after a cue word, or, from 5 letters and if it is no
+  creature type, next to a word a filter reads ("Bloomburrow creatures"); "Dark Ritual" and
+  "Uneasy Alliance" name no set.
+- Where several names fit, the one with the most words wins, then the one whose words stand
+  together ("Tarkir Dragonstorm dragons" is not Dragons of Tarkir), then the one written
+  exactly so, then a full name over a short one ("Commander Legends" is that set, not
+  "Commander Legends: Battle for Baldur's Gate").
+- Without such a name, a word after a cue that several set names share names all of them
+  ("aus Eldraine"), except format names ("in Modern"); otherwise an exact word of 5 letters or
+  more before the colon names the set ("Duskmourn"), a creature type only after a cue word.
+
+A request that is exactly a card name, or the face of one, is searched as that name where it
+names no filter ("Dark Ritual") or words are left that no filter reads ("Control Magic"). Where
+every word reads as a filter ("Flash", "Counterspell", "Wrath of God" with the creature type
+God), the filters win and the card of that full name is put on top of their results. A face of
+more than one word counts as a full name too ("Green Goblin" puts Norman Osborn // Green Goblin
+on top); a face of one word is a single filter word there and does not ("Burn" is burn, not
+Turn // Burn). The card list has no layout field, so this rule stands in for telling split
+cards from double-faced ones; the catalog format stays as it is. This decision, the name
+ranking and the order are `web/src/lib/search/results.ts` (`searchResults`), a pure function
+with its own tests; `web/src/scripts/card-search.ts` only loads, shows and pages the results.
+
+Creature types come from the type lines into the card list (one more field per card and the
+list of all types in the file). A request word that is one ("Elfen", "dragons") asks for cards
+of that type; "Synergie mit Elfen" and "elf synergy" stay a synergy with the type. A guild name
+means the cards a deck of its colours can play: one or both colours and no other ("Izzet"
+finds mono-red spells too, but no colourless card), and so do the shard and wedge names for
+three colours ("Esper", "Jund"). "mono" and "farblos" mean exactly these colours ("monoblau"
+too), "nur" and "only" too, but only right before a colour word ("nur in Rot"), and "only" at
+the very end a word or two behind one ("red creatures only"); "rote Karten nur bis 3 Mana" is
+not mono. Plain colour words mean all of them and maybe more. Colours, keywords, card types and
+creature types can be ruled out ("nicht blau", "non-blue", "nonblack", "nicht Izzet", "ohne
+Fliegen", "without flying", "non-artifact creatures", "Nicht-Artefakt-Kreaturen", "non-human",
+"Kreaturen ohne Menschen"; new query fields `notTypes` and `notCreatureTypes`). A negation
+covers the whole list behind it while its words are of one kind ("ohne Fliegen oder
+Reichweite", "keine blauen oder roten Karten", "weder blau noch rot", "neither blue nor red")
+and ends with the list ("Kreaturen ohne Fliegen mit Reichweite" asks for reach). "keine
+farblosen Karten" are cards of any colour. One word for two types ("Artefaktkreaturen",
+"artifact creatures") needs both, while "Artefakte und Kreaturen" is either. German creature
+words count with at most a short ending, the dative "-ern" included ("Hunde", "Geistern", not
+"hundert"), and in compounds with a card word or a second creature word ("Zombiekarten",
+"Drachenkreaturen" as creatures, "Elfenkriegern" as elf or warrior); any other second part
+makes no compound ("Elfmeter", "Geistreich", "Goblinkönig").
+
+Seven card roles are read from the English rules text at build time, like the synergies, and
+can be searched: ramp, removal, counterspell, wipe, draw, burn and tutor ("Removal", "Edikte",
+"Konter", "Boardwipe", "Tutor"). Removal deals with a creature, a planeswalker or any
+permanent, not only with artifacts or enchantments, and exile that brings the card back is
+none; a wipe hits all creatures or all opposing ones, not those in a fight or your own;
+discarding and drawing as many is no draw; a tutor finds a card that is no land. The
+archetypes (aggro, control, midrange) are fixed rules over roles and mana value. Both are
+heuristics over the rules text, not deck data.

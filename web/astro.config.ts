@@ -10,11 +10,14 @@ export default defineConfig({
   trailingSlash: 'always',
   // Who runs the site, for the imprint and the privacy notice. Set by the deployment, so
   // personal data stays out of the repository; locally a web/.env file works.
+  // PRODUCTION_BUILD is only set by the deployment (deploy.yml): that build fails without the
+  // operator (src/lib/operator.ts), while local and CI builds show a placeholder.
   env: {
     schema: {
       OPERATOR_NAME: envField.string({ context: 'server', access: 'public', optional: true }),
       OPERATOR_ADDRESS: envField.string({ context: 'server', access: 'public', optional: true }),
       OPERATOR_EMAIL: envField.string({ context: 'server', access: 'public', optional: true }),
+      PRODUCTION_BUILD: envField.boolean({ context: 'server', access: 'public', default: false }),
     },
   },
   i18n: {

@@ -7,6 +7,7 @@ import type { Locale } from '../../config/site';
 import type { Card } from '../data/schema';
 import { cardKeywords, type Keyword, KEYWORDS } from '../search/keywords';
 import { cardAnswers } from '../search/answers';
+import { cardRoles, type Role, ROLES } from '../search/roles';
 import { cardSynergies, type Synergy, SYNERGIES } from '../search/synergies';
 import { cardTribes, creatureTypes } from '../search/tribes';
 import { shownCard } from './local';
@@ -31,6 +32,8 @@ export interface CatalogCard extends SortableCard {
   readonly altName: string;
   readonly manaCost: string;
   readonly types: readonly CardType[];
+  /** The creature types of the type line, of every face, lower case ("elf", "druid"). */
+  readonly creatureTypes: readonly string[];
   /** Keyword abilities, for the search tab (lib/search). */
   readonly keywords: readonly Keyword[];
   /** What the rules text works with ("Synergie mit Artefakten"), for the search tab. */
@@ -39,6 +42,8 @@ export interface CatalogCard extends SortableCard {
   readonly answers: readonly Synergy[];
   /** Creature types the rules text works with, lower case ("elemental"). */
   readonly tribes: readonly string[];
+  /** What the card does for its deck ("ramp", "removal"), read from the rules text. */
+  readonly roles: readonly Role[];
   readonly banned: boolean;
   /** The set of the printing shown: the newest one, on German pages the newest German one. */
   readonly setCode: string;
@@ -50,18 +55,21 @@ export interface CatalogCard extends SortableCard {
 
 /**
  * One entry per card (oracle id). The price is that of the cheapest printing, as in the
- * set tables; the play share is the highest one, since only Standard sets have one.
+ * set tables; the play share is the highest one, since only Standard sets have one. Token
+ * cards ("Token Creature — Angel", from The List and token sets) are left out: no deck plays
+ * them, and the search would find them for "Angel" and read their types as creature types.
  */
 export function buildCatalog(printings: readonly Printing[], locale: Locale): CatalogCard[] {
+  const cards = printings.filter((p) => !/\bToken\b/.test(p.card.typeLine));
   const byCard = new Map<string, Printing[]>();
-  for (const printing of printings) {
+  for (const printing of cards) {
     const list = byCard.get(printing.card.oracleId);
     if (list) list.push(printing);
     else byCard.set(printing.card.oracleId, [printing]);
   }
   // Every creature type of any card, so the rules text is read against real types only
   const known = new Set(
-    printings.flatMap((p) => creatureTypes(p.card.typeLine).map((type) => type.toLowerCase())),
+    cards.flatMap((p) => creatureTypes(p.card.typeLine).map((type) => type.toLowerCase())),
   );
   return [...byCard.values()].map((list) => catalogCard(list, locale, known));
 }
@@ -87,10 +95,12 @@ function catalogCard(
     cmc: card.cmc,
     type: mainType(card.typeLine),
     types: cardTypes(card.typeLine),
+    creatureTypes: [...new Set(creatureTypes(card.typeLine).map((type) => type.toLowerCase()))],
     keywords: cardKeywords(card.text),
     synergies: cardSynergies(card.text, card.name),
     answers: cardAnswers(card.text, card.name),
     tribes: cardTribes(card.text, card.name, known),
+    roles: cardRoles(card.text, card.name, card.isLand, card.typeLine),
     price: prices.length > 0 ? Math.min(...prices) : null,
     playShare: shares.length > 0 ? Math.max(...shares) : null,
     isLand: card.isLand,
@@ -133,11 +143,17 @@ type EncodedCard = [
   answers: string,
   /** Creature types the card works with, separated by spaces; usually empty. */
   tribes: string,
+  /** Indexes into ROLES, one base-36 digit each; usually empty. */
+  roles: string,
+  /** Creature types of the type line, separated by spaces; last, so older files still read. */
+  creatureTypes: string,
 ];
 
 export interface CatalogFile {
   /** Set names by code, for the set column. */
   readonly sets: Readonly<Record<string, string>>;
+  /** Every creature type of the cards once, sorted, for the search ("Elfen", "Drachen"). */
+  readonly creatureTypes: readonly string[];
   readonly cards: readonly EncodedCard[];
 }
 
@@ -172,6 +188,7 @@ export function encodeCatalog(
 ): CatalogFile {
   return {
     sets,
+    creatureTypes: [...new Set(cards.flatMap((card) => card.creatureTypes))].sort(),
     cards: cards.map((card) => [
       card.name,
       card.altName,
@@ -190,6 +207,8 @@ export function encodeCatalog(
       card.synergies.map((synergy) => SYNERGIES.indexOf(synergy).toString(36)).join(''),
       card.answers.map((theme) => SYNERGIES.indexOf(theme).toString(36)).join(''),
       card.tribes.join(' '),
+      card.roles.map((role) => ROLES.indexOf(role).toString(36)).join(''),
+      card.creatureTypes.join(' '),
     ]),
   };
 }
@@ -214,6 +233,8 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
       synergies = '',
       answers = '',
       tribes = '',
+      roles = '',
+      creatureTypes = '',
     ]) => {
       const [main, ...all] = [...types].map((index) => CARD_TYPES[Number(index)]);
       return {
@@ -224,10 +245,12 @@ export function decodeCatalog(file: CatalogFile): CatalogCard[] {
         cmc,
         type: isCardType(main) ? main : 'other',
         types: all.filter(isCardType),
+        creatureTypes: creatureTypes ? creatureTypes.split(' ') : [],
         keywords: [...keywords].flatMap((digit) => KEYWORDS[parseInt(digit, 36)] ?? []),
         synergies: [...synergies].flatMap((digit) => SYNERGIES[parseInt(digit, 36)] ?? []),
         answers: [...answers].flatMap((digit) => SYNERGIES[parseInt(digit, 36)] ?? []),
         tribes: tribes ? tribes.split(' ') : [],
+        roles: [...roles].flatMap((digit) => ROLES[parseInt(digit, 36)] ?? []),
         price,
         playShare,
         isLand: (flags & 1) !== 0,

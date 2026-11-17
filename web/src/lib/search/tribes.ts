@@ -6,8 +6,12 @@
  */
 
 // Artifact types that a few artifact creatures carry too; as themes they are artifacts and
-// tokens (lib/search/synergies.ts), not creature types
+// tokens (lib/search/synergies.ts), not creature types. And enchantment types on the type
+// line of a creature or a Kindred card: the summons of Final Fantasy are Saga creatures
+// ("Enchantment Creature — Saga Phoenix"), and there are Kindred Auras.
 const NOT_CREATURE_TYPES = new Set([
+  'Saga',
+  'Aura',
   'Treasure',
   'Food',
   'Clue',
@@ -71,11 +75,15 @@ export function cardTribes(oracleText: string, name: string, known: ReadonlySet<
 }
 
 /**
- * German words for common creature types, as they start on German cards (normalized: no
- * umlauts). "Elementarkreaturen" and "Elementarwesen" both start with "elementar".
+ * German words for common creature types, as on German cards (normalized: no umlauts). A request
+ * word is one of them with at most a short ending (GERMAN_ENDING): "Hunde", "Geister" and
+ * "Geistern" are, "hundert" and "menschlich" are not. Compounds of one with a card word or a
+ * second one count too (germanCompound); some have entries of their own ("Elementarwesen").
  */
 export const GERMAN_TRIBES: readonly (readonly [string, string])[] = [
   ['elementar', 'elemental'],
+  ['elementarwesen', 'elemental'],
+  ['elementarkreatur', 'elemental'],
   ['elf', 'elf'],
   ['elfen', 'elf'],
   ['goblin', 'goblin'],
@@ -93,6 +101,7 @@ export const GERMAN_TRIBES: readonly (readonly [string, string])[] = [
   ['katze', 'cat'],
   ['ratte', 'rat'],
   ['eichhorn', 'squirrel'],
+  ['eichhornchen', 'squirrel'],
   ['dinosaurier', 'dinosaur'],
   ['pirat', 'pirate'],
   ['soldat', 'soldier'],
@@ -110,14 +119,56 @@ export const GERMAN_TRIBES: readonly (readonly [string, string])[] = [
   ['schlange', 'snake'],
   ['spinne', 'spider'],
   ['werwolf', 'werewolf'],
+  ['avatar', 'avatar'],
 ];
 
 /**
- * The creature types a request word may name: the German one, or the English word's possible
- * singulars (the cards decide which one is a type).
+ * The endings of the German plural and case forms: "Hunde", "Geister", "Drachen", "Goblins", and
+ * the dative "Geistern".
+ */
+const GERMAN_ENDING = /^(?:e|en|er|ern|n|s)?$/;
+
+/** The German creature type `word` names with at most a short ending, if any. */
+function germanTribe(word: string): string | undefined {
+  return GERMAN_TRIBES.find(
+    ([stem]) => word.startsWith(stem) && GERMAN_ENDING.test(word.slice(stem.length)),
+  )?.[1];
+}
+
+// What may join a German creature type word to the next part: "Zombiekarten", "Elfenkarten",
+// "Drachenkreaturen", "Geisterkarten", "Engelskarten"
+const GERMAN_LINKS = ['', 'e', 'en', 'er', 'n', 's'];
+// The card words after a creature type word: "Zombiekarten", "Drachenkreaturen"
+const GERMAN_CARD_WORD = /^(?:karten?|kreatur(?:en)?)$/;
+
+/**
+ * The creature types of a German compound: a creature type word and a card word ("Zombiekarten",
+ * "Drachenkreaturen") or a second creature type word ("Elfenkriegern" is elf and warrior). Any
+ * other second part is no compound of a type: "Elfmeter", "Geistreich", "Goblinkönig".
+ */
+function germanCompound(word: string): string[] {
+  for (const [stem, type] of GERMAN_TRIBES) {
+    if (!word.startsWith(stem)) continue;
+    const tail = word.slice(stem.length);
+    for (const link of GERMAN_LINKS) {
+      if (!tail.startsWith(link)) continue;
+      const part = tail.slice(link.length);
+      if (GERMAN_CARD_WORD.test(part)) return [type];
+      const second = part ? germanTribe(part) : undefined;
+      if (second) return [...new Set([type, second])];
+    }
+  }
+  return [];
+}
+
+/**
+ * The creature types a request word may name: the German one or ones, or the English word's
+ * possible singulars (the cards decide which one is a type).
  */
 export function tribeCandidates(word: string): string[] {
-  const german = GERMAN_TRIBES.find(([start]) => word.startsWith(start));
-  if (german) return [german[1]];
+  const german = germanTribe(word);
+  if (german) return [german];
+  const compound = germanCompound(word);
+  if (compound.length > 0) return compound;
   return /^[a-z'-]{3,}$/.test(word) ? [...new Set(singular(word))] : [];
 }

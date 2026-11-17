@@ -10,14 +10,19 @@ under _Actions → Refresh data and deploy → Run workflow_. It rebuilds the sn
 prices, builds the site and publishes it to GitHub Pages (enable _Settings → Pages → Source:
 GitHub Actions_). A push to `main` does not deploy; code changes go live with the next run.
 Each run starts with the [CI](../.github/workflows/ci.yml) checks; if one fails, nothing is
-deployed and the site stays as it was.
+deployed and the site stays as it was. The same holds when the pipeline's snapshot checks
+(`pipeline/src/rotation_radar/domain/checks.py`) fail, for example after a source delivered
+too little; the log lists every problem. The last snapshot travels in the weekly build cache as
+the reference for these checks.
 `SITE_URL` and `BASE_PATH` configure the public address: `<owner>.github.io/<repository>/`,
 or an own domain when the repository variable `SITE_URL` holds it (for example
 `https://deckade.de`, the same domain as under _Settings → Pages → Custom domain_). The
 imprint and the privacy notice
 name the operator from the repository variables `OPERATOR_NAME`, `OPERATOR_ADDRESS` and
 `OPERATOR_EMAIL` (_Settings → Secrets and variables → Actions → Variables_), so personal data
-stays out of the code.
+stays out of the code. The deployment sets `PRODUCTION_BUILD`, which makes the build fail and
+name the missing variables when one of the three is not set; local and CI builds show a
+placeholder instead.
 
 ## Legal checks
 

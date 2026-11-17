@@ -63,9 +63,6 @@ export function product(name: string, overrides: Partial<Product> = {}): Product
     category: 'booster_box',
     subtype: 'play',
     contents: [{ count: 30, kind: 'play' }],
-    price: 120,
-    averageSale: null,
-    pricePerPack: 4,
     ...overrides,
   };
 }

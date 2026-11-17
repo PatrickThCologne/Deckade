@@ -3,6 +3,9 @@
 The repository archives public decklists from MTGO (Challenges, Leagues) and
 Melee (paper tournaments) as one JSON file per event, sorted by date. Event files
 never change once published, so they are cached on disk.
+
+A listing or download that still fails after the client's retries stops the build: an empty
+play rate would look like data. Only a single event file that is not valid JSON is skipped.
 """
 
 from __future__ import annotations
@@ -69,7 +72,11 @@ class DecklistArchive:
                 f"{base}/contents/Tournaments/{source}/{year}", self._api_headers
             )
         except httpx.HTTPStatusError as error:
-            log.warning("No decklists for %s %s: %s", source, year, error.response.status_code)
+            # A year folder appears with its first event: early in January the new one may
+            # not exist yet. Any other failure is an error.
+            if error.response.status_code != httpx.codes.NOT_FOUND:
+                raise
+            log.info("No decklists for %s %s yet", source, year)
             return []
         sha = next((m["sha"] for m in months if m["name"] == f"{month:02d}"), None)
         if sha is None:
@@ -87,11 +94,12 @@ class DecklistArchive:
             data: dict[str, Any] = json.loads(cached.read_bytes())
             return data
         url = f"{GITHUB_RAW}/{DECKLIST_REPOSITORY}/{DECKLIST_BRANCH}/Tournaments/{source}/{path}"
+        content = self._http.get_bytes(url)
         try:
-            content = self._http.get_bytes(url)
             data = json.loads(content)
-        except (httpx.HTTPError, ValueError) as error:
-            log.warning("Skipping %s: %s", path, error)
+        except ValueError as error:
+            # Not cached, so the next build downloads it again
+            log.warning("Skipping %s, not valid JSON: %s", path, error)
             return None
         cached.parent.mkdir(parents=True, exist_ok=True)
         cached.write_bytes(content)

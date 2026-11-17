@@ -21,19 +21,19 @@ from rotation_radar.domain.products import PackCount
 from rotation_radar.domain.rotation import RotationEstimate, SetRotation
 from rotation_radar.domain.sets import SetStatus
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 RULE_SOURCE = "https://magic.wizards.com/en/formats/standard"
 
 
 @dataclass(frozen=True)
 class ProductEntry:
+    """No price: the only source, Cardmarket, needs written consent to show its prices
+    (docs/adr/0003-scryfall-prices.md); the website links to a search there instead."""
+
     name: str
     category: str
     subtype: str | None
     contents: tuple[PackCount, ...]
-    price: float | None
-    average_sale: float | None
-    price_per_pack: float | None
 
 
 @dataclass(frozen=True)

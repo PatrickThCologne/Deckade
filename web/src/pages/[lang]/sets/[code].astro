@@ -298,12 +298,10 @@ const description = set.standard
       gap: 12px;
     }
 
+    /* On phones the facts and the card list come first; the pack is already on the tile
+       that was tapped. The overlay then fades in without the flying pack. */
     .pack {
-      grid-area: auto;
-      width: 150px;
-      justify-self: center;
-      border-right: 1px solid var(--line);
-      border-radius: var(--radius-lg);
+      display: none;
     }
 
     .main {

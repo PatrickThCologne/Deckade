@@ -45,6 +45,41 @@ describe('creature types', () => {
     expect(creatureTypes('Artifact Creature — Equipment Golem')).toEqual(['Golem']);
   });
 
+  // Real type lines: summons of Final Fantasy are Saga creatures, and Kindred Auras exist
+  it('takes Saga and Aura for no creature type', () => {
+    expect(creatureTypes('Enchantment Creature — Saga Phoenix')).toEqual(['Phoenix']);
+    expect(
+      creatureTypes(
+        'Legendary Creature — Human Noble Wizard // Legendary Enchantment Creature — Saga Phoenix',
+      ),
+    ).toEqual(['Human', 'Noble', 'Wizard', 'Phoenix']);
+    expect(creatureTypes('Kindred Enchantment — Treefolk Aura')).toEqual(['Treefolk']);
+  });
+
+  it.each([
+    ['hund', 'dog'],
+    ['hunde', 'dog'],
+    ['geister', 'spirit'],
+    ['menschen', 'human'],
+    ['drachen', 'dragon'],
+    ['vampiren', 'vampire'],
+    ['zwerge', 'dwarf'],
+    ['soldaten', 'soldier'],
+  ])('reads the German word "%s" with an ending as %s', (word, type) => {
+    expect(tribeCandidates(word)).toContain(type);
+  });
+
+  it.each([
+    ['hundert', 'dog'],
+    ['menschlich', 'human'],
+    ['menschliche', 'human'],
+    ['geistreich', 'spirit'],
+    ['elfmal', 'elf'],
+    ['goblinkonig', 'goblin'],
+  ])('takes the longer word "%s" for no %s', (word, type) => {
+    expect(tribeCandidates(word)).not.toContain(type);
+  });
+
   const known = new Set(['elemental', 'elf', 'goblin', 'soldier']);
 
   it.each([
@@ -93,10 +128,13 @@ describe('search for answers and creature types', () => {
   const card = (overrides: Partial<SearchableCard>): SearchableCard => ({
     colors: 'U',
     types: ['instant'],
+    creatureTypes: [],
     keywords: [],
     synergies: [],
     answers: [],
     tribes: [],
+    roles: [],
+    printedIn: [],
     cmc: 2,
     isLand: false,
     price: 1,

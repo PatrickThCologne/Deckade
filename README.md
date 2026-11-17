@@ -10,6 +10,13 @@ but public data:
 - every card with an estimated price and how often it is played in tournaments
 - what bundles and booster boxes contain
 
+**Live: [deckade.de](https://deckade.de)** · updated every day ·
+how AI was used: [AI-DECLARATION.md](AI-DECLARATION.md)
+
+| All sets                                                    | Standard rotation                                    | Search                                                 |
+| ----------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| ![All sets on one timeline](docs/screenshots/overview.webp) | ![Standard rotation](docs/screenshots/rotation.webp) | ![Plain-language search](docs/screenshots/search.webp) |
+
 ## Features
 
 - **All sets** – a timeline by year. Each set opens as an overlay with its own URL: release
@@ -32,10 +39,10 @@ but public data:
 
 The project consists of two parts with a clear contract between them:
 
-| Part                    | Stack                                                    | Responsibility                                                   |
-| ----------------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
-| [`pipeline/`](pipeline) | Python 3.12, httpx, Pillow · pytest, mypy (strict), ruff | Fetch and process the data, write a JSON snapshot and the images |
-| [`web/`](web)           | Astro 7, TypeScript (strict), Zod · Vitest, Prettier     | Validate the snapshot and render a static, SEO-friendly website  |
+| Part                    | Stack                                                        | Responsibility                                                   |
+| ----------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------- |
+| [`pipeline/`](pipeline) | Python 3.12, httpx, Pillow · pytest, mypy (strict), ruff     | Fetch and process the data, write a JSON snapshot and the images |
+| [`web/`](web)           | Astro 7, TypeScript (strict), Zod · Vitest, ESLint, Prettier | Validate the snapshot and render a static, SEO-friendly website  |
 
 ### Architecture
 
@@ -61,6 +68,11 @@ flowchart LR
 - **One data contract.** The pipeline writes camelCase JSON (`snapshot.py`, `SCHEMA_VERSION`);
   the website validates it with Zod at build time (`web/src/lib/data/schema.ts`) and fails the
   build instead of shipping a broken page.
+- **A bad build keeps the good one.** Before writing, the pipeline checks the snapshot
+  (`domain/checks.py`): at least 100 sets, Standard sets, decks for the play rate, German text
+  for half the cards, and no sudden drop in sets or decks since the last snapshot. A failed
+  check, or a source that still fails after its retries, ends the build with every problem
+  listed and leaves the previous snapshot in place.
 - **Wording is logic, too.** `web/src/lib/rotation/describe.ts` turns rotation data into text
   for both languages and is tested with the real dictionaries.
 
@@ -116,12 +128,13 @@ Set `GITHUB_TOKEN` to raise the GitHub API rate limit for the decklist download.
 
 ## Quality checks
 
-| Pipeline                | Website          |
-| ----------------------- | ---------------- |
-| `pytest`                | `npm test`       |
-| `mypy` (strict)         | `npm run check`  |
-| `ruff check src tests`  | `npm run lint`   |
-| `ruff format src tests` | `npm run format` |
+| Pipeline                | Website                                                    |
+| ----------------------- | ---------------------------------------------------------- |
+| `pytest`                | `npm test`                                                 |
+| `mypy` (strict)         | `npm run check`                                            |
+| `ruff check src tests`  | `npm run lint`                                             |
+| `ruff format src tests` | `npm run format`                                           |
+|                         | `npm run e2e` (browser smoke tests, after `npm run build`) |
 
 All of them run in [CI](.github/workflows/ci.yml) on every push to `main` and on every pull
 request. CI does not download live data: the website is checked against the small snapshot in

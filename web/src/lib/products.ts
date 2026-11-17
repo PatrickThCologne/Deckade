@@ -8,7 +8,8 @@ export function sortProducts(products: readonly Product[]): Product[] {
     const index = SUBTYPE_ORDER.indexOf(p.subtype ?? '');
     return index === -1 ? SUBTYPE_ORDER.length : index;
   };
-  return products.toSorted((a, b) => rank(a) - rank(b) || (a.price ?? 0) - (b.price ?? 0));
+  // Same rank: the order of the snapshot (toSorted is stable)
+  return products.toSorted((a, b) => rank(a) - rank(b));
 }
 
 const normalizeWord = (word: string) => word.toLowerCase().replace(/[^a-z0-9]/g, '');

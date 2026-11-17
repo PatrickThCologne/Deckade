@@ -66,7 +66,6 @@ export const de = {
   'facts.includes': 'inkl. {sets}',
   'facts.special': 'Sonderregel von Wizards',
   'facts.preorder': 'Vorverkauf',
-  'products.perPackShort': '{price} je Booster',
 
   'cards.heading': 'Karten',
   'cards.search': 'Name oder Kartentext suchen',
@@ -113,10 +112,6 @@ export const de = {
   'type.other': 'Sonstige',
 
   'products.heading': 'Bundles & Booster Boxes',
-  'products.contents': 'Inhalt',
-  'products.price': 'Preis',
-  'products.perPack': 'je Booster',
-  'products.empty': 'Für dieses Set sind keine Bundles oder Booster Boxes gelistet.',
 
   'pack.play': 'Play Booster',
   'pack.set': 'Set Booster',
@@ -187,7 +182,7 @@ export const de = {
 
   'meta.overview.title': 'Alle Magic-Sets im Überblick',
   'meta.overview.description':
-    'Alle Magic-Sets seit 1993 auf einen Blick – mit Markierungen, ab wo sie in Standard, Pioneer und Modern legal sind, Kartenpreisen und Booster-Box-Preisen.',
+    'Alle Magic-Sets seit 1993 auf einen Blick – mit Markierungen, ab wo sie in Standard, Pioneer und Modern legal sind, Kartenpreisen und dem Inhalt der Booster-Boxen.',
   'meta.set.descriptionFormats': '{name}: legal in {formats}. {cards} mit Preis.',
   'tabs.label': 'Bereiche',
   'tabs.overview': 'Alle Sets',
@@ -224,12 +219,16 @@ export const de = {
   'search.guide.colors.example': '„rot“, „Azorius“',
   'search.guide.types': 'Typen und Fähigkeiten',
   'search.guide.types.example': '„Kreaturen mit Eile“',
+  'search.guide.sets': 'Sets',
+  'search.guide.sets.example': '„Kreaturen aus Reality Fracture“',
   'search.guide.limits': 'Manawert und Preis',
   'search.guide.limits.example': '„bis 3 Mana“, „unter 2 €“',
   'search.guide.synergies': 'Synergien',
   'search.guide.synergies.example': '„Synergie mit Elfen“',
   'search.guide.answers': 'Antworten',
   'search.guide.answers.example': '„Konter gegen Flieger“',
+  'search.guide.styles': 'Spielweisen',
+  'search.guide.styles.example': '„Karten zum Rampen“, „Aggro“, „Late Game“',
   'search.guide.order': 'Reihenfolge',
   'search.guide.order.example': '„günstig“, „beliebt“',
   'search.label': 'Wonach suchst du?',

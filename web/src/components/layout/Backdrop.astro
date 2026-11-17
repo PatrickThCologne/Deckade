@@ -4,10 +4,10 @@
  * colour from red at the top to violet at the bottom. While scrolling the wall sinks slower
  * than the content and its rows drift sideways, alternating left and right
  * (scripts/backdrop.ts). Each row holds its sequence twice, so it can loop without showing
- * an end. The artworks are Scryfall art crops, shown unchanged; the artists
- * are credited in the footer. Scryfall's image rules forbid changing the images themselves
- * (no desaturating, recolouring, blurring), so only dark layers on top keep the text in front
- * readable.
+ * an end. The artworks are Scryfall art crops; the artists are credited in the footer.
+ * Scryfall's image rules forbid changing the images themselves (no desaturating, recolouring,
+ * blurring), so the tiles only crop them to their shape and dark layers on top keep the text in
+ * front readable.
  */
 import { snapshot } from '../../lib/data/load';
 import { colourRows } from '../../lib/backdrop';
