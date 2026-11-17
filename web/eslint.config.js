@@ -2,11 +2,12 @@
 // Prettier keeps the formatting. Accessibility is checked on the built pages by Lighthouse in
 // CI (lighthouserc.json): eslint-plugin-jsx-a11y does not support ESLint 10 yet.
 import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import astro from 'eslint-plugin-astro';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: [
       'dist/',
