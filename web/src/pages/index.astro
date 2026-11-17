@@ -1,11 +1,13 @@
 ---
-import { DEFAULT_LOCALE, SITE_NAME } from '../config/site';
+import { DEFAULT_LOCALE, LOCALES, SITE_NAME } from '../config/site';
 import { localePath } from '../lib/links';
 
-// The site lives under /de/ and /en/; the root only forwards to the default language.
+// The site lives under /de/ and /en/; the root only forwards to the browser's first language
+// the site has, else to the default language (also without JavaScript).
 // Static hosting has no server redirect, so this page does it at once and stays dark and
 // empty meanwhile (Astro's own redirect page waits two seconds on a white page).
 const target = localePath(DEFAULT_LOCALE);
+const targets = Object.fromEntries(LOCALES.map((locale) => [locale, localePath(locale)]));
 const canonical = new URL(target, Astro.site).href;
 ---
 
@@ -18,8 +20,11 @@ const canonical = new URL(target, Astro.site).href;
     <meta name="theme-color" content="#06080c" />
     <link rel="canonical" href={canonical} />
     <meta http-equiv="refresh" content={`0;url=${target}`} />
-    <script is:inline define:vars={{ target }}>
-      location.replace(target);
+    <script is:inline define:vars={{ target, targets }}>
+      const language = (navigator.languages ?? [navigator.language])
+        .map((tag) => String(tag).slice(0, 2).toLowerCase())
+        .find((code) => Object.hasOwn(targets, code));
+      location.replace(language ? targets[language] : target);
     </script>
     <style>
       html {
