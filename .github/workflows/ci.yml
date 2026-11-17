@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
           cache: pip
           cache-dependency-path: |
             pipeline/pyproject.toml
@@ -50,7 +50,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
           cache: npm
           cache-dependency-path: web/package-lock.json
       # The small contract snapshot written by the pipeline's tests (tests/contract) stands in
@@ -65,6 +65,9 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run build
+      # Smoke tests in a real browser against the built pages (playwright.config.ts)
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
       # Lighthouse checks the built pages (lighthouserc.json): accessibility, best practices and
       # SEO fail the job below their minimum; performance only warns, as shared runners vary.
       # The reports are kept as the run's "lighthouse" artifact.

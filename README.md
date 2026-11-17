@@ -128,12 +128,13 @@ Set `GITHUB_TOKEN` to raise the GitHub API rate limit for the decklist download.
 
 ## Quality checks
 
-| Pipeline                | Website          |
-| ----------------------- | ---------------- |
-| `pytest`                | `npm test`       |
-| `mypy` (strict)         | `npm run check`  |
-| `ruff check src tests`  | `npm run lint`   |
-| `ruff format src tests` | `npm run format` |
+| Pipeline                | Website                                                    |
+| ----------------------- | ---------------------------------------------------------- |
+| `pytest`                | `npm test`                                                 |
+| `mypy` (strict)         | `npm run check`                                            |
+| `ruff check src tests`  | `npm run lint`                                             |
+| `ruff format src tests` | `npm run format`                                           |
+|                         | `npm run e2e` (browser smoke tests, after `npm run build`) |
 
 All of them run in [CI](.github/workflows/ci.yml) on every push to `main` and on every pull
 request. CI does not download live data: the website is checked against the small snapshot in

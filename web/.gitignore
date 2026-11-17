@@ -2,3 +2,6 @@
 # reports and generated data are ignored there)
 npm-debug.log*
 .env.production
+# Playwright results (playwright.config.ts)
+test-results/
+playwright-report/
